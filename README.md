@@ -3,10 +3,10 @@ Continuously Operating Reference Stations (CORS), provide network RTK differenti
 
 # 简介
 CORS主要功能包括
-1. 支持北斗、GPS、GLONASS、GALILEO多频多系统
-2. 支持多频组合网络RTK基线解算
+1. 支持北斗、GPS、GLONASS、GALILEO、QZSS多频多系统
+2. 支持多频组合网络RTK基线解算（双频、三频等）
 3. 支持中长基线网络RTK基线解算（300km以内）
-4. 多策略快速稳健模糊度固定（300km以内，模糊度固定率97%；200km以内，模糊度固定率99%）
+4. 多策略快速稳健模糊度固定（300km以内，模糊度固定率97%；200km以内，模糊度固定率99%；低卫星仰角模糊度固定等）
 5. 虚拟参考站技术
 6. 基准站观测数据时间同步技术
 7. 支持连接大规模基准站
