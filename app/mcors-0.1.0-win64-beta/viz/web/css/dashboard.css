@@ -1,0 +1,1629 @@
+/* ==========================================================================
+   mcors CORS 基准站网监控大屏
+   浅色主题 · 面向长时间值守的监控场景
+   ========================================================================== */
+
+:root {
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --panel-2: #fafbfc;
+  --border: #e3e8ef;
+  --border-strong: #cfd6e0;
+  --text: #1c2530;
+  --text-2: #5a6675;
+  --text-3: #8b97a6;
+
+  --accent: #2563eb;
+  --accent-soft: #eff4ff;
+
+  /* 解状态配色：遵循"解得越稳越醒目"的直觉 */
+  --fix: #16a34a;
+  --float: #f59e0b;
+  --ppp: #8b5cf6;
+  --dgps: #0ea5e9;
+  --single: #64748b;
+  --none: #cbd5e1;
+  --fixdeg: #0891b2;
+  /* 引擎 solstr[] 会输出全部 9 种解状态（engine.c:724）：
+     FIX FLOAT SBAS DGPS SINGLE PPP DR FIXDEG NONE。
+     这三个原先只在 theme.js 的 COLORS 里硬编码，CSS 侧没有对应变量，
+     导致图例无法呈现 SBAS/DR 两种状态的色块 —— 用户无从对照。 */
+  --sbas: #a855f7;
+  --dr: #6b7280;
+
+  --danger: #dc2626;
+  --ok: #16a34a;
+  --warn: #d97706;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 4px 12px rgba(16, 24, 40, .04);
+  --shadow-lg: 0 8px 28px rgba(16, 24, 40, .12);
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+        "PingFang SC", "Hiragino Sans GB", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- 整页不滚动
+ * 目标：大屏所有信息一屏显示完，**页面本身不出现滚动条**。
+ * 做法：body 锁定 100vh 并纵向 flex 布局，grid 吃掉顶栏以外的全部高度
+ * （flex:1 + min-height:0），面板内部（表格/画布）各自滚动。
+ * 图表模块都用 getBoundingClientRect 取尺寸并监听 resize，
+ * 因此容器变矮后 canvas 会自动重绘，无需改 JS。
+ * -------------------------------------------------------------------------- */
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- 顶栏 */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 10px 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  /* body 已是 100vh 的 flex 列容器、页面不滚动，sticky 没有意义，
+   * 反而可能让顶栏脱离 flex 流导致高度计算偏差。 */
+  position: relative;
+  z-index: 50;
+  /* 顶栏必须保持原高，不能被 flex 压缩 */
+  flex-shrink: 0;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+
+.brand .logo {
+  font-size: 26px;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: .2px;
+}
+
+.brand .sub {
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+.status-strip {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.stat {
+  min-width: 74px;
+  padding: 6px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.stat b {
+  display: block;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat span {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.conn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-2);
+  min-width: 92px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--none);
+  flex-shrink: 0;
+}
+
+.dot.on { background: var(--ok); box-shadow: 0 0 0 3px rgba(22, 163, 74, .16); }
+.dot.off { background: var(--danger); box-shadow: 0 0 0 3px rgba(220, 38, 38, .14); }
+
+/* ---------------------------------------------------------------- 栅格 */
+
+.grid {
+  display: grid;
+  /* 两列布局：左列窄（地图/趋势/天空），右列宽（两张表）。
+   *
+   * 右列 = 容器宽的 45%（已扣除 gap），左列吃掉剩余。
+   *
+   * 写法说明（这里踩过一个很隐蔽的坑）：
+   * 原写成 minmax(0,1fr) minmax(0,calc((100% - 12px) * 0.45))，
+   * 以为 calc 生效了，实测右列却占 55%（1023/1860）。
+   * 原因是 grid 的分配顺序：先按各列 max 定值，再把剩余全部分给 fr 列。
+   * minmax(0, calc(0.45)) 里的 0.45 只是**上限**不是定值 ——
+   * 831.6px 落地后，1fr 列把剩下的 1016px 全吃掉，右列反被撑到 1023px。
+   *
+   * 去掉 minmax 包裹、直接写 calc 才是定值语义：
+   * 定值列先占 831.6px，1fr 列拿剩余 1016.4px，合计 100%。
+   *
+   * 为什么右列不能更窄：两张表分别 9 列和 7 列，
+   * 实测站点表站名列需 169px、位置列需 161px、状态列需 49px
+   * （改前只给到 16px，徽标被挤没）。45% 下算得
+   * 站名 192 / 位置 200 / 状态 100，均有余量。
+   * 站网图是矢量地图、有 autoFit，缩到 1000px 仍完全可读 ——
+   * 宽度让给「读不动」的表格，收益高于留给「读得动」的地图。 */
+  /* 12 列网格（便于按 1/12 精确分配），两行布局。
+   *
+   * 用户要求：
+   *   1) 行1 的「基站网图」与「基线解算信息」宽度各占页面 50%
+   *   2) 这两块的高度 = 页面高度的 50%（1080 × 50% = 540px）
+   *   3) 行2 的趋势图/天空图要留出空间补充内容（摘要 + 分系统图表）
+   *
+   * 为什么从 3 行改成 2 行：
+   * 行1 独占 540px 后，grid 可用 847px 只剩 295px。
+   * 若仍分 3 行，趋势图与天空图各只有约 141px，
+   * 天空图圆径 R = min(宽, 141/2-26) - 12 = 32.5px —— 完全不可用。
+   * 故压成 2 行：行1 两块（50%+50%），行2 三块。
+   *
+   * 行2 的列分配按「内容需要多少」定，不是均分：
+   *   趋势图 3/12 (462px) —— 折线 + 数值摘要条
+   *   天空图 3/12 (462px) —— 左侧圆图 + 右侧分系统星数条形图
+   *   站点表 6/12 (924px) —— 7 列需 924px 才不溢出（实测列1 需 169px，
+   *                          23% 配 924px 得 209px）。给 462px 会溢出 100px。 */
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  /* 行1 = 50vh（1080 屏即 540px = 页面高 50%）；行2 吃掉剩余（实测 295px）。 */
+  grid-template-rows: minmax(0, 50vh) minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  align-items: stretch;
+  /* 关键：允许 grid 收缩到内容高度以下，否则 min-height 撑破 flex 容器 */
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#panelNetwork { grid-column: 1 / 7;  grid-row: 1; }   /* 行1 左半 50% */
+#panelBaseline { grid-column: 7 / 13; grid-row: 1; }   /* 行1 右半 50% */
+/* 用户要求「基站信息与卫星天空图对调」——天空图需要更宽来并排放
+ * 分系统星数条形图。但**不能完全对调**：
+ *   完全对调（天空图 6 列 / 站点表 3 列）→ 站点表仅 448px，
+ *   列 1 只分到 103px 而站名实际需 169px，**溢出 66px**（实测）。
+ * 故按「天空图加宽、站点表保住不溢出」折中：
+ *   趋势图 3 列 (462px) —— 折线 + 数值摘要
+ *   天空图 4 列 (616px) —— 圆图(350px) + 分系统条形图(约 250px) 并排
+ *   站点表 5 列 (756px) —— 列1 = 174px > 需 169px，不溢出
+ * 注：天空图圆径由**高度**决定（R = min(宽, 高/2-26) - 12），
+ * 616px 与 924px 宽的 R 都是 175px，多给宽度只增大条形图区。 */
+#panelTrend    { grid-column: 1 / 4;  grid-row: 2; }
+#panelSky      { grid-column: 4 / 8;  grid-row: 2; }
+#panelStation  { grid-column: 8 / 13; grid-row: 2; }
+
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+  #panelNetwork { grid-column: 1 / 3; grid-row: 1; }
+  #panelBaseline { grid-column: 1; grid-row: 2; }
+  #panelStation  { grid-column: 2; grid-row: 2; }
+  /* 窄屏两列等宽，趋势图与天空图仍**左右并列**（与宽屏一致） */
+  #panelTrend    { grid-column: 1; grid-row: 3; }
+  #panelSky      { grid-column: 2; grid-row: 3; }
+}
+
+@media (max-width: 820px) {
+  /* 窄屏（手机）无法一屏容纳，改为纵向滚动 */
+  body { height: auto; overflow: auto; }
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: minmax(300px, auto);
+    overflow: visible;
+  }
+  #panelNetwork, #panelBaseline, #panelStation, #panelSky, #panelTrend {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .status-strip { display: none; }
+}
+
+/* ---------------------------------------------------------------- 面板 */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  flex-shrink: 0;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 650;
+}
+
+.panel-body {
+  padding: 12px 14px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-body.no-pad { padding: 0; }
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart {
+  flex: 1;
+  /* 原来写死 min-height:340px（站网图 460px），是页面出现滚动条的元凶：
+   * 五个面板纵向叠起来必然超出视口。这里改为完全由 grid 行高决定，
+   * 绘图模块本就按 getBoundingClientRect 自适应。 */
+  min-height: 0;
+  width: 100%;
+  /* 绘图模块会在此容器内挂载 canvas，让 canvas 撑满容器 */
+  display: flex;
+  position: relative;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--panel-2);
+  font-size: 11px;
+  color: var(--text-2);
+  /* 图例项多时换行会吃掉画布高度，限制为两行内并允许横向滚动 */
+  max-height: 46px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.lg { display: inline-flex; align-items: center; gap: 5px; }
+
+.sw {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sw.fix { background: var(--fix); }
+.sw.float { background: var(--float); }
+.sw.ppp { background: var(--ppp); }
+.sw.dgps { background: var(--dgps); }
+.sw.single { background: var(--single); }
+.sw.sbas { background: var(--sbas); }
+.sw.dr { background: var(--dr); }
+.sw.fixdeg { background: var(--fixdeg); }
+.sw.none { background: var(--none); border: 1px solid var(--border-strong); }
+
+/* 站网三角边：用线形图例区别于解状态的圆点
+   颜色与 network-map.js 里 _drawTrinet() 的边线保持一致 */
+.sw.tri {
+  width: 16px;
+  height: 0;
+  border-radius: 0;
+  border-top: 2px solid rgba(99, 102, 241, .55);
+  vertical-align: middle;
+}
+
+/* 虚拟站图例：菱形 + 紫边，与 network-map.js 的 _drawVirtualStation()
+   以及基线标签的「V·」角标三处保持同一套视觉语言。
+   菱形用 rotate(45deg) 实现；因旋转会改变布局尺寸，故用
+   display:inline-block + 固定宽高，并预留 1px 溢出。 */
+.sw.vrs {
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+  background: #7c3aed;
+  border: 1px solid #fff;
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, .55);
+  transform: rotate(45deg);
+  vertical-align: middle;
+  margin: 0 2px;
+}
+
+.lg-vrs b {
+  font-weight: 600;
+  color: #6d28d9;
+  margin-left: 1px;
+}
+
+/* 三角网拓扑来源指示。
+   运维需要一眼分清是引擎算的网还是前端示意网，故用颜色强区分：
+   绿=引擎权威拓扑，橙=示意/降级，灰=无拓扑 */
+.lg.topo-ok { color: #15803d; }
+.lg.topo-ok .sw { background: #22c55e; }
+
+.lg.topo-warn { color: #b45309; }
+.lg.topo-warn .sw { background: #f59e0b; }
+
+.lg.topo-off { color: var(--text-3, #94a3b8); }
+.lg.topo-off .sw { background: none; border: 1px solid currentColor; }
+
+.lg#netTopoStatus b { font-weight: 600; }
+
+/* ---------------------------------------------------------------- 控件 */
+
+.btn {
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .12s;
+  white-space: nowrap;
+}
+
+.btn:hover { background: var(--panel-2); border-color: var(--text-3); }
+
+.btn.sm { padding: 4px 9px; font-size: 12px; }
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn.primary:hover { background: #1d4ed8; }
+
+.btn.ghost { background: transparent; }
+
+.btn.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn.danger:hover { background: #b91c1c; }
+
+.btn.icon {
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  color: var(--text-3);
+  padding: 2px 6px;
+}
+
+.btn.icon:hover { background: var(--panel-2); color: var(--text); }
+
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.inp, .sel {
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  border-radius: var(--radius-sm);
+  padding: 5px 9px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  max-width: 190px;
+}
+
+.inp:focus, .sel:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.chk {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.chk input { accent-color: var(--accent); cursor: pointer; }
+
+/* ---------------------------------------------------------------- 表格 */
+
+.table-wrap {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  /* 行高基准：单元格内 inline-block 元素（按钮/徽章）在基线对齐时会额外
+   * 生成行盒，行高越松散被撑得越高。实测 1.5 → 每行 47px，1.2 → 约 28px。 */
+  line-height: 1.2;
+  /* 固定列宽：右侧列只有约 468px，浏览器自动分配时会把「站名」「坐标」
+   * 两列挤到换行，一换行行高就翻倍。固定比例后长内容用 ellipsis 截断，
+   * 完整值仍可通过 title 悬停查看。 */
+  table-layout: fixed;
+}
+
+/* 首列（站名/基线名）承载主要标识，单行显示、过长用 ellipsis 截断
+ * （完整内容可通过 title 悬停查看）。
+ * 注意：不要用 -webkit-line-clamp 做两行折行 —— table-cell 上加
+ * display:-webkit-box 会让文本逐字竖排（实测站名变成竖着的字母串）。
+ * 要让长站名完整显示，正确做法是给它足够列宽，见下方 #blTable 列宽表。 */
+.tbl tbody td:first-child,
+.tbl thead th:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 数值列不换行 */
+.tbl .num { white-space: nowrap; }
+
+.tbl thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel-2);
+  color: var(--text-2);
+  font-weight: 600;
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.tbl tbody td {
+  /* 一屏布局下右侧列宽度有限（1920 宽下约 480px），
+   * 收紧行高与横向内边距，让 6 列表格能多显示几行而不横向滚动。
+   *
+   * padding 需配合下面表格的 line-height 一起调：单元格内容（含 inline-block
+   * 的按钮/徽章）在基线对齐时会额外生成一个行盒，实测单行 5+20+5=30px 的
+   * 内容会渲染成 ~47px。收紧 line-height 与单元格 line-height 才能真正降下来。 */
+  padding: 3px 8px;
+  line-height: 1.2;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.tbl tbody tr:hover { background: var(--accent-soft); }
+
+/* 基线表：行高再压一档，让一屏能显示更多条。
+ *
+ * 实测（baseline-table-probe 注入 14 条）：默认行高 27px，
+ * 容器可视 237px 只能放 7 条，14 条要 406px 需面板内滚动。
+ * 压到 20px 后一屏可放 10 条，比原来多 3 条。
+ *
+ * 为什么不给基线表更多**面板高度**：
+ * body 锁 100vh（页面一屏不滚动是硬需求），扣掉 header 90px、
+ * padding 与两行 gap 后 .grid 实测只有 847px，三个面板都在这条链上。
+ * 实测把 grid 比例从 1.15:1:1 调成 1:0.92:0.82，基线面板高度
+ * 291.75px **完全没变** —— 垂直空间是零和的，抬此压彼。
+ * 既然分不到高度，就只能压行高。
+ *
+ * 20px 是可读下限：12.5px 字号 + 上下各 2px padding + 1px 边线。
+ * 再压文字会糊，故超出部分由 .table-wrap（overflow:auto）面板内滚动。 */
+#blTable tbody td { padding-top: 1.5px; padding-bottom: 1.5px; }
+#blTable thead th { padding-top: 3px; padding-bottom: 3px; }
+
+.tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.tbl tr.empty td {
+  text-align: center;
+  color: var(--text-3);
+  padding: 28px 12px;
+}
+
+.tbl .row-del {
+  color: var(--danger);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  /* 实测（1920x1080）：按钮在表格单元格内高 34~38px，而同行文字只有 16~20px，
+   * 是整张表的行高决定者 —— 基线表 12 行因此溢出、站点表 7 行溢出 101px。
+   * 根因是按钮为 inline-block，line-height:normal，在单元格基线对齐时
+   * 把行盒撑高（显式 line-height 只能降到 34px）。
+   * 改为 flex 布局 + 固定高度，彻底脱离基线对齐。 */
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  width: 100%;
+  max-width: 46px;
+}
+
+.tbl .row-del:hover { background: rgba(220, 38, 38, .09); }
+
+.tbl .row-del:disabled { opacity: .4; cursor: not-allowed; }
+
+/* 状态徽标 */
+.badge {
+  display: inline-block;
+  /* 必须 nowrap：状态列只占 10%（约 47px），「固定解」三字加上
+   * 16px 横向 padding 就会换行，把行高从 31px 撑到 39px
+   * （实测站点表 8 行放不下，基线表 12 行却正常 —— 差别只在列宽）。
+   * 换行后的徽标是一个 26.9px 的双行盒，比内容本身高出 9px。 */
+  white-space: nowrap;
+  padding: 1.5px 5px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  /* 与 .row-del 同理：inline-block 在表格单元格基线对齐时会撑高行盒。
+   * 收紧自身行高即可，不要加 vertical-align:middle（会再抬一次基线）。 */
+  line-height: 1.3;
+}
+
+/* 表格内的次要说明文字（时间戳、中文名、区域）：
+ * 统一走行内 <span class="ts">/<span class="sub2">，不再另起一行，
+ * 以压低行高让整表在一屏内完整显示。 */
+.tbl .ts {
+  margin-left: 6px;
+  font-size: 10.5px;
+  font-family: var(--mono);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.tbl .sub2 {
+  margin-left: 5px;
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+/* ---------------------------------------------------------------- 列宽
+ * table-layout:fixed 之后必须显式给列宽，否则浏览器按内容均分，
+ * 「站名」「坐标」这类长文本列会被挤到换行（一换行行高就翻倍）。
+ * 比例按 468px 实际可用宽度调过：操作列只放一个按钮，7~14% 足够。
+ * -------------------------------------------------------------------- */
+#blTable { table-layout: fixed; }
+/* 首列要放下「SPWD00AUS0 → MGRV00AUS0」两个 9 字符站名，40% 才不被截断；
+ * 时间戳已是次要信息（悬停 title 可看），不占宽度。 */
+/* 首列 56%：实测能完整放下最长的「SPWD00AUS0 → WSIA00AUS0」（21 字符），
+ * 时间戳已移出首列（改为整行 title 悬停提示），不再占宽度。 */
+/* 9 列：基线 / 解状态 / 长度 / 龄期 / 星数 / 双差模糊度 / 电离层 / 对流层 / 操作
+ *
+ * 首列 34% —— 「SPWD00AUS0 → WSIA00AUS0」两个 9 字符站名在 468px
+ * 面板里约需 150px（原 56% 是为 6 列设的，加列后必须重算，
+ * 否则站名被 ellipsis 截断）。
+ * 三个双差量列只放整数/4 位小数，8% 足够（约 37px）。
+ * 完整精度（NL 模糊度、离散度、模型值等）在点击行的详情抽屉里。 */
+/* 9 列（对应 solution.c 的 $BLSOLS 输出）：
+ *   基线 / 解状态 / 长度 / 龄期 / 参与解算卫星数 / 定位误差 / 双差大气延迟
+ *
+ * 7 列。原先的「模糊度(nb)」与「操作」两列按需求移除 ——
+ *   · 模糊度个数在表里只是个小整数，信息量低，逐方程明细本就在抽屉里；
+ *   · 「解绑」是低频且需谨慎的操作，放成每行常驻按钮太容易误点；
+ *     现在整行可点开详情抽屉，要解绑走抽屉或引擎控制台的 delvsta。
+ * 腾出的宽度给「参与解算卫星数」与「双差大气延迟」——
+ * 它们表头分别是 7 字和 8 字，窄列会换行把行高撑翻。
+ *
+ * 列宽按**实际内容宽度**核算，不是拍脑袋：
+ *   基线           32%  最长「SPWD00AUS0 → WGBA00AUS0」约 25 字符 ≈ 230px
+ *   解状态         11%  「固定解」徽标约 44px + padding
+ *   长度            8%  整数或 1 位小数
+ *   龄期            7%  整数
+ *   参与解算卫星数  15%  表头 7 字
+ *   定位误差       12%  形如 -0.123 的 3 位小数（表头 5 字）
+ *   双差大气延迟   15%  表头「双差大气延迟(m)」8 字，本表最宽
+ */
+#blTable th:nth-child(1), #blTable td:nth-child(1) { width: 32%; }
+#blTable th:nth-child(2), #blTable td:nth-child(2) { width: 11%; }
+#blTable th:nth-child(3), #blTable td:nth-child(3) { width: 8%; }
+#blTable th:nth-child(4), #blTable td:nth-child(4) { width: 7%; }
+#blTable th:nth-child(5), #blTable td:nth-child(5) { width: 15%; }
+#blTable th:nth-child(6), #blTable td:nth-child(6) { width: 12%; }
+#blTable th:nth-child(7), #blTable td:nth-child(7) { width: 15%; }
+
+/* ---------------------------------------------------------------- 基线表
+ * 行级动效：进场 / 离场 / 移动
+ *
+ * 背景（实测 2026-10-05）：基线集合会随基站上下线真实变化 ——
+ * 实测两次采样的基线**成员完全一致**（各 10 条），但跨较长时间
+ * 再看就会换掉一两条（如 MGRV00AUS0 换成 BCEP00BKG0）。
+ * 这是数据的真实变化，不该掩盖；需要解决的是**变化时的视觉断裂**：
+ * 原来 innerHTML 全量重写，行「啪」地出现/消失，用户只觉得在闪。
+ *
+ * 方案：JS 侧按 key 复用 <tr>（见 baseline-panel.js _paint），
+ * CSS 侧只负责给三种状态加过渡：
+ *   .bl-enter   新出现的基线 —— 淡入 + 淡绿底色一闪
+ *   .bl-leaving 消失的基线 —— 淡出后再移除（450ms 后由 JS 摘掉）
+ *   .bl-move    位置变化的行 —— 左侧细色条一闪，说明「它挪到这儿了」
+ *   .bl-worse   解状态**变差**的行 —— 淡红底色持续一会儿，说明「它出问题了」
+ * -------------------------------------------------------------------- */
+
+/* 用 animation 而不是 transition：这些是「一次性提示」，
+ * 不是持续状态，animation 播完即止、不需要 JS 清理属性。
+ *
+ * ⚠ 强度刻意调得很轻（2026-10-05「闪来闪去」之后）：
+ *   动效是**辅助提示**，不该成为视觉主体。原来 .bl-move 用
+ *   rgba(245,158,11,.18) 铺满整行、持续 600ms，配合每帧重启
+ *   （见 baseline-panel.js _paint 的说明）就成了持续闪烁。
+ *   现在只在**左侧加一条细色条**，不整行铺底 —— 即使偶发触发，
+ *   也只是"眼角瞥到一下"，不会刷存在感。 */
+@keyframes bl-enter {
+  from { opacity: 0; transform: translateY(-4px); background: rgba(22, 163, 74, .10); }
+  to   { opacity: 1; transform: none;             background: transparent; }
+}
+
+@keyframes bl-leave {
+  from { opacity: 1; background: rgba(100, 116, 139, .08); }
+  to   { opacity: 0; background: transparent; }
+}
+
+/* 移动提示：左侧 3px 色条淡出，而不是整行染色。
+ * 用 box-shadow inset 画色条，不占布局、不影响列宽。 */
+@keyframes bl-move {
+  from { box-shadow: inset 3px 0 0 0 rgba(245, 158, 11, .85); }
+  to   { box-shadow: inset 3px 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+/* 状态变差提示：**整行淡红底**，与 .bl-move 的「左侧细色条」在形状上
+ * 就区分开 —— 两者可能同时出现（某行既挪了位置、状态又变差了），
+ * 若都用色条会互相覆盖，用户分不清是哪个原因。
+ *
+ * 为什么不复用上面的 animation 而单独写：
+ *   需要**持续一段时间再消失**（2400ms），而 animation 的时长写在
+ *   keyframes 规则处、跟着类走。用 animation + 定时器摘类的话，
+ *   定时器时长与 CSS 时长必须人工对齐，改一个忘另一个就会闪。
+ *   这里用 animation 播 2.4s（终态透明，无 forwards），
+ *   JS 侧定时器**留了余量**（2401ms > 2400ms）才摘类。
+ *
+ * ⚠ 颜色用「跌」的红 —— 但注意这不是行情涨跌，是"质量变差"，
+ *   与全局涨红跌绿约定无关，只是惯例上用暖色标警。
+ *
+ * 强度同样刻意压低（rgba .10）：2400ms 的持续底色比 600ms 一闪
+ * 更容易变成视觉噪音，12~20 行里若有几行同时变差，底色太浓会盖过
+ * 内容本身。淡到"扫一眼能看出、盯着看不刺眼"为准。 */
+@keyframes bl-worse {
+  from { background: rgba(220, 38, 38, .14); box-shadow: inset 3px 0 0 0 rgba(220, 38, 38, .8); }
+  70%  { background: rgba(220, 38, 38, .10); box-shadow: inset 3px 0 0 0 rgba(220, 38, 38, .4); }
+  to   { background: transparent;            box-shadow: inset 3px 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+#blTable tbody tr.bl-enter { animation: bl-enter .42s ease-out; }
+#blTable tbody tr.bl-leaving {
+  animation: bl-leave .45s ease-in forwards;
+  pointer-events: none;   /* 正在消失的行不接受点击 */
+}
+#blTable tbody tr.bl-move { animation: bl-move .6s ease-out; }
+/* 状态变差：2.4s 的持续提示。放在 .bl-move 之后 ——
+ * 二者同时存在时（位置也变了、状态也差了），box-shadow 让给「变差」
+ * 这一条，因为它是更重要的信息（挪位置只是布局变化，状态变差是故障）。 */
+#blTable tbody tr.bl-worse { animation: bl-worse 2.4s ease-out; }
+
+/* 陈旧行（名册模型）：该基线超过 4s 没收到新解算，数值停留在最后一次
+ * 收到的结果上。整行降透明度（悬停恢复全亮，方便看清旧值），
+ * 悬停 title 由 JS 写入说明。这是**持续状态**，用 opacity 而非 animation
+ * —— 与上面的一次性提示不同，它要保持到下一帧数据到来。
+ * 放在 :hover 规则之前没关系：opacity 与 background 是不同属性，
+ * 悬停高亮底色照常生效，不受层叠影响。 */
+#blTable tbody tr.bl-stale { opacity: .55; transition: opacity .3s; }
+#blTable tbody tr.bl-stale:hover { opacity: 1; }
+
+/* 悬停底色要能盖过动效底色，否则用户把鼠标移到刚进场的行上，
+ * 看到的还是绿色而不是高亮色。放在动效规则之后即可靠层叠取胜。
+ *
+ * ⚠ .bl-worse 是个例外：它用 animation 写 background，而 animation
+ *   的优先级**高于任何普通声明**（包括后面的 :hover）——
+ *   这是 CSS 动画层叠规则决定的，不是权重问题，加多少 !important
+ *   到 :hover 上也压不住。故变差提示期间悬停不改变底色。
+ *   这是可接受的取舍：2.4s 内用户本来也不需要悬停高亮。 */
+#blTable tbody tr:hover { background: var(--accent-soft); }
+
+/* 基线列：等宽字体 + 固定分隔符
+ *
+ * 「基线名称显示变来变去」的一半原因是**字形宽度不一致**：
+ * 站名由 NTRIP 挂载点构成（SPWD00AUS0 / VRS001 / WSIA00AUS0），
+ * 长度从 6 到 10 个字符不等；比例字体下每行「基线 → 流动站」
+ * 的箭头位置逐行错开，看着就是"在变"。
+ * 等宽 + tabular-nums 后字符位对齐，扫视时能一眼比对站名差异
+ * （这正是基线表的主要用途：发现"哪条基线的站名不对"）。
+ *
+ * 箭头用独立 span 上色，避免与站名同色导致箭头被读成站名的一部分。 */
+#blTable tbody td:first-child {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.1px;
+}
+#blTable tbody td:first-child b {
+  font-weight: 600;
+  color: var(--text);
+}
+#blTable tbody td:first-child .bl-arrow {
+  color: var(--text-3);
+  margin: 0 4px;
+}
+
+/* 数值列固定宽度语义：等宽 + 右对齐已在 .tbl .num 定义，
+ * 这里补 tabular-nums 保证数字位不随字号抖动（12.5px 下 1 比 8 窄）。 */
+#blTable tbody td.num { font-variant-numeric: tabular-nums; }
+
+#stTable { table-layout: fixed; }
+/* 7 列（对应 solution.c 的 $SRCINFO 输出）：
+ *   名称 / 位置 / 挂载点 / 上游 / 设备 / 状态 / 操作
+ *
+ * 与旧列（高程/天线高/类型）的区别：那三列来自 conf 台账，
+ * 本机实测 base-stations.info 解析为空 → 整列都是「—」。
+ * 现在改为引擎 $SRCINFO 每行都带的字段，不存在这种"整列空白"。
+ *
+ * 列宽核算：
+ *   名称    19%  站名 10 字符（KURJ00AUS0）≈ 80px + 「虚拟/运行期」标记
+ *   位置    21%  「40.43399, 116.38706」≈ 20 字符；完整精度在抽屉里
+ *   挂载点  15%  常见 10 字符
+ *   上游    20%  形如 ntrip.data.gnss.ga.gov.au:2101（过长则 ellipsis，
+ *                完整地址在抽屉里；title 属性保留悬停可读）
+ *   设备    11%  天线/接收机型号两行小字
+ * 状态列必须放得下「已连接」徽标（约 50px），否则徽标换行、行高翻倍。 */
+#stTable th:nth-child(1), #stTable td:nth-child(1) { width: 19%; }
+#stTable th:nth-child(2), #stTable td:nth-child(2) { width: 21%; }
+#stTable th:nth-child(3), #stTable td:nth-child(3) { width: 15%; }
+#stTable th:nth-child(4), #stTable td:nth-child(4) { width: 20%; }
+#stTable th:nth-child(5), #stTable td:nth-child(5) { width: 11%; }
+#stTable th:nth-child(6), #stTable td:nth-child(6) { width: 8%; }
+/* 操作列只放一个「删除」按钮，6% 足够 */
+#stTable th:nth-child(7), #stTable td:nth-child(7) { width: 6%; }
+
+/* 站点表新列用到的样式：
+ *   .sub2    行内小字（中文名、型号、端口）
+ *   .mono-sm 等宽小字（挂载点、地址）—— 等宽能让站点名/挂载点的
+ *            字符位对齐，扫视时更容易发现"哪个挂载点不一样"
+ *   .na      无数据占位，与"值就是 0"区分开
+ *   .dev-cell 设备列：两个小字各占一行，靠 flex 列向排布，
+ *            并压住行高（否则两行小字会把 24px 的行撑到 30px+） */
+#stTable .sub2 { display: block; font-size: 10px; color: var(--text-3); line-height: 1.15; }
+#stTable .mono-sm { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+#stTable .na { color: var(--text-3); }
+#stTable .dev-cell { line-height: 1.15; }
+
+/* 站点表的行数会随运行期 addsource 增长（实测已到 8~9 行），
+ * 固定按 7 行调的行高很快就不够。这里再压一档行高与表头，
+ * 让 9~10 行仍能一屏显示；超过则退化为面板内滚动（页面不滚动）。 */
+#stTable thead th { padding-top: 3px; padding-bottom: 3px; }
+#stTable tbody td { padding-top: 3px; padding-bottom: 3px; }
+
+/* 运行期角标不额外占高：与站名基线对齐即可 */
+#stTable tbody td .rt-tag { vertical-align: 0; }
+
+/* 状态单元格 = 连接状态圆点 + 解状态徽标。
+ *
+ * 这里**不能**直接给 td 设 display:flex。
+ * 那样确实能消除匿名文本节点带来的多余行盒（原注释的说法没错），
+ * 但代价更大：td 脱离 table-cell 后，在 table-layout:fixed 下
+ * 该列不再按表头声明的百分比分配，而是按内容收缩 ——
+ * 实测表头「状态」列 121px，tbody 同一列只有 16px（正好一个汉字宽），
+ * 徽标「固定解」被挤没了，单列溢出 44px。
+ *
+ * 正确做法：td 保持 table-cell（让列宽算法生效），
+ * 内部用一个 flex 包装盒承载两个 inline-block。
+ * 空白文本节点问题由「模板里不留换行」+ 包装盒双保险解决。 */
+#stTable tbody td.st-cell {
+  white-space: nowrap;
+  line-height: 1.2;
+}
+/* 内部包装盒：station-panel 在渲染时给这格加 .st-in，
+ * 用它做 flex 容器既能控制间距，又不会影响 td 的列宽。 */
+#stTable tbody td.st-cell .st-in {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 位置/坐标列在窄列里也要单行显示 */
+#stTable td:nth-child(2),
+#blTable td:nth-child(1) { white-space: nowrap; }
+
+/* 数值列（参与解算卫星数 / 定位误差 / 双差大气延迟）：
+ * 等宽数字 + 略小字号 + 右对齐，保证小数点成列对齐，便于扫视比较。 */
+#blTable td:nth-child(5),
+#blTable td:nth-child(6),
+#blTable td:nth-child(7) {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* 站点表操作列：按钮撑满并居中。
+ *
+ * ⚠ 只作用于 stTable —— 基线表原先也有这条，但它的末列是
+ *   「双差大气延迟」这个**右对齐数值列**，被居中后数字位置与上方各列
+ *   不齐，一眼就能看出错位。表结构变化时务必复查 last-child 规则。 */
+#stTable td:last-child { text-align: center; padding-left: 2px; padding-right: 2px; }
+
+.badge.fix, .badge.FIX { background: rgba(22, 163, 74, .13); color: #15803d; }
+.badge.fixdeg { background: rgba(8, 145, 178, .13); color: #0e7490; }
+.badge.float, .badge.FLOAT { background: rgba(245, 158, 11, .15); color: #b45309; }
+.badge.ppp, .badge.PPP { background: rgba(139, 92, 246, .13); color: #6d28d9; }
+.badge.dgps, .badge.DGPS { background: rgba(14, 165, 233, .13); color: #0369a1; }
+.badge.single, .badge.SINGLE { background: rgba(100, 116, 139, .15); color: #475569; }
+.badge.none, .badge.NONE { background: rgba(203, 213, 225, .4); color: #64748b; }
+/* 徽标的 class 用的是**引擎原始大写** stat（baseline-panel.js 传 b.stat，
+ * 引擎 solstr[] 输出 FIX/FLOAT/SBAS/…），所以每条都要同时给大写别名 ——
+ * 原先 .badge.sbas/.badge.dr 只有小写，SBAS/DR 状态会匹配不上而丢样式。 */
+.badge.sbas, .badge.SBAS { background: rgba(168, 85, 247, .13); color: #7e22ce; }
+.badge.dr, .badge.DR { background: rgba(107, 114, 128, .15); color: #4b5563; }
+.badge.fixdeg, .badge.FIXDEG { background: rgba(8, 145, 178, .13); color: #0e7490; }
+
+.dot-status {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.dot-status.on { background: var(--ok); }
+.dot-status.off { background: var(--none); border: 1px solid var(--border-strong); }
+
+/* ---------------------------------------------------------------- 弹窗 */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/*
+ * hidden 属性兜底。
+ *
+ * .modal / .drawer 自身声明了 display:flex，优先级高于 UA 样式表里的
+ * [hidden]{display:none}，导致 <div class="modal" hidden> 依然可见。
+ * 这里显式兜底，保证 hidden 语义在任何浏览器下都成立。
+ */
+.modal[hidden],
+.drawer[hidden],
+.mask[hidden] {
+  display: none !important;
+}
+
+.mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 37, 48, .38);
+  z-index: 150;
+}
+
+.modal-box {
+  position: relative;
+  z-index: 201;
+  width: min(680px, 100%);
+  max-height: 88vh;
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-head h3 { margin: 0; font-size: 15px; font-weight: 650; }
+
+.modal-body { padding: 18px; overflow: auto; }
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+
+@media (max-width: 620px) { .grid2 { grid-template-columns: 1fr; } }
+
+.fld { display: flex; flex-direction: column; gap: 4px; }
+
+.fld > span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.fld > span i { color: var(--danger); font-style: normal; }
+
+.fld input, .fld select {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.fld input:focus, .fld select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.fld em {
+  font-size: 11px;
+  color: var(--text-3);
+  font-style: normal;
+}
+
+.hint {
+  margin: 15px 0 0;
+  padding: 9px 12px;
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: #1e40af;
+}
+
+.hint code {
+  font-family: var(--mono);
+  background: rgba(37, 99, 235, .1);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+
+/* ---------------------------------------------------------------- 抽屉 */
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(560px, 92vw);
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer-head h3 { margin: 0; font-size: 14px; font-weight: 650; }
+
+.drawer-body {
+  flex: 1;
+  overflow: auto;
+  margin: 0;
+  padding: 16px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-2);
+  background: var(--panel-2);
+}
+
+/* ---------------------------------------------------------------- 提示 */
+
+.toast-wrap {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.toast {
+  min-width: 250px;
+  max-width: 400px;
+  padding: 11px 15px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  font-size: 13px;
+  border-left: 3px solid var(--accent);
+  background: var(--panel);
+  animation: slideIn .18s ease-out;
+}
+
+.toast.ok { border-left-color: var(--ok); }
+.toast.err { border-left-color: var(--danger); }
+.toast.warn { border-left-color: var(--warn); }
+
+.toast b { display: block; margin-bottom: 2px; font-weight: 650; }
+
+.toast span { color: var(--text-2); font-size: 12px; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 加载态 */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 160px;
+  color: var(--text-3);
+  font-size: 13px;
+  gap: 9px;
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+/* ==========================================================================
+   数据链路诊断横幅
+   用于在链路异常或"上游仅星历"时给出明确成因，
+   避免用户把上游数据缺失误判为引擎故障。
+   ========================================================================== */
+
+.caps-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  /* 与 .grid 的 padding 对齐（12px），此前用 18px 与网格错位 */
+  margin: 12px 12px 0;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+  /* body 是 flex 列布局，不加会被压扁变形；它出现与否是状态驱动的，
+   * 不能靠 flex 压缩来腾空间。 */
+  flex-shrink: 0;
+}
+
+.caps-banner.warn {
+  border-left-color: var(--warn);
+  background: #fffbeb;
+  border-color: #fde68a;
+  border-left-color: var(--warn);
+}
+
+.caps-banner.error {
+  border-left-color: var(--danger);
+  background: #fef2f2;
+  border-color: #fecaca;
+  border-left-color: var(--danger);
+}
+
+.caps-banner.mock {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  border-color: #c7d7fe;
+  border-left-color: var(--accent);
+}
+
+.caps-tag {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 11.5px;
+  color: #fff;
+  background: var(--warn);
+  white-space: nowrap;
+}
+
+.caps-banner.error .caps-tag { background: var(--danger); }
+.caps-banner.mock  .caps-tag { background: var(--accent); }
+
+.caps-msg { flex: 1 1 auto; }
+
+.caps-msg code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, .06);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+}
+
+.caps-meta {
+  flex: 0 0 auto;
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-family: ui-monospace, monospace;
+  white-space: nowrap;
+}
+
+/* ================================================================
+ * 站点详情抽屉
+ * 站点信息量大（标识/行政区/坐标/天线/设备/连接共 20+ 字段），
+ * 全塞进表格会把行高撑爆、破坏一屏布局。因此：
+ *   表格只放高频字段（含天线高），点击行从右侧滑出完整详情。
+ * ================================================================== */
+.st-drawer {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  /* 460px：基线详情里的逐双差方程表有 7 列（#/卫星/频/模糊度/电离层/
+   * 对流层/残差），380px 下每列不足 55px，数字被压成竖排。
+   * 站点详情字段少，用不到这么宽，但同一套样式保持一致更易维护。 */
+  width: 460px;
+  max-width: 92vw;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 28px rgba(15, 23, 42, .18);
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  animation: stDrawerIn .18s ease-out;
+}
+
+/* 关键：`hidden` 属性靠 UA 样式 `display:none` 生效，而上面显式写了
+ * `display:flex`，**优先级更高会覆盖 hidden** —— 实测两个抽屉
+ * hidden=true 却仍占位显示，把大屏右侧 380px 完全遮住
+ * （连基线表都看不见），且无论如何点关闭按钮都关不掉。
+ * 任何「用 hidden 属性控制显隐」的元素都要配这条。 */
+.st-drawer[hidden] { display: none; }
+@keyframes stDrawerIn {
+  from { transform: translateX(24px); opacity: .4; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.st-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  flex-shrink: 0;
+}
+
+.st-drawer-title {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.st-drawer-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.st-drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 16px 20px;
+}
+
+/* 分组标题 */
+.st-grp {
+  margin: 14px 0 6px;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--text-3);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.st-grp:first-child { margin-top: 2px; }
+
+/* 键值行 */
+.st-kv {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 12.5px;
+}
+.st-kv:last-child { border-bottom: none; }
+.st-kv > dt {
+  flex: 0 0 96px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.st-kv > dd {
+  flex: 1;
+  margin: 0;
+  color: var(--text);
+  word-break: break-all;
+  font-variant-numeric: tabular-nums;
+}
+.st-kv > dd.na { color: var(--text-3); font-style: italic; }
+.st-kv > dd.mono { font-family: var(--mono); font-size: 11.5px; }
+
+/* 运行期新增站点标记（不在 conf/ntripsources 里） */
+.rt-tag {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 4px;
+  border: 1px solid var(--warn, #d97706);
+  border-radius: 3px;
+  /* 行高必须显式收紧：继承 body 的 1.5 会让这个角标比同行文字高，
+   * 把整行撑到 39px（实测），而基线表同位置只有 31px。
+   * 角标是次要信息，不该影响行高。 */
+  font-size: 10px;
+  line-height: 1.25;
+  height: 14px;
+  color: var(--warn, #d97706);
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+/* ================================================================
+ * 基线解状态图例
+ * 图例项直接复用基线连线的视觉语言（颜色 + 线宽 + 虚实），
+ * 这样「图例里的线」与「图上的线」长得一样，对应关系不需要文字解释。
+ * ================================================================ */
+.lg-sep {
+  color: var(--text-3);
+  font-size: 11px;
+  padding-left: 6px;
+  margin-left: 2px;
+  border-left: 1px solid var(--border);
+}
+
+.bl-state-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.bl-lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+/* 线段示意：宽 18px、高 0、border-top 即线，宽度由 --w 控制 */
+.bl-lg i {
+  display: inline-block;
+  width: 18px;
+  height: 0;
+  border-top-style: solid;
+  border-top-width: var(--w, 2px);
+  border-top-color: var(--c, #999);
+  opacity: var(--a, 1);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* 虚线示意：用 repeating-linear-gradient 画间断，比 border 更好控制 */
+.bl-lg i.dashed {
+  border-top-style: none;
+  height: 2px;
+  background-image: linear-gradient(to right,
+    var(--c, #999) 0 5px, transparent 5px 9px);
+  opacity: var(--a, 1);
+}
+
+.bl-lg b {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.bl-lg s {
+  font-size: 10.5px;
+  color: var(--text-3);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================================================================
+ * 基线悬停提示
+ * 颜色之外的第二条通道：鼠标移到某条基线上，直接文字说明
+ * 「哪两个站 + 什么解状态 + 多长」。色弱用户、投影仪、
+ * 截图打印等场景下颜色可能失效或混淆，文字始终可靠。
+ * ================================================================ */
+.bl-hover {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  min-width: 132px;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--panel);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, .16);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.bl-hover-t {
+  color: var(--text);
+  font-weight: 600;
+  font-family: var(--mono);
+  margin-bottom: 2px;
+}
+
+.bl-hover-r {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-2);
+}
+
+.bl-hover-r i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.bl-hover-r b {
+  font-weight: 500;
+}
+
+.bl-hover-r s {
+  margin-left: auto;
+  padding-left: 8px;
+  text-decoration: none;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================================================================
+ * 双差方程明细表（基线详情抽屉内）
+ *
+ * 逐方程列出模糊度/电离层/对流层/残差。模糊度逐方程相差整周属正常
+ * （这正是模糊度的定义），所以不能用「同一值」或中位数代替 ——
+ * 各方程的聚簇形态是判断周跳是否被剔除的直接依据。
+ * ================================================================ */
+.dd-eqs {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  margin: 2px 0 6px;
+}
+.dd-eqs th {
+  padding: 3px 4px;
+  text-align: right;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--border-strong, var(--border));
+  white-space: nowrap;
+}
+.dd-eqs th:first-child,
+.dd-eqs td:first-child { text-align: center; }
+.dd-eqs th:nth-child(2), .dd-eqs td:nth-child(2) { text-align: left; }
+.dd-eqs th:nth-child(3), .dd-eqs td:nth-child(3) { text-align: center; }
+.dd-eqs td {
+  padding: 2.5px 4px;
+  text-align: right;
+  border-bottom: 1px dashed var(--border);
+  color: var(--text-2);
+}
+.dd-eqs td.sat { color: var(--text); font-weight: 600; }
+/* 残差超阈值 → 标红：这类方程通常是周跳未剔除的直接证据 */
+.dd-eqs tr.bad td { color: var(--danger, #dc2626); }
+.dd-eqs tr.bad td.sat { color: var(--danger, #dc2626); }
+.dd-eqs tr:hover td { background: var(--panel-2); }
+
+/* 逐星表末尾的「平均」汇总行：与上方逐星行视觉上必须分得开，
+ * 否则读者会把平均值当成某一颗卫星的实际值。 */
+.dd-eqs tr.dd-avg td {
+  position: sticky;
+  bottom: 0;
+  background: var(--panel-2, var(--panel));
+  border-top: 1px solid var(--border);
+  border-bottom: none;
+  font-weight: 600;
+  color: var(--text);
+}
+.dd-eqs tr.dd-avg:hover td { background: var(--panel-2); }
+
+/* 「平均」标注角标：出现在表头与数值单元格内。
+ * 这列是全星平均值而非单星实测值，不标注会被误读成某颗星的值。 */
+.avg-tag {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--panel-2, transparent);
+  color: var(--text-3);
+  font-size: 9.5px;
+  line-height: 1.5;
+  font-weight: 400;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+thead .avg-tag { vertical-align: 1px; }
+
+.dd-note {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+.dd-note b { color: var(--text-2); font-weight: 600; }
+
+/* ================================================================
+   逐星延迟历史曲线（点击逐星表的延迟数值展开）
+   ================================================================ */
+
+/* 可点击的延迟单元格：手型 + 悬停底色，让「能点」一眼可见。
+   不用下划线是因为表格已有多列数字，下划线会与相邻列混淆。 */
+.dd-eqs td.sat-plot {
+  cursor: pointer;
+  position: relative;
+}
+.dd-eqs td.sat-plot:hover {
+  background: rgba(8, 145, 178, .10);
+}
+.dd-eqs td.sat-plot::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  width: 0;
+  height: 0;
+  border-top: 4px solid var(--text-3);
+  border-left: 4px solid transparent;
+  opacity: .55;
+}
+.dd-eqs td.sat-plot:hover::after { opacity: 1; }
+.dd-eqs td.sat-plot.on {
+  background: rgba(8, 145, 178, .16);
+  font-weight: 600;
+  color: var(--text);
+}
+/* 标红行（电离层超阈值）里的可点格：底色要把红让位给悬停反馈，
+   否则「异常」与「可点」两种语义会打架 */
+.dd-eqs tr.bad td.sat-plot { color: var(--danger, #dc2626); }
+.dd-eqs tr.bad td.sat-plot:hover,
+.dd-eqs tr.bad td.sat-plot.on { background: rgba(8, 145, 178, .14); }
+
+.sat-chart-box {
+  margin-top: 10px;
+  padding: 8px 10px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-lg, 12px);
+  background: var(--panel-2, transparent);
+}
+.sat-chart-box[hidden] { display: none; }
+
+.sat-chart-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+#satChartTitle {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sat-chart-tabs {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.sat-tab {
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 10px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+.sat-tab:hover { color: var(--text-2); border-color: var(--border-sec, var(--border)); }
+.sat-tab.on {
+  background: rgba(8, 145, 178, .14);
+  border-color: rgba(8, 145, 178, .5);
+  color: #0e7490;
+  font-weight: 600;
+}
+.sat-chart-close {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  flex: none;
+}
+.sat-chart-close:hover { color: var(--danger, #dc2626); border-color: var(--danger, #dc2626); }
+
+/* canvas 容器必须有确定高度：mountCanvas 把 canvas 设成
+   width/height:100%，若容器高度靠内容撑开则会得到 0，量不到绘制区域。 */
+.sat-chart-canvas {
+  height: 168px;
+  width: 100%;
+}
+.sat-chart-canvas canvas { display: block; }

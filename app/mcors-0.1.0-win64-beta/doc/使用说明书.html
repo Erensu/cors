@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mcors CORS 基准站网监控系统 · 使用说明书</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1f2937; --ink2:#4b5563; --ink3:#6b7280;
+    --line:#e2e8f0; --line2:#cbd5e1; --accent:#2563eb; --accent-soft:#eff6ff;
+    --ok:#059669; --warn:#d97706; --bad:#dc2626; --code-bg:#f1f5f9;
+    --mono:"Cascadia Mono","Consolas","SFMono-Regular","Menlo",monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px 96px}
+
+  /* ── 页头 ── */
+  header{
+    background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);
+    color:#fff; padding:44px 0 38px; margin-bottom:36px;
+    box-shadow:0 4px 20px rgba(37,99,235,.18);
+  }
+  header .wrap{padding-bottom:0}
+  header h1{margin:0 0 10px;font-size:29px;letter-spacing:.4px}
+  header p{margin:0;opacity:.9;font-size:14px}
+  header .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px}
+  header .meta span{
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+    padding:4px 12px;border-radius:999px;font-size:12.5px;
+  }
+
+  /* ── 目录 ── */
+  nav.toc{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:20px 26px;margin-bottom:36px;box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  nav.toc h2{margin:0 0 14px;font-size:15px;color:var(--ink3);font-weight:600;
+    text-transform:uppercase;letter-spacing:1px}
+  nav.toc ol{margin:0;padding-left:22px;columns:2;column-gap:36px}
+  nav.toc li{margin:5px 0;break-inside:avoid}
+  nav.toc a{color:var(--accent);text-decoration:none}
+  nav.toc a:hover{text-decoration:underline}
+
+  /* ── 章节 ── */
+  section{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  h2.sec{
+    margin:0 0 22px;padding-bottom:12px;border-bottom:2px solid var(--accent-soft);
+    font-size:21px;display:flex;align-items:center;gap:11px;
+  }
+  h2.sec .n{
+    background:var(--accent);color:#fff;width:29px;height:29px;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:700;flex-shrink:0;
+  }
+  h3{margin:30px 0 12px;font-size:16.5px;color:var(--ink);border-left:3px solid var(--accent);padding-left:11px}
+  h3:first-of-type{margin-top:6px}
+  h4{margin:20px 0 9px;font-size:14.5px;color:var(--ink2)}
+  p{margin:11px 0;color:var(--ink2)}
+  ul,ol{margin:11px 0;padding-left:24px;color:var(--ink2)}
+  li{margin:6px 0}
+  strong{color:var(--ink);font-weight:600}
+  code{
+    font-family:var(--mono);font-size:13px;background:var(--code-bg);
+    padding:2px 6px;border-radius:4px;color:#b91c1c;border:1px solid #e2e8f0;
+  }
+  pre{
+    background:#0f172a;color:#e2e8f0;border-radius:9px;padding:16px 18px;
+    overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;
+    margin:13px 0;border:1px solid #1e293b;
+  }
+  pre code{background:none;color:inherit;padding:0;border:none;font-size:13px}
+  pre .c{color:#64748b}
+  pre .k{color:#7dd3fc}
+
+  /* ── 表格 ── */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.8px}
+  th,td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#f8fafc;color:var(--ink);font-weight:600;font-size:13px;
+    border-bottom:2px solid var(--line2);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fafbfc}
+  td code{font-size:12.5px;white-space:nowrap}
+  /* 窄列布局用 */
+  th.w1{width:12%} th.w2{width:18%} th.w3{width:22%} th.w4{width:26%}
+
+  /* ── 提示框 ── */
+  .box{border-radius:9px;padding:14px 17px;margin:15px 0;font-size:14px;
+    border-left:4px solid;background:#f8fafc}
+  .box p{margin:6px 0}
+  .box p:first-child{margin-top:0}
+  .box p:last-child{margin-bottom:0}
+  .box .t{font-weight:700;display:block;margin-bottom:6px}
+  .box.tip{border-color:var(--accent);background:var(--accent-soft)}
+  .box.tip .t{color:var(--accent)}
+  .box.warn{border-color:var(--warn);background:#fffbeb}
+  .box.warn .t{color:var(--warn)}
+  .box.bad{border-color:var(--bad);background:#fef2f2}
+  .box.bad .t{color:var(--bad)}
+  .box.ok{border-color:var(--ok);background:#f0fdf4}
+  .box.ok .t{color:var(--ok)}
+
+  .step{counter-reset:s;margin:16px 0}
+  .step>li{margin:14px 0}
+
+  /* 徽标 */
+  .tag{display:inline-block;padding:1.5px 8px;border-radius:5px;font-size:11.5px;
+    font-weight:600;font-family:var(--mono);vertical-align:1px}
+  .tag.ok{background:#dcfce7;color:#166534}
+  .tag.no{background:#fee2e2;color:#991b1b}
+  .tag.mid{background:#fef3c7;color:#92400e}
+  .tag.info{background:#dbeafe;color:#1e40af}
+
+  /* 流程箭头 */
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0;
+    font-size:13.5px;font-family:var(--mono)}
+  .flow .n2{background:#f1f5f9;border:1px solid var(--line2);border-radius:7px;
+    padding:6px 12px;color:var(--ink)}
+  .flow .ar{color:var(--ink3);font-weight:700}
+
+  hr{border:none;border-top:1px dashed var(--line2);margin:26px 0}
+
+  footer{text-align:center;color:var(--ink3);font-size:13px;padding:26px 0 0}
+  footer a{color:var(--accent)}
+
+  /* 用于"往上返回"（文末文字版） */
+  .totop{display:inline-block;margin-top:6px;font-size:12.5px;color:var(--ink3);text-decoration:none}
+  .totop:hover{color:var(--accent)}
+
+  /* ── 阅读进度条 ── */
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+    background:linear-gradient(90deg,var(--accent),var(--ok));
+    transition:width .12s linear;pointer-events:none;border-radius:0 2px 2px 0}
+
+  /* ── 返回顶部悬浮按钮 ── */
+  .totop-btn{
+    position:fixed;right:26px;bottom:30px;width:42px;height:42px;border-radius:12px;
+    background:var(--accent);color:#fff;border:none;cursor:pointer;z-index:98;
+    font-size:18px;line-height:1;box-shadow:0 4px 14px rgba(37,99,235,.35);
+    opacity:0;visibility:hidden;transform:translateY(8px);
+    transition:opacity .2s,transform .2s,visibility .2s;
+  }
+  .totop-btn.show{opacity:1;visibility:visible;transform:none}
+  .totop-btn:hover{background:#1d4ed8}
+
+  /* ── 双栏布局：宽屏目录跟随滚动 ── */
+  @media (min-width:1180px){
+    .wrap.layout{
+      max-width:1360px;display:grid;align-items:start;
+      grid-template-columns:240px minmax(0,1fr);column-gap:28px;
+    }
+    .wrap.layout>nav.toc{
+      grid-column:1;grid-row:1/-1;
+      position:sticky;top:18px;margin-bottom:0;
+      max-height:calc(100vh - 36px);overflow-y:auto;
+      padding:16px 18px;
+    }
+    .wrap.layout>nav.toc ol{columns:1;padding-left:0;list-style:none}
+    .wrap.layout>nav.toc li{margin:2px 0}
+    .wrap.layout>nav.toc a{
+      display:block;padding:6px 10px;border-radius:7px;font-size:13.5px;
+      border-left:3px solid transparent;
+    }
+    .wrap.layout>nav.toc a:hover{text-decoration:none;background:var(--accent-soft)}
+    .wrap.layout>nav.toc a.active{
+      font-weight:700;background:var(--accent-soft);
+      border-left-color:var(--accent);
+    }
+    .wrap.layout>section{grid-column:2}
+    .wrap.layout>footer{grid-column:2}
+  }
+
+  /* 锚点跳转不被遮挡 + h3 悬停锚链接 */
+  section{scroll-margin-top:16px}
+  h3{scroll-margin-top:16px;position:relative}
+  h3 .anchor{position:absolute;left:-20px;top:2px;color:var(--ink3);
+    text-decoration:none;font-weight:400;font-size:14px;opacity:0;transition:opacity .15s}
+  h3:hover .anchor{opacity:1}
+
+  /* 打印 */
+  @media print{
+    #progress,.totop-btn,nav.toc{display:none}
+    body{background:#fff}
+    .wrap{max-width:none;padding:0}
+    .wrap.layout{display:block}
+    section{box-shadow:none;border:none;padding:8px 0;break-inside:auto;page-break-inside:auto}
+    pre,table,.box,figure{break-inside:avoid}
+    header{box-shadow:none}
+  }
+
+  @media (max-width:760px){
+    nav.toc ol{columns:1}
+    section{padding:22px 18px}
+    .wrap{padding:0 14px 60px}
+    header h1{font-size:22px}
+    table{font-size:13px}
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<header>
+  <div class="wrap">
+    <h1>mcors · CORS 基准站网监控系统<br>使用说明书</h1>
+    <p>引擎（<code style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">cors-engine</code>）+ 可视化大屏（Web）的部署、配置与日常操作指南</p>
+    <div class="meta">
+      <span>版本 2026-10-06（详版）</span>
+      <span>平台 Windows / MinGW-w64 · Linux（兼容）</span>
+      <span>引擎端口 9000 · 数据流 8080 · 大屏 8181</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+
+<nav class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#s1">系统概览与工作原理</a></li>
+    <li><a href="#s2">快速开始</a></li>
+    <li><a href="#s3">编译构建</a></li>
+    <li><a href="#s4">配置说明</a></li>
+    <li><a href="#s5">启动与停止</a></li>
+    <li><a href="#s6">可视化大屏</a></li>
+    <li><a href="#s7">基站增删操作</a></li>
+    <li><a href="#s8">控制台命令</a></li>
+    <li><a href="#s9">HTTP 接口</a></li>
+    <li><a href="#s10">采集层配置</a></li>
+    <li><a href="#s11">常见问题 FAQ</a></li>
+    <li><a href="#s12">运维与排查</a></li>
+    <li><a href="#s13">性能与资源占用</a></li>
+    <li><a href="#s14">术语表</a></li>
+  </ol>
+</nav>
+
+<main class="content">
+
+<!-- ══════════════ 1 ══════════════ -->
+<section id="s1">
+  <h2 class="sec"><span class="n">1</span>系统概览与工作原理</h2>
+
+  <p>mcors 是一套 <strong>CORS（Continuously Operating Reference Station，连续运行基准站）网络解算与监控系统</strong>。它由两部分组成：</p>
+  <ul>
+    <li><strong>C/C++ 引擎</strong>（<code>cors-engine.exe</code>）—— NTRIP 数据接入、基线解算、误差建模、虚拟参考站（VRS）服务、控制台命令处理。</li>
+    <li><strong>Web 可视化大屏</strong> —— 采集层（Node.js）把引擎数据转成 Web 可消费格式，前端页面在浏览器中实时呈现。</li>
+  </ul>
+
+  <h3>1.1 数据是怎么流动的</h3>
+  <p>理解这条链路，是后面所有排查工作的基础。数据从上游基站一路走到你的浏览器，中间有五个环节：</p>
+
+  <div class="flow">
+    <span class="n2">上游基站<br>NTRIP 服务器</span><span class="ar">→</span>
+    <span class="n2">引擎 · NTRIP 客户端</span><span class="ar">→</span>
+    <span class="n2">引擎 · 解算核心<br>（基线/VRS/大气建模）</span><span class="ar">→</span>
+    <span class="n2">Solution 数据流<br>TCP 8080</span><span class="ar">→</span>
+    <span class="n2">采集层<br>Node.js</span><span class="ar">→</span>
+    <span class="n2">浏览器大屏<br>8181</span>
+  </div>
+
+  <p>两个关键设计点需要记住：</p>
+  <ol>
+    <li><strong>引擎与采集层是解耦的。</strong> 引擎只负责算，并把结果往 8080 端口「广播」；采集层主动去连 8080 拿数据。因此采集层挂了不影响引擎解算，引擎重算也不影响采集层启动顺序。</li>
+    <li><strong>控制台有两个入口，用的不是同一个协议。</strong> 引擎自身在 9000 上是 <strong>TCP 纯文本</strong>控制台；采集层在 8181 上转发了一份 <strong>HTTP</strong> 的 <code>/api/console</code>。<strong>不能</strong>用 <code>curl http://&lt;引擎IP&gt;:9000/api/console</code> 去访问引擎 —— 那个端口不认识 HTTP，会返回空响应。要发 HTTP 请求必须打到 8181。</li>
+  </ol>
+
+  <h3>1.2 四个端口，各司其职</h3>
+  <table>
+    <thead><tr><th class="w1">端口</th><th class="w2">服务</th><th>作用</th><th class="w2">协议</th></tr></thead>
+    <tbody>
+      <tr><td><code>9000</code></td><td>引擎控制台</td><td>接收命令文本（增删基站、查询状态等），也是 <code>start-gui</code> 等命令的输入口</td><td>TCP 纯文本</td></tr>
+      <tr><td><code>8080</code></td><td>Solution 数据流</td><td>持续推送解算结果（基站 / 基线 / 卫星 / 大气延迟）</td><td>TCP 广播</td></tr>
+      <tr><td><code>7999</code></td><td>Monitor</td><td>基站监控数据（可选的独立监控服务）</td><td>TCP</td></tr>
+      <tr><td><code>8181</code></td><td>大屏 Web</td><td>浏览器访问的可视化界面，同时提供 REST 接口与 WebSocket</td><td>HTTP / WebSocket</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">监听地址已统一为 0.0.0.0</span>
+    <p>引擎的 9000 / 8080 / 7999 端口默认绑定 <code>0.0.0.0</code>，意味着<strong>本机（127.0.0.1）和局域网其他机器都能连接</strong>。如需限制为仅本机可访问，加参数 <code>-b local</code>。</p>
+    <p>大屏端口 8181 由采集层监听：默认 <code>127.0.0.1</code>（仅本机）；需要让他人访问时执行 <code>start-gui 8181 lan</code>。详见 <a href="#s5">5.1 节</a>。</p>
+  </div>
+
+  <h3>1.3 目录结构</h3>
+<pre><code>mcors-20260826/
+├── BUILD.md              <span class="c"># 编译说明</span>
+├── conf/                 <span class="c"># 配置模板（注意：运行期用的是 build/conf/）</span>
+├── include/              <span class="c"># 公共头文件（cors.h 等）</span>
+├── src/                  <span class="c"># 引擎源码</span>
+│   ├── engine/           <span class="c"># 主引擎 + 控制台命令（engine.c / mcors.c）</span>
+│   ├── cors/             <span class="c"># 解算核心 + solution 数据流</span>
+│   ├── ntrip/            <span class="c"># NTRIP 客户端 / 广播器 / 代理</span>
+│   ├── nrtk/             <span class="c"># 网络 RTK</span>
+│   ├── pnt/  vrs/        <span class="c"># 定位 / 虚拟参考站</span>
+│   ├── dtrignet/         <span class="c"># Delaunay 三角网</span>
+│   └── monitor/          <span class="c"># 监控服务</span>
+├── build/                <span class="c"># 编译输出（含运行期 conf/）</span>
+│   ├── cors-engine.exe   <span class="c"># ★ 主程序</span>
+│   ├── conf/cors.conf    <span class="c"># ★ 实际使用的配置</span>
+│   └── *.trace           <span class="c"># 运行日志（按时间命名）</span>
+├── lib/                  <span class="c"># 第三方库（libuv / openblas / gsl …）</span>
+├── viz/                  <span class="c"># 可视化大屏</span>
+│   ├── web/              <span class="c"># 前端页面（HTML/CSS/JS）</span>
+│   │   ├── index.html    <span class="c"># 主页面（各面板的 DOM 结构）</span>
+│   │   ├── css/dashboard.css
+│   │   └── js/           <span class="c"># 各面板渲染逻辑（baseline-panel.js 等）</span>
+│   ├── collector/        <span class="c"># 采集层（Node.js）</span>
+│   │   ├── index.js      <span class="c"># 入口：连接引擎 / HTTP 服务 / 广播</span>
+│   │   └── config.js     <span class="c"># 环境变量与默认配置</span>
+│   ├── tools/            <span class="c"># 测试与诊断工具（探针、编译脚本）</span>
+│   └── test/             <span class="c"># 自动化测试套件</span>
+└── doc/                  <span class="c"># 文档（本文件所在处）</span>
+</code></pre>
+
+  <div class="box warn">
+    <span class="t">配置文件要看 build/conf/ 那份</span>
+    <p>引擎从 <code>build/</code> 目录启动时读取的是 <code>build/conf/cors.conf</code>，<strong>不是</strong>项目根的 <code>conf/</code>。两者若不一致会造成「改了配置却不生效」的困惑。运行期请统一使用 <code>build/conf/</code> 下的文件。</p>
+  </div>
+
+  <h3>1.4 本说明书的使用方式</h3>
+  <table>
+    <thead><tr><th class="w3">你的目的</th><th>建议阅读</th></tr></thead>
+    <tbody>
+      <tr><td>第一次把系统跑起来</td><td><a href="#s2">第 2 章 快速开始</a> → <a href="#s6">第 6 章 可视化大屏</a></td></tr>
+      <tr><td>改了源码要重新编译</td><td><a href="#s3">第 3 章 编译构建</a></td></tr>
+      <tr><td>增加 / 删除一个基站</td><td><a href="#s7">第 7 章 基站增删操作</a></td></tr>
+      <tr><td>用脚本或程序对接系统</td><td><a href="#s8">第 8 章 控制台命令</a> + <a href="#s9">第 9 章 HTTP 接口</a></td></tr>
+      <tr><td>出问题了，界面没数据</td><td><a href="#s12">第 12 章 运维与排查</a>（含逐层排查顺序）→ <a href="#s11">第 11 章 FAQ</a></td></tr>
+      <tr><td>想理解某个术语</td><td><a href="#s14">第 14 章 术语表</a></td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 2 ══════════════ -->
+<section id="s2">
+  <h2 class="sec"><span class="n">2</span>快速开始</h2>
+
+  <p>假设已完成编译（见 <a href="#s3">第 3 章</a>），从零把系统跑起来只需三步，全程在一个命令行窗口里完成。</p>
+
+  <h3>步骤 1 · 启动引擎</h3>
+  <p>打开命令提示符（cmd），切到项目根目录后进入 <code>build</code>：</p>
+<pre><code>cd build
+cors-engine.exe -o conf\cors.conf -t 1 -s -p 9000</code></pre>
+
+  <p>各参数含义（完整说明见 <a href="#s5">5.1 节</a>）：</p>
+  <table>
+    <thead><tr><th class="w1">参数</th><th>作用</th></tr></thead>
+    <tbody>
+      <tr><td><code>-o conf\cors.conf</code></td><td>指定配置文件。相对路径以<strong>当前工作目录</strong>（即 <code>build\</code>）为基准</td></tr>
+      <tr><td><code>-t 1</code></td><td>日志级别 1（较详细）。排查问题时用这个</td></tr>
+      <tr><td><code>-s</code></td><td>以服务模式启动。注意：此模式 stdout 会被虚拟终端接管</td></tr>
+      <tr><td><code>-p 9000</code></td><td>控制台监听端口</td></tr>
+    </tbody>
+  </table>
+
+  <p>看到版本号与监听提示即启动成功。之后这个窗口就是<strong>引擎控制台</strong>，后续的 <code>start</code> / <code>start-gui</code> 都在这里输入。</p>
+
+  <div class="box warn">
+    <span class="t">这个窗口不要关，也不要长时间鼠标点击</span>
+    <p>关掉窗口 = 结束引擎进程。另外 <code>-s</code> 模式下控制台输入循环里有个已知的 <code>uv_sleep</code> 阻塞问题（见 <a href="#s11">FAQ Q13</a>），粘滞期间键盘输入会被吃掉，但命令本身仍会正常执行。</p>
+  </div>
+
+  <h3>步骤 2 · 启动解算服务</h3>
+  <p>在同一个窗口（引擎控制台）输入并回车：</p>
+<pre><code>start</code></pre>
+  <p>这会启动 CORS 解算服务，开始按配置接入上游基站数据。</p>
+
+  <div class="box bad">
+    <span class="t">命令匹配是「前缀匹配」—— 请把命令名写完整</span>
+    <p>引擎用「命令表项 <em>包含</em> 你输入的串」来匹配，且取<strong>第一个</strong>命中项。输入 <code>start</code> 有极小概率命中排在表里的 <code>start-gui</code>。<strong>请始终输入完整命令名</strong>。详见 <a href="#s8">8.6 节</a>。</p>
+  </div>
+
+  <h3>步骤 3 · 打开大屏</h3>
+  <p>在引擎控制台输入：</p>
+<pre><code>start-gui</code></pre>
+  <p>引擎会自动拉起采集层并打开浏览器，地址为 <code>http://127.0.0.1:8181/</code>。</p>
+
+  <div class="box ok">
+    <span class="t">成功标志</span>
+    <p>控制台显示：</p>
+<pre style="margin:8px 0 0"><code>gui ready: http://127.0.0.1:8181/</code></pre>
+    <p>浏览器打开后能看到「基站网图」「基线解算信息」等面板，且右上角显示数据连接正常。</p>
+  </div>
+
+  <h3>2.1 让别人也能看大屏</h3>
+  <p>如果希望局域网内其他机器也能访问：</p>
+<pre><code>start-gui 8181 lan</code></pre>
+  <p>此时采集层监听 <code>0.0.0.0:8181</code>，控制台会额外打印一行网卡地址：</p>
+<pre><code>lan access: http://192.168.x.x:8181/</code></pre>
+  <p>把这个地址发给同事即可。</p>
+
+  <h3>2.2 start 与 start-gui 的区别</h3>
+  <table>
+    <thead><tr><th class="w2">命令</th><th>启动什么</th><th>不执行的后果</th></tr></thead>
+    <tbody>
+      <tr><td><code>start</code></td><td><strong>引擎侧</strong>的 CORS 解算服务（接数据、算基线）</td><td>引擎在空转，无解算数据</td></tr>
+      <tr><td><code>start-gui</code></td><td><strong>展示侧</strong>的采集层 + 浏览器界面</td><td>没有界面可看</td></tr>
+    </tbody>
+  </table>
+  <p>两者<strong>互相独立</strong>，需要都执行：</p>
+  <ul>
+    <li>只 <code>start</code> 不 <code>start-gui</code> → 引擎在算，但没有界面。</li>
+    <li>只 <code>start-gui</code> 不 <code>start</code> → 界面能打开，但没数据。界面控制台会提示 <code>cors not started yet</code>。</li>
+  </ul>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 3 ══════════════ -->
+<section id="s3">
+  <h2 class="sec"><span class="n">3</span>编译构建</h2>
+
+  <h3>3.1 一键编译（推荐）</h3>
+<pre><code>viz\tools\build-engine.cmd</code></pre>
+  <p>脚本自动完成四步，产物为 <code>build\cors-engine.exe</code>：</p>
+  <table>
+    <thead><tr><th class="w1">步骤</th><th class="w2">目标</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>1/4</td><td><code>openblas_static</code></td><td>最慢（LAPACK 数千个 C 文件），首次全量编译耗时较长；之后走增量，几乎不耗时</td></tr>
+      <tr><td>2/4</td><td><code>libcors</code></td><td>项目核心静态库</td></tr>
+      <tr><td>3/4</td><td><code>cors-engine</code></td><td>链接生成 exe</td></tr>
+      <tr><td>4/4</td><td>拷贝 DLL</td><td><code>libuv.dll</code> 等运行期依赖</td></tr>
+    </tbody>
+  </table>
+  <p><strong>增量编译</strong>：脚本不清理中间产物，改完代码直接重跑。改一个 <code>.c</code> 文件约 30 秒。</p>
+
+  <h3>3.2 只想编译引擎目标（最常用）</h3>
+  <p>若已配置好构建目录，只想快速重编引擎：</p>
+<pre><code><span class="c"># 第一步：确保没有引擎实例占用 exe（否则链接时报 Permission denied）</span>
+taskkill /F /IM cors-engine.exe
+
+<span class="c"># 第二步：进 build 目录，只编 cors-engine 目标</span>
+cd build
+cmake --build . --target cors-engine -j 8</code></pre>
+
+  <div class="box bad">
+    <span class="t">绝对不要用全量 cmake --build .</span>
+    <p>全量构建会挂在第三方依赖 <code>lib/gsl/ampl/thirdparty/test-support</code>（缺少 <code>asl.h</code>）上并<strong>静默失败</strong> —— 表面上没有明显报错，实际 <code>cors-engine.exe</code> 没有被重新链接，导致「改了代码却不生效」这种极难定位的问题。</p>
+    <p><strong>务必显式指定目标</strong>：<code>--target cors-engine</code>。</p>
+  </div>
+
+  <div class="box warn">
+    <span class="t">链接前必须先结束引擎进程</span>
+    <p>Windows 下 exe 被运行中的进程占用时无法覆盖，链接会报 <code>Permission denied</code>（或 MinGW 下的 <code>cannot open output file</code>）。编译前先执行 <code>taskkill /F /IM cors-engine.exe</code>。</p>
+    <p>如果 <code>taskkill</code> 说「找不到进程」，说明本来就没在跑，可以继续。</p>
+  </div>
+
+  <h3>3.3 编译耗时参考</h3>
+  <table>
+    <thead><tr><th class="w3">场景</th><th class="w1">耗时</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>首次全量（含 openblas）</td><td>很长</td><td>一次性的，之后 <code>openblas_static</code> 目标已最新，会直接跳过</td></tr>
+      <tr><td>改 1 个 <code>.c</code> 文件</td><td>约 30 秒</td><td>只重编该文件 + 重新链接</td></tr>
+      <tr><td>改了头文件</td><td>1–3 分钟</td><td>依赖它的所有 <code>.c</code> 都会重编</td></tr>
+      <tr><td>新增源文件</td><td>需先 configure</td><td>见 3.5 节</td></tr>
+      <tr><td>什么也没改</td><td>几秒</td><td>CMake 判定已最新，只打印 <code>Built target</code>。<strong>这是判断「有没有真的重编」的重要线索</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.4 工具链路径（本机实际）</h3>
+  <table>
+    <thead><tr><th class="w2">工具</th><th>路径</th></tr></thead>
+    <tbody>
+      <tr><td>MinGW</td><td><code>D:\x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0\mingw64</code></td></tr>
+      <tr><td>CMake</td><td><code>D:\CMAKE\bin\cmake.exe</code></td></tr>
+      <tr><td>make</td><td><code>&lt;MinGW&gt;\bin\mingw32-make.exe</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.5 修改 CMakeLists 或新增源文件</h3>
+<pre><code>viz\tools\build-engine.cmd --configure</code></pre>
+  <p>不加 <code>--configure</code> 时，只要 <code>build\CMakeCache.txt</code> 存在就直接增量编译。但<strong>新增源文件必须先重新 configure</strong>，否则新文件不在构建图里，会出现「符号未定义」或者更隐蔽的「老代码照旧跑」。</p>
+
+  <h3>3.6 修改过代码后如何确认真的生效</h3>
+  <p>这是本系统最容易踩的坑之一。请按下面顺序确认：</p>
+  <ol class="step">
+    <li>
+      <strong>看编译输出有没有 <code>Linking CXX executable ... cors-engine.exe</code></strong>
+      <p>只打印 <code>Built target cors-engine</code> 而<strong>没有</strong> Linking 行，说明 CMake 认为目标已最新 —— 文件没被重写。</p>
+    </li>
+    <li>
+      <strong>对比产物与源码的时间戳</strong>，产物必须晚于所有源码：
+<pre><code>dir /T:W build\cors-engine.exe src\ntrip\ntripclient.c</code></pre>
+      <p>若 exe 比源码旧，说明没有真正重编（多半是上一节的静默失败问题）。</p>
+    </li>
+    <li>
+      <strong>确认没有旧实例在跑</strong>：
+<pre><code>tasklist | findstr cors-engine</code></pre>
+      <p>若还有进程存活，可能你启动的是<strong>旧进程</strong>，看到的行为自然是旧的。先 <code>taskkill</code> 再启动。</p>
+    </li>
+  </ol>
+
+  <div class="box tip">
+    <span class="t">一条命令核对时间戳</span>
+<pre style="margin:8px 0 0"><code>dir /T:W build\cors-engine.exe &amp;&amp; dir /O-D /T:W src\*.c src\*\*.c</code></pre>
+    <p>先看 exe 的写入时间，再看源码按修改时间倒序排列的头部 —— 两者一对比就清楚了。</p>
+  </div>
+
+  <h3>3.7 Linux 平台构建（兼容）</h3>
+  <p>引擎代码已双平台化（Win32 / POSIX 自动分支），Linux 侧用 shell 版脚本编译，产物为 <code>build/cors-engine</code>（无 .exe 后缀）：</p>
+<pre><code>./viz/tools/build-engine.sh                <span class="c"># 增量构建</span>
+./viz/tools/build-engine.sh --configure   <span class="c"># 改 CMakeLists.txt 后重新 configure</span></code></pre>
+  <div class="box warn">
+    <span class="t">栈大小必须在运行时手动放开</span>
+    <p>MinGW 链接期的 <code>-Wl,--stack</code> 选项在 Linux/ELF 上不存在。引擎线程使用大栈数组，Linux 默认 8MB 栈可能直接段错误——启动前执行 <code>ulimit -s 102400</code>（100MB，单位是 KB）。要求：gcc、make、cmake ≥ 3.16。细节（与 Windows 的差异对照表）见 <code>BUILD.md</code> 的「Linux 构建」章节。</p>
+  </div>
+  <div class="box tip">
+    <span class="t">验证状态（2026-10-06）</span>
+    <p>src/ 全部 68 个源文件已通过 <code>x86_64-linux-gnu</code> 目标的<strong>真实 Linux 编译验证</strong>（Zig 交叉编译，glibc 头文件环境，零错误）；Windows 侧同步回归通过。完整链接与运行时验证需在真实 Linux 机器上执行一次 <code>build-engine.sh</code>——若遇报错，优先排查 lib/ 下第三方子目录（openblas/gsl/boost）的平台假设，而非 src/。</p>
+  </div>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 4 ══════════════ -->
+<section id="s4">
+  <h2 class="sec"><span class="n">4</span>配置说明</h2>
+
+  <p>配置文件位于 <code>build\conf\cors.conf</code>。格式为 <code>键 = 值</code>，每行一项。以下是全部配置项：</p>
+
+  <table>
+    <thead><tr><th class="w3">配置项</th><th>含义</th><th class="w3">典型值</th></tr></thead>
+    <tbody>
+      <tr><td><code>ntrip-sources-file</code></td><td>NTRIP 数据源列表（上游基站清单）</td><td><code>conf\ntripsources</code></td></tr>
+      <tr><td><code>trace-file</code></td><td>日志输出文件（留空则用默认命名 <code>cors_engine_&lt;时间戳&gt;.trace</code>）</td><td>（空）</td></tr>
+      <tr><td><code>baselines-file</code></td><td>基线列表（哪些站与哪些站组成基线）</td><td><code>conf\beselines</code></td></tr>
+      <tr><td><code>base-stations-info-file</code></td><td>基站信息字典（站名 → 类型说明等元数据）</td><td>（空）</td></tr>
+      <tr><td><code>virtual-stations-file</code></td><td>虚拟参考站（VRS）列表</td><td><code>conf\vrsstations</code></td></tr>
+      <tr><td><code>rtk-conf-file</code></td><td>RTK 参数文件</td><td>（空）</td></tr>
+      <tr><td><code>agent-user-file</code></td><td>NTRIP 代理用户表</td><td><code>conf\agentuser</code></td></tr>
+      <tr><td><code>ntrip-record-file</code></td><td>NTRIP 数据记录文件</td><td><code>ntrip_record.dat</code></td></tr>
+      <tr><td><code>monitor-record-file</code></td><td>监控记录文件</td><td><code>monitor_record.dat</code></td></tr>
+      <tr><td><code>sourcetable-file</code></td><td>挂载点表（NTRIP 客户端可看到的源清单）</td><td><code>conf\sourcetable</code></td></tr>
+      <tr><td><code>monitor-port</code></td><td>监控服务端口</td><td><code>7999</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">相对路径的基准是「启动时的工作目录」</span>
+    <p>配置里写 <code>conf\ntripsources</code> 这样的相对路径时，引擎是相对<strong>启动它时的当前目录</strong>去解析的。这就是为什么官方启动命令要求先 <code>cd build</code> —— 只有这样 <code>conf\</code> 才指向 <code>build\conf\</code>。如果你从别处启动，这些相对路径会全部失效。</p>
+  </div>
+
+  <h3>4.1 数据源列表格式（ntripsources）</h3>
+  <p><code>build\conf\ntripsources</code> 每行一个上游基站，字段之间用空白分隔，顺序固定：</p>
+<pre><code><span class="c"># 站名   IP地址          端口   用户名     密码    挂载点       纬度      经度       高程   类型</span>
+A001     60.29.242.238   8002   chuNtrip   xxxx   RTCM32eph   40.4339   116.2831   50.0   M</code></pre>
+  <p>以 <code>#</code> 开头的行为注释，空行忽略。</p>
+
+  <h4>类型字段取值</h4>
+  <table>
+    <thead><tr><th class="w1">值</th><th class="w2">含义</th><th>解算中的角色</th></tr></thead>
+    <tbody>
+      <tr><td><code>M</code></td><td>主站（Master）</td><td>基准，其他站与它组成基线</td></tr>
+      <tr><td><code>E</code></td><td>副站 / 仅星历（Ephemeris only）</td><td>只提供星历，不参与观测值解算</td></tr>
+      <tr><td><code>O</code></td><td>普通站（Observation）</td><td>提供观测值，参与解算</td></tr>
+      <tr><td><code>V</code></td><td>虚拟站（Virtual）</td><td>由 VRS 算法生成，不是真实上游</td></tr>
+    </tbody>
+  </table>
+
+  <p>界面上的「基站信息」面板会把这个类型翻译成中文显示（如「混合」「仅星历」）。若看到类型显示为 <code>M</code>／「混合」而与你填写的不一致，见 <a href="#s11">FAQ Q14</a>。</p>
+
+  <h3>4.2 虚拟站列表格式（vrsstations）</h3>
+  <p>每行一个虚拟参考站，字段与数据源类似但更精简：</p>
+<pre><code><span class="c"># 站名     纬度       经度       高程</span>
+VRS001    40.4500   116.3000   48.5</code></pre>
+
+  <h3>4.3 修改配置后的生效方式</h3>
+  <table>
+    <thead><tr><th class="w3">改了什么</th><th class="w3">生效方式</th><th>命令 / 操作</th></tr></thead>
+    <tbody>
+      <tr><td>大部分配置项</td><td>重启引擎</td><td><code>shutdown</code> 后重新启动</td></tr>
+      <tr><td>站点字典文件</td><td><span class="tag ok">热加载</span></td><td><code>POST /api/dict/reload</code>，无需重启</td></tr>
+      <tr><td>基站增删</td><td><span class="tag ok">即时</span></td><td>通过界面或 <code>addsource</code>/<code>delsource</code> 命令，不需要改配置文件</td></tr>
+      <tr><td>RTK / 定位参数</td><td><span class="tag ok">即时</span></td><td><code>loadopt</code> / <code>updpntopt</code> / <code>updrtkopt</code></td></tr>
+      <tr><td>观测值更新频率</td><td><span class="tag ok">即时</span></td><td><code>setobsudfrq</code> / <code>setrtkudfrq</code></td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 5 ══════════════ -->
+<section id="s5">
+  <h2 class="sec"><span class="n">5</span>启动与停止</h2>
+
+  <h3>5.1 命令行参数</h3>
+<pre><code>cors-engine.exe -o conf\cors.conf -t 1 -s -p 9000</code></pre>
+  <table>
+    <thead><tr><th class="w1">参数</th><th>含义</th><th class="w3">示例</th></tr></thead>
+    <tbody>
+      <tr><td><code>-o &lt;file&gt;</code></td><td>配置文件路径</td><td><code>-o conf\cors.conf</code></td></tr>
+      <tr><td><code>-t &lt;level&gt;</code></td><td>日志级别（1 = 较详细；数值越大越详细）</td><td><code>-t 1</code></td></tr>
+      <tr><td><code>-s</code></td><td>启动服务模式。<strong>副作用</strong>：stdout/stderr 被虚拟终端接管，直接 <code>fprintf</code> 到 stdout 的内容可能看不到</td><td><code>-s</code></td></tr>
+      <tr><td><code>-p &lt;port&gt;</code></td><td>控制台监听端口</td><td><code>-p 9000</code></td></tr>
+      <tr><td><code>-b &lt;addr&gt;</code></td><td>服务监听地址</td><td><code>-b any</code> / <code>-b local</code></td></tr>
+    </tbody>
+  </table>
+
+  <h4><code>-b</code> 参数取值</h4>
+  <table>
+    <thead><tr><th class="w3">取值</th><th class="w2">等效</th><th>效果</th></tr></thead>
+    <tbody>
+      <tr><td><code>any</code> / <code>0.0.0.0</code> / <code>*</code></td><td>默认</td><td><span class="tag ok">推荐</span> 对外 + 本机都能访问</td></tr>
+      <tr><td><code>local</code> / <code>localhost</code></td><td><code>127.0.0.1</code></td><td>仅本机可连，外部访问被拒</td></tr>
+      <tr><td><code>auto</code></td><td>本机网卡 IP</td><td>旧行为：只绑一块网卡，换网络 / 改 IP 后失效</td></tr>
+      <tr><td>具体 IP</td><td>—</td><td>绑定指定地址</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">为什么默认是 0.0.0.0 而不是某个具体 IP</span>
+    <p>绑定具体网卡 IP（如 <code>192.168.83.1</code>）有三个问题：</p>
+    <ul>
+      <li>只有那块网卡能连，其他网段不通；</li>
+      <li>换 WiFi / 改 IP 后服务直接不可达，需要重新配置；</li>
+      <li>从本机用 <code>127.0.0.1</code> 也连不上（因为没绑回环）。</li>
+    </ul>
+    <p><code>0.0.0.0</code> 表示「接受所有网卡（含回环）的连接」，本机用 <code>127.0.0.1</code> 进、别人用任意网卡 IP 进都能通，是最稳妥的选择。</p>
+  </div>
+
+  <h3>5.2 停止引擎</h3>
+  <p>在引擎控制台输入：</p>
+<pre><code>shutdown</code></pre>
+  <p>引擎会打印 <code>cors server shutdown ...</code>，等待约 1 秒后退出。或直接用系统命令强制结束：</p>
+<pre><code>taskkill /F /IM cors-engine.exe</code></pre>
+
+  <div class="box warn">
+    <span class="t">stop 与 shutdown 是两件事</span>
+    <table style="margin:10px 0 0">
+      <thead><tr><th class="w1">命令</th><th class="w2">作用范围</th><th>进程状态</th></tr></thead>
+      <tbody>
+        <tr><td><code>stop</code></td><td>只停 CORS 解算服务</td><td><span class="tag mid">进程仍在</span>可再 <code>start</code></td></tr>
+        <tr><td><code>shutdown</code></td><td>退出整个引擎进程</td><td><span class="tag no">进程终止</span>控制台回到系统提示符</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:10px">引擎退出后，采集层会随之失去数据源，界面上的数据会停止更新。</p>
+  </div>
+
+  <div class="box bad">
+    <span class="t">别把「界面显示引擎退出」和「引擎崩溃」搞混</span>
+    <p>如果界面上出现「引擎已退出」之类的提示，第一反应不应该是「崩溃了」—— 先确认<strong>有没有人在控制台输入过 <code>stop</code> 或 <code>shutdown</code></strong>。这是实测中真实发生过的一次误判：看起来像崩溃，实际是有人手工停了服务。</p>
+  </div>
+
+  <h3>5.3 停止采集层</h3>
+<pre><code>taskkill /F /IM node.exe</code></pre>
+  <div class="box bad">
+    <span class="t">这条命令会杀掉本机所有 node 进程</span>
+    <p>如果这台机器上还跑着其他 Node 应用（其他项目、其他服务），请改用按 PID 精确结束：</p>
+<pre style="margin:8px 0 0"><code><span class="c">REM 1. 找到占用 8181 的 PID（最后一列）</span>
+netstat -ano | findstr :8181
+
+<span class="c">REM 2. 按 PID 精确结束</span>
+taskkill /F /PID &lt;pid&gt;</code></pre>
+  </div>
+
+  <h3>5.4 完整的启动 / 停止时序</h3>
+  <table>
+    <thead><tr><th class="w1">顺序</th><th class="w3">操作</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>结束残留进程</td><td>先 <code>taskkill</code> 引擎，再按 PID 结束采集层</td></tr>
+      <tr><td>2</td><td>启动引擎</td><td><code>cd build</code> 后运行 <code>cors-engine.exe ...</code></td></tr>
+      <tr><td>3</td><td>启动解算服务</td><td>控制台输入 <code>start</code></td></tr>
+      <tr><td>4</td><td>启动大屏</td><td>控制台输入 <code>start-gui</code>（或 <code>start-gui 8181 lan</code>）</td></tr>
+      <tr><td>—</td><td colspan="2"><em>以下是停止时的顺序</em></td></tr>
+      <tr><td>5</td><td>停解算服务（可选）</td><td><code>stop</code>。跳过也可，<code>shutdown</code> 会一并处理</td></tr>
+      <tr><td>6</td><td>退出引擎</td><td><code>shutdown</code></td></tr>
+      <tr><td>7</td><td>结束采集层</td><td><code>shutdown</code> 会带走它；若残留则按 PID 结束</td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 6 ══════════════ -->
+<section id="s6">
+  <h2 class="sec"><span class="n">6</span>可视化大屏</h2>
+
+  <p>浏览器访问 <code>http://127.0.0.1:8181/</code> 即可打开。界面由多个面板组成，数据通过 WebSocket 实时推送（采集层<strong>每秒</strong>广播一次）。</p>
+
+  <h3>6.1 面板总览</h3>
+
+  <figure style="margin:14px 0 18px">
+    <img src="images/dashboard-live-drawer.png" alt="实时监控大屏整体界面（真实链路，含基线详情抽屉）" style="display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)">
+    <figcaption style="margin-top:8px;font-size:12.5px;color:var(--ink3);text-align:center;line-height:1.7">
+      真实链路下的完整界面：左上「基站网图」（Delaunay 三角网，绿线为固定解基线，VRS001 虚拟站着重显示）、右上「基线解算信息」、下方依次为「定位质量趋势」「卫星天空图」「基站信息」。右侧为点开基线行后滑出的<strong>详情抽屉</strong> —— 列出该基线逐星的双差延迟明细，点击数值可弹出历史曲线（见 6.4 节）。
+    </figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th class="w2">面板</th><th>内容</th><th class="w3">要点</th></tr></thead>
+    <tbody>
+      <tr><td><strong>基站网图</strong></td><td>基站拓扑与 Delaunay 三角网</td><td>虚拟站（VRS）着重显示</td></tr>
+      <tr><td><strong>基线解算信息</strong></td><td>各基线的解算状态、长度、龄期、参与卫星数、双差大气延迟</td><td>延迟列为所有卫星的平均值；<strong>点行可打开详情抽屉</strong></td></tr>
+      <tr><td><strong>基站信息</strong></td><td>站名、位置、挂载点、上游、设备、状态</td><td>支持界面增删基站</td></tr>
+      <tr><td><strong>卫星天空图</strong></td><td>可见卫星方位 / 高度角分布</td><td>区分参与解算与仅星历</td></tr>
+      <tr><td><strong>定位质量趋势</strong></td><td>定位精度随时间变化曲线</td><td>—</td></tr>
+      <tr><td><strong>逐星延迟曲线</strong></td><td>单颗卫星的双差大气 / 电离层 / 对流层延迟历史</td><td>点击延迟数值可弹出曲线图</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.2 基站网图的连接方式</h3>
+  <p>基站之间的连线采用 <strong>Delaunay 三角网（triangle-network）</strong>：引擎侧用三角剖分算法生成权威的顶点 / 边 / 三角形数据，通过 <code>showtrinet</code> 命令导出为 CSV（含校验和），前端据此渲染。虚拟站会叠加在网图上并加以强调。</p>
+
+  <div class="box tip">
+    <span class="t">为什么用 Delaunay 而不是「按距离连最近的几个」</span>
+    <p>Delaunay 三角网有几个适合基准站网的数学性质：</p>
+    <ul>
+      <li><strong>不重叠、不留空洞</strong> —— 覆盖区域内每个点都被三角形完整包住，不会出现「某台站孤立、没有基线」的情况；</li>
+      <li><strong>最大化最小角</strong> —— 避免出现细长三角形，使基线长度分布均匀，解算更稳定；</li>
+      <li><strong>唯一性</strong> —— 给定点集（无四点共圆退化情形）结果唯一，因此引擎与前端可以独立算出同一张网，便于校验。</li>
+    </ul>
+  </div>
+
+  <h3>6.3 基线解算信息面板详解</h3>
+  <p>这是日常看得最多的面板。表格共 <strong>7 列</strong>：</p>
+  <table>
+    <thead><tr><th class="w2">列</th><th>含义</th><th class="w3">显示格式</th></tr></thead>
+    <tbody>
+      <tr><td><strong>基线</strong></td><td>「基准站 → 流动站」的站名对。用独立箭头分隔，站名用等宽字体</td><td>如 <code>VRS001 → WSIA00AUS0</code></td></tr>
+      <tr><td><strong>解状态</strong></td><td>当前解的类型</td><td>见下方状态表</td></tr>
+      <tr><td><strong>长度</strong></td><td>基线长度</td><td>1 位小数，单位 km</td></tr>
+      <tr><td><strong>龄期</strong></td><td>距最近一次有效解算的时长</td><td>整数，单位秒</td></tr>
+      <tr><td><strong>卫星数</strong></td><td>参与该基线解算的卫星数量</td><td>整数</td></tr>
+      <tr><td><strong>定位误差</strong></td><td>定位残差的归一化值</td><td>3 位小数</td></tr>
+      <tr><td><strong>双差大气延迟</strong><sup style="color:var(--accent)">平均</sup></td><td>所有参与卫星的<strong>算术平均值</strong></td><td>3 位小数，单位 m</td></tr>
+    </tbody>
+  </table>
+
+  <h4>解状态取值</h4>
+  <table>
+    <thead><tr><th class="w2">状态</th><th>含义</th><th class="w2">质量</th></tr></thead>
+    <tbody>
+      <tr><td><code>FIX</code></td><td>整周模糊度已固定，厘米级</td><td><span class="tag ok">最佳</span></td></tr>
+      <tr><td><code>FIXDEG</code></td><td>固定但精度退化（部分卫星质量差）</td><td><span class="tag ok">良好</span></td></tr>
+      <tr><td><code>FLOAT</code></td><td>浮点解，模糊度未固定，分米～米级</td><td><span class="tag mid">可用</span></td></tr>
+      <tr><td><code>PPP</code></td><td>精密单点定位</td><td><span class="tag mid">可用</span></td></tr>
+      <tr><td><code>DGPS</code></td><td>差分 GPS，亚米级</td><td><span class="tag mid">一般</span></td></tr>
+      <tr><td><code>SBAS</code></td><td>星基增强</td><td><span class="tag mid">一般</span></td></tr>
+      <tr><td><code>SINGLE</code></td><td>单点定位，米级</td><td><span class="tag no">较差</span></td></tr>
+      <tr><td><code>DR</code></td><td>航位推算（失去观测，靠惯性推）</td><td><span class="tag no">差</span></td></tr>
+      <tr><td><code>NONE</code> / 无</td><td>无解</td><td><span class="tag no">无</span></td></tr>
+    </tbody>
+  </table>
+
+  <h4>六种排序模式</h4>
+  <p>表格上方的排序下拉框可切换排序依据：</p>
+  <table>
+    <thead><tr><th class="w3">模式</th><th>排序规则</th><th>适用场景</th></tr></thead>
+    <tbody>
+      <tr><td><strong>固定顺序（首次出现序）</strong>（默认）</td><td>按基线在本次运行中<strong>首次出现的顺序</strong>排列，之后行位置永不变动，新基线只追加到末尾</td><td>日常监控——行位置稳定，一眼看出「谁是新来的」</td></tr>
+      <tr><td><strong>按解状态</strong></td><td>FIX 最前，依次到无解；同档位内按站名</td><td>快速找出哪条基线没解出来</td></tr>
+      <tr><td><strong>按基线长度</strong></td><td>长度<strong>由长到短</strong></td><td>关注长基线（解算难度大）</td></tr>
+      <tr><td><strong>按参与星数</strong></td><td>星数<strong>由多到少</strong></td><td>找出卫星数偏少的基线</td></tr>
+      <tr><td><strong>按定位误差</strong></td><td>误差<strong>由大到小</strong>（最差的排最前）</td><td>一眼看到质量最差的基线</td></tr>
+      <tr><td><strong>按站点名</strong></td><td>按「基准站 → 流动站」字面升序</td><td>找特定站，或需要稳定可预期的顺序</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">行顺序为什么不会乱跳 · 被删基线为何 30 秒才消失</span>
+    <p>早期版本存在「同一批基线每几秒上下跳一次」的问题。现在由<strong>名册（roster）模型</strong>从结构上保证稳定：</p>
+    <ol style="margin:8px 0 0">
+      <li><strong>名册只增改、不因数据抖动删除</strong> —— 表格行来自「名册」而非「最后一帧数据」。某基线偶尔一轮没解出来，它的行<strong>原位保留</strong>，只是超过 4 秒无新解算时降透明度（灰显，提示「这个数是老的」）；数据恢复即复原。只有引擎真断链才整体清空重计。</li>
+      <li><strong>固定顺序 = 首次出现序</strong> —— 名册新基线只追加到末尾；已有行的相对次序永不变动（默认「固定顺序」档的排序依据）。</li>
+      <li><strong>被删除的基线有 30 秒缓冲</strong> —— 基线从网图拓扑消失（删基站 / 三角网重剖淘汰）且解算侧也停了之后，行<strong>不会立刻消失</strong>，而是保留显示 30 秒再淡出移除。期间数据若恢复，倒计时自动取消。这样运维能看见「它刚被删掉」的过程，行数也不会突跳。</li>
+      <li><strong>唯一决胜键 + 档位粘滞</strong> —— 非固定顺序的档位里，用「基准站→流动站」站名对作最终比较依据；定位误差这类每帧都抖的排序键量化到档位（误差 0.1 m、长度 1 km 一档）并允许一档容差，只有真实跃变才换位。</li>
+    </ol>
+    <p style="margin-top:8px">配套的视觉提示：新出现的基线<strong>淡绿闪入</strong>、超时未更新的行<strong>灰显</strong>、被删除的基线<strong>保留 30 秒后淡出</strong>、位置变化的行<strong>淡黄一闪</strong>、解状态变差<strong>淡黄提示</strong>（变好不提示）。看到颜色提示就说明数据真的变了，不是渲染抖动。</p>
+  </div>
+
+  <h3>6.4 查看单颗卫星的延迟历史</h3>
+  <p>完整操作路径：</p>
+  <ol class="step">
+    <li>在「基线解算信息」表中<strong>点击任意一行</strong>（不要点延迟数值单元格），右侧会滑出<strong>详情抽屉</strong>。</li>
+    <li>抽屉里列出该基线所有参与卫星，每颗星有若干延迟数值。</li>
+    <li>点击某颗卫星的<strong>双差大气延迟 / 双差电离层延迟 / 双差对流层延迟</strong>数值，会弹出该卫星的历史曲线图。</li>
+    <li>曲线图上可观察延迟随时间的变化趋势。历史缓冲长度见 <a href="#s10">10.3 节</a>。</li>
+  </ol>
+
+  <div class="box tip">
+    <span class="t">两种点法，两种结果</span>
+    <ul style="margin:8px 0 0">
+      <li>点<strong>行的其他位置</strong> → 打开基线详情抽屉（看这颗基线的所有卫星）。</li>
+      <li>直接点<strong>「双差大气延迟」列里的数值</strong> → 打开该基线的延迟曲线（不用先进抽屉）。</li>
+    </ul>
+  </div>
+
+  <h3>6.5 数据连接状态</h3>
+  <p>界面右上角显示数据连接状态。若显示断开或数据不更新，请按顺序检查：</p>
+  <ol>
+    <li>引擎是否在运行 —— <code>tasklist | findstr cors-engine</code></li>
+    <li>引擎里是否已执行 <code>start</code> —— 没执行界面会提示 <code>cors not started yet</code></li>
+    <li>采集层是否在运行 —— <code>netstat -ano | findstr :8181</code>，要看有 <code>LISTENING</code></li>
+    <li>数据是否在推进 —— <code>curl http://127.0.0.1:8181/api/snapshot</code>，看 <code>frames</code> 是否增长</li>
+  </ol>
+  <p>详细的逐层排查顺序见 <a href="#s12">12.4 节</a>。</p>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 7 ══════════════ -->
+<section id="s7">
+  <h2 class="sec"><span class="n">7</span>基站增删操作</h2>
+
+  <p>基站可以在<strong>界面上操作</strong>，也可以通过<strong>控制台命令</strong>或 <strong>HTTP 接口</strong>操作。三种方式最终都下发到引擎的 <code>addsource</code> / <code>delsource</code> 命令，效果一致。</p>
+
+  <h3>7.1 界面操作</h3>
+  <ol class="step">
+    <li>在「基站信息」面板点击<strong>新增</strong>按钮，弹出表单。</li>
+    <li>填写各项参数（见下表），点击确定。</li>
+    <li>新基站会立刻出现在列表中，并标记为「运行期」（表示是运行时动态添加的，不在配置文件里）。</li>
+  </ol>
+  <p><strong>删除</strong>：在列表该行的操作列点击删除。</p>
+
+  <h3>7.2 新增基站的字段</h3>
+  <table>
+    <thead><tr><th class="w1">字段</th><th>说明</th><th class="w3">约束与校验</th></tr></thead>
+    <tbody>
+      <tr><td><code>name</code></td><td>站名</td><td>必填，唯一；重名会被拒绝（引擎侧静默忽略）</td></tr>
+      <tr><td><code>addr</code></td><td>NTRIP 服务器 IP</td><td>必填，合法 IPv4（如 <code>192.168.1.100</code>）</td></tr>
+      <tr><td><code>port</code></td><td>端口</td><td>必填，1–65535 的整数</td></tr>
+      <tr><td><code>user</code></td><td>NTRIP 用户名</td><td>必填</td></tr>
+      <tr><td><code>passwd</code></td><td>NTRIP 密码</td><td>必填</td></tr>
+      <tr><td><code>mntpnt</code></td><td>挂载点（Mount Point）</td><td>必填；<strong>引擎侧以此作为「源名」</strong></td></tr>
+      <tr><td><code>lat</code></td><td>纬度（度，十进制度）</td><td>必填，−90 ~ 90</td></tr>
+      <tr><td><code>lon</code></td><td>经度（度，十进制度）</td><td>必填，−180 ~ 180</td></tr>
+      <tr><td><code>height</code></td><td>高程（米，椭球高）</td><td>必填</td></tr>
+      <tr><td><code>type</code></td><td>类型</td><td>必填，取 <code>M</code> / <code>E</code> / <code>O</code> / <code>V</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box warn">
+    <span class="t">mntpnt 与 name 的关系容易踩坑</span>
+    <p>查询某个源是否存在时，<strong>引擎用的是挂载点（mntpnt）作为源名</strong>。所以如果 <code>name</code> 与 <code>mntpnt</code> 填得不一样，用 <code>sourceinfo &lt;name&gt;</code> 可能查不到 —— 要用挂载点去查。</p>
+    <p><strong>建议两者填成一样</strong>，减少混淆。若确实需要不同（例如多个站共用同一个 NTRIP 服务器的不同挂载点），请记住查询用 mntpnt。</p>
+  </div>
+
+  <h3>7.3 控制台命令操作</h3>
+<pre><code><span class="c"># 新增基站（参数顺序固定，共 10 个参数）</span>
+addsource 站名 IP 端口 用户名 密码 挂载点 纬度 经度 高程 类型
+
+<span class="c"># 例如</span>
+addsource TEST01 192.168.1.100 2101 user pass RTCM32 40.01 116.01 50.0 M
+
+<span class="c"># 删除基站</span>
+delsource TEST01
+
+<span class="c"># 查看某数据源详情</span>
+sourceinfo TEST01
+
+<span class="c"># 查看所有数据源</span>
+sourceinfo</code></pre>
+
+  <div class="box bad">
+    <span class="t">参数个数必须齐 —— 缺参数不会友好报错</span>
+    <p><code>addsource</code> 严格要求 <strong>10 个参数</strong>（命令名后 10 项，加上命令名共 11 个 token）。参数不足时会打印一行 ASCII 用法提示：</p>
+<pre style="margin:8px 0 0"><code>usage: addsource NAME HOST PORT USER PASS MOUNT LAT LON H TYPE
+       TYPE = E(eph only) M(mixed) O(obs) V(virtual)</code></pre>
+    <p>请注意：提示是 <strong>ASCII 英文</strong>的，不是乱码 —— 控制台按 latin1 传输，中文会变乱码，所以这里刻意用了英文。</p>
+  </div>
+
+  <h3>7.4 HTTP 接口操作</h3>
+  <p>采集层提供 REST 接口，供界面或脚本调用（端口 8181）：</p>
+<pre><code><span class="c"># 新增基站</span>
+curl -X POST http://127.0.0.1:8181/api/station/add \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"TEST01\",\"addr\":\"192.168.1.100\",\"port\":2101,
+       \"user\":\"user\",\"passwd\":\"pass\",\"mntpnt\":\"TEST01\",
+       \"lat\":40.01,\"lon\":116.01,\"height\":50.0,\"type\":\"M\"}"
+
+<span class="c"># 删除基站</span>
+curl -X POST http://127.0.0.1:8181/api/station/del \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"TEST01\"}"</code></pre>
+
+  <div class="box tip">
+    <span class="t">参数校验会拦下非法输入</span>
+    <p>接口对缺字段、非法 IP、非法端口（0 或 &gt;65535）、越界经纬度、非法类型都会返回 <code>400</code> 并给出原因，<strong>不会下发到引擎</strong>。被拒绝的基站不会进入站点表。</p>
+    <p>这意味着：通过 8181 接口添加比直接敲 <code>addsource</code> 命令<strong>更安全</strong>，因为多了一道校验。</p>
+  </div>
+
+  <h3>7.5 关于「运行期」标记</h3>
+  <p>通过界面 / 命令新增的基站带 <code>runtimeOnly</code> 标记，界面上显示为「运行期」。这类记录<strong>只存在于运行时</strong>：</p>
+  <ul>
+    <li>引擎重启后消失（因为不在配置文件里）</li>
+    <li>删除后从站点表与数据表中清理，不会残留（见下方的生命周期说明）</li>
+  </ul>
+  <p>如果需要<strong>永久生效</strong>，请把基站写进 <code>build\conf\ntripsources</code> 配置文件，然后重启引擎。</p>
+
+  <h4>删除基站后的数据生命周期</h4>
+  <p>删除基站是一个<strong>分阶段收敛</strong>的过程，各阶段时间不同：</p>
+  <table>
+    <thead><tr><th class="w2">时间</th><th>发生的事</th><th>界面上看到什么</th></tr></thead>
+    <tbody>
+      <tr><td>立即（&lt;1 秒）</td><td>源表删除；三角网重剖（该站顶点与相关边消失）；基线表删除对应基线</td><td>网图上该站与连线消失；基线表对应行进入 30 秒缓冲期</td></tr>
+      <tr><td>10 ～ 15 秒</td><td>该站的孤儿数据（观测值 / 站信息 / 卫星状态 / 解算状态等）由<strong>生命周期回收器</strong>从共享内存表中清除——删除后这些数据不再更新，超过 10 秒即被判定过期回收</td><td>无感知（内部清理）</td></tr>
+      <tr><td>30 秒</td><td>基线表缓冲期到期</td><td>基线表对应行淡出消失</td></tr>
+    </tbody>
+  </table>
+  <p>反向操作同理：<strong>新增</strong>基站时数据一经创建即视为活跃管理，只要持续有更新就永远不会被回收；若新增的源从不推流（如配置了不存在的 caster），删除它之后这些零数据会在登记后 10 秒被兜底回收。</p>
+
+  <h3>7.6 三种操作方式的对比</h3>
+  <table>
+    <thead><tr><th class="w2">方式</th><th>优点</th><th>缺点</th><th class="w2">适用</th></tr></thead>
+    <tbody>
+      <tr><td>界面操作</td><td>直观，有表单校验，即时看到结果</td><td>需要有人开浏览器</td><td>日常运维</td></tr>
+      <tr><td>控制台命令</td><td>无需浏览器；可在引擎侧直接操作</td><td>参数靠位置，无校验，缺参数提示不友好</td><td>排障、快速验证</td></tr>
+      <tr><td>HTTP 接口</td><td>可脚本化、可集成；有完整字段校验</td><td>需要采集层在跑</td><td>自动化、批量操作</td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 8 ══════════════ -->
+<section id="s8">
+  <h2 class="sec"><span class="n">8</span>控制台命令</h2>
+
+  <p>引擎控制台支持以下命令。命令行尾需要是 <strong>CRLF</strong>（采集层的 TCP 客户端会自动加，telnet 默认也是），只发 <code>\n</code> 时可能被当成命令的一部分。</p>
+
+  <h3>8.1 服务控制</h3>
+  <table>
+    <thead><tr><th class="w3">命令</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>start-gui [端口] [lan]</code></td><td>启动可视化大屏（自动拉起采集层并打开浏览器）。不带参数用默认端口 8181 且仅本机；加 <code>lan</code> 则对外开放</td></tr>
+      <tr><td><code>start</code></td><td>启动 CORS 解算服务</td></tr>
+      <tr><td><code>stop</code></td><td>停止 CORS 解算服务（引擎进程继续运行，可再 <code>start</code>）</td></tr>
+      <tr><td><code>shutdown</code></td><td>退出引擎进程</td></tr>
+      <tr><td><code>quiet [0|1]</code></td><td>查询 / 设置 <code>showbls</code> 静默状态。不带参数 = 查询；<code>quiet 0</code> 恢复回显；<code>quiet 1</code> 静默</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.2 数据源管理</h3>
+  <table>
+    <thead><tr><th class="w3">命令</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>addsource</code></td><td>新增 NTRIP 数据源（基站）。需 10 个参数，见 <a href="#s7">7.3 节</a></td></tr>
+      <tr><td><code>delsource &lt;站名&gt;</code></td><td>删除数据源</td></tr>
+      <tr><td><code>sourceinfo [站名]</code></td><td>查询数据源详情（不接参数则列出全部）。<strong>站名用挂载点</strong></td></tr>
+      <tr><td><code>monisrcinfo</code></td><td>数据源监控信息</td></tr>
+      <tr><td><code>loadopt</code></td><td>重新加载配置</td></tr>
+      <tr><td><code>updpntopt</code> / <code>updrtkopt</code></td><td>更新定位 / RTK 参数</td></tr>
+      <tr><td><code>setobsudfrq &lt;秒&gt;</code> / <code>setrtkudfrq &lt;秒&gt;</code></td><td>设置观测值 / RTK 更新频率</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.3 解算信息查询</h3>
+  <table>
+    <thead><tr><th class="w3">命令</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>showbls</code></td><td>显示基线解算状态概览。<strong>这条是大屏数据的主要来源</strong></td></tr>
+      <tr><td><code>showblsols</code></td><td>显示基线解算详细结果</td></tr>
+      <tr><td><code>showblsif</code> / <code>showblswl</code></td><td>显示基线 IF（无电离层组合）/ WL（宽巷）解算信息</td></tr>
+      <tr><td><code>showambdds</code></td><td>显示双差模糊度</td></tr>
+      <tr><td><code>showatmodddelay</code></td><td>显示双差大气延迟</td></tr>
+      <tr><td><code>navidata</code> / <code>observ</code> / <code>satellite</code></td><td>星历 / 观测值 / 卫星信息</td></tr>
+      <tr><td><code>rtkpos</code></td><td>RTK 定位结果</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box warn">
+    <span class="t">showbls 会被采集层每秒轮询一次</span>
+    <p>采集层为了给大屏供数，会<strong>每秒</strong>下发一次 <code>showbls</code>。这个命令的输出条目较多，若不禁默会把控制台刷得没法用。</p>
+    <p>因此系统默认<strong>静默</strong>该命令的输出。需要手工看内容时，先 <code>quiet 0</code> 恢复回显，看完再 <code>quiet 1</code> 恢复静默。</p>
+  </div>
+
+  <h3>8.4 三角网与虚拟站</h3>
+  <table>
+    <thead><tr><th class="w3">命令</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>showdtrigs</code></td><td>显示三角网顶点</td></tr>
+      <tr><td><code>showsubnet</code></td><td>显示子网信息</td></tr>
+      <tr><td><code>drawdtrignet</code></td><td>绘制 / 导出三角网</td></tr>
+      <tr><td><code>showtrinet</code></td><td>导出<strong>权威</strong>三角网 CSV（顶点 / 边 / 三角形 + 校验和尾巴），是大屏三角网渲染的数据基准</td></tr>
+      <tr><td><code>addvsta</code> / <code>delvsta</code></td><td>新增 / 删除虚拟参考站（VRS）</td></tr>
+      <tr><td><code>showvstas</code></td><td>列出虚拟参考站</td></tr>
+      <tr><td><code>drawvsta</code></td><td>绘制虚拟站位置</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">showtrinet 的校验和尾巴是什么</span>
+    <p>CSV 末尾附带的校验和用于<strong>确认数据完整且未被截断</strong>。网络传输或缓冲区边界问题可能导致 CSV 尾部缺失，此时校验和不匹配 —— 前端据此可以判断「拿到的三角网是否可信」，避免渲染出一张残缺的网。</p>
+  </div>
+
+  <h3>8.5 用户与监控</h3>
+  <table>
+    <thead><tr><th class="w3">命令</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>adduser</code> / <code>deluser</code> / <code>showusers</code></td><td>NTRIP 用户管理</td></tr>
+      <tr><td><code>addmonitor</code> / <code>delmonitor</code></td><td>监控源管理</td></tr>
+      <tr><td><code>addntripagent</code> / <code>delntripagent</code></td><td>NTRIP 代理管理</td></tr>
+      <tr><td><code>agentinfo</code></td><td>代理信息</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.6 命令匹配规则（重要）</h3>
+
+  <div class="box tip">
+    <span class="t">命令是「精确匹配」</span>
+    <p>引擎判断命令的逻辑是：把输入的第一个词与命令表逐项<strong>全等比较</strong>（区分大小写），命中即执行。这意味着：</p>
+    <ol style="margin:8px 0">
+      <li><strong>必须输入完整命令名</strong> —— 输入 <code>start-g</code> 或 <code>st</code> 不会命中任何命令，只会得到 <code>unknown command</code>；</li>
+      <li><strong>相近命令互不干扰</strong> —— <code>start</code> 与 <code>start-gui</code> 是两个独立命令，谁也不会被对方「抢走」。</li>
+    </ol>
+  </div>
+
+  <p>完整命令表（按功能分组排列，共 38 个）：</p>
+<pre><code>start-gui   start       stop        addsource   delsource   loadopt
+navidata    observ      satellite   sourceinfo  rtkpos      addvsta
+delvsta     showdtrigs  showbls     showsubnet  adduser     deluser
+showvstas   showusers   monisrcinfo agentinfo   addmonitor  addntripagent
+delmonitor  delntripagent  updpntopt  updrtkopt  showblsols  drawdtrignet
+drawvsta    showambdds  showblsif   showblswl   showatmodddelay
+setobsudfrq setrtkudfrq shutdown</code></pre>
+
+  <div class="box tip">
+    <span class="t">命令报「unknown command」时先查这两件事</span>
+    <ol style="margin:8px 0 0">
+      <li><strong>命令名拼写</strong> —— 是否少打或多打了字符（精确匹配下，多一个字符都算不命中）。</li>
+      <li><strong>是否带了不该有的参数</strong> —— 多数命令参数不足时会打印 <code>usage:</code> 提示行；个别命令仍会静默忽略。</li>
+    </ol>
+  </div>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 9 ══════════════ -->
+<section id="s9">
+  <h2 class="sec"><span class="n">9</span>HTTP 接口</h2>
+
+  <p>采集层（默认 8181 端口）提供以下接口，供前端与自动化脚本使用。全部接口都是<strong>同步 JSON</strong> 响应。</p>
+
+  <h3>9.1 接口清单</h3>
+  <table>
+    <thead><tr><th class="w1">方法</th><th class="w3">路径</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td><code>/api/snapshot</code></td><td>完整状态快照（连接状态、站点表、字典统计、历史数据等）</td></tr>
+      <tr><td>GET</td><td><code>/api/stations</code></td><td>站点列表（比 snapshot 轻量）</td></tr>
+      <tr><td>POST</td><td><code>/api/console</code></td><td>执行控制台命令，请求体 <code>{"cmd":"showbls"}</code></td></tr>
+      <tr><td>POST</td><td><code>/api/station/add</code></td><td>新增基站（带字段校验）</td></tr>
+      <tr><td>POST</td><td><code>/api/station/del</code></td><td>删除基站</td></tr>
+      <tr><td>POST</td><td><code>/api/dict/reload</code></td><td>重新加载站点字典（热加载）</td></tr>
+      <tr><td>POST</td><td><code>/api/baseline/add</code></td><td>新增基线</td></tr>
+      <tr><td>POST</td><td><code>/api/baseline/del</code></td><td>删除基线</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box bad">
+    <span class="t">只有这 8 条路由</span>
+    <p>没有 <code>/api/state</code>、没有 <code>/api/health</code>、没有 <code>/api/version</code>。访问不存在的路径会返回 404。做健康检查请用 <code>/api/snapshot</code>。</p>
+  </div>
+
+  <h3>9.2 查询状态</h3>
+<pre><code>curl http://127.0.0.1:8181/api/snapshot</code></pre>
+  <p>返回 JSON，关键字段：</p>
+<pre><code>{
+  "solution": { "connected": true, "frames": 5625, "errors": 0 },
+  "console":  { "connected": true },
+  "stations": [ ... ],
+  "dictStats": { ... }
+}</code></pre>
+
+  <table>
+    <thead><tr><th class="w3">字段</th><th>含义</th><th class="w2">健康判断</th></tr></thead>
+    <tbody>
+      <tr><td><code>solution.connected</code></td><td>采集层是否连上了引擎的 8080 数据流</td><td>应为 <code>true</code></td></tr>
+      <tr><td><code>solution.frames</code></td><td>已接收的解算数据帧数</td><td><strong>连续两次读应增长</strong></td></tr>
+      <tr><td><code>solution.errors</code></td><td>解析错误计数</td><td>应为 <code>0</code> 或稳定不增长</td></tr>
+      <tr><td><code>console.connected</code></td><td>采集层是否连上了引擎的 9000 控制台</td><td>应为 <code>true</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">判断「数据是否在动」要看 frames 的增量，不是看 connected</span>
+    <p><code>connected: true</code> 只说明 TCP 连接建起来了，不代表数据在流。<strong>唯一可靠的判断是 frames 在增长</strong>。间隔几秒取两次对比：</p>
+<pre style="margin:8px 0 0"><code>curl -s http://127.0.0.1:8181/api/snapshot | findstr /C:"frames" &amp; timeout /t 3 &gt;nul &amp; curl -s http://127.0.0.1:8181/api/snapshot | findstr /C:"frames"</code></pre>
+  </div>
+
+  <h3>9.3 执行任意控制台命令</h3>
+<pre><code>curl -X POST http://127.0.0.1:8181/api/console \
+  -H "Content-Type: application/json" \
+  -d "{\"cmd\":\"sourceinfo\"}"</code></pre>
+
+  <div class="box warn">
+    <span class="t">请求体字段名是 cmd，不是 command</span>
+    <p>写成 <code>command</code> 会直接返回 <code>400</code>。这是实测踩过的坑。</p>
+  </div>
+
+  <h3>9.4 健康检查脚本</h3>
+<pre><code><span class="c">REM 最简：确认 snapshot 可访问且数据流已连上</span>
+curl -s http://127.0.0.1:8181/api/snapshot | findstr /C:"\"connected\":true"
+
+<span class="c">REM 更可靠：确认 frames 真的在推进（两次读数不同即正常）</span>
+curl -s http://127.0.0.1:8181/api/snapshot | findstr /C:"frames"</code></pre>
+
+  <h3>9.5 用 PowerShell 取结构化数据</h3>
+  <p>需要提取具体字段值时，PowerShell 比 <code>findstr</code> 方便：</p>
+<pre><code><span class="c"># 取 solution 的连接状态与帧数</span>
+$s = Invoke-RestMethod http://127.0.0.1:8181/api/snapshot
+$s.solution | Select-Object connected, frames, errors
+
+<span class="c"># 列出所有站点名</span>
+$s.stations | Select-Object -ExpandProperty name</code></pre>
+
+  <div class="box tip">
+    <span class="t">snapshot 的响应体积可能很大</span>
+    <p><code>/api/snapshot</code> 会带上完整的逐星延迟历史缓冲，实测可达数百 KB。若只需站点清单，用更轻的 <code>/api/stations</code>。前端实时数据走 WebSocket，不走这个接口。</p>
+  </div>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 10 ══════════════ -->
+<section id="s10">
+  <h2 class="sec"><span class="n">10</span>采集层配置</h2>
+
+  <p>采集层是 Node.js 程序（<code>viz/collector/index.js</code>），职责是：连引擎的 8080 拿解算数据、连 9000 下发控制台命令、对外提供 8181 的 HTTP + WebSocket 服务。</p>
+  <p>正常使用时由 <code>start-gui</code> 自动拉起，<strong>无需手工干预</strong>；需要单独调试时才手动启动。</p>
+
+  <h3>10.1 手动启动</h3>
+<pre><code>set MCORS_SOURCE=live
+set MCORS_HOST=127.0.0.1
+set MCORS_WEB_PORT=8181
+node viz\collector\index.js</code></pre>
+
+  <h3>10.2 环境变量</h3>
+  <table>
+    <thead><tr><th class="w3">变量</th><th class="w2">默认</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>MCORS_SOURCE</code></td><td><code>mock</code></td><td><code>live</code> = 连真引擎；<code>mock</code> = 内置模拟数据</td></tr>
+      <tr><td><code>MCORS_HOST</code></td><td>自动探测</td><td>引擎地址</td></tr>
+      <tr><td><code>MCORS_CONSOLE_PORT</code></td><td><code>9000</code></td><td>控制台端口</td></tr>
+      <tr><td><code>MCORS_SOLUTION_PORT</code></td><td><code>8080</code></td><td>数据流端口</td></tr>
+      <tr><td><code>MCORS_WEB_PORT</code></td><td><code>8181</code></td><td>大屏 HTTP 端口</td></tr>
+      <tr><td><code>MCORS_WEB_HOST</code></td><td><code>0.0.0.0</code></td><td>大屏监听地址</td></tr>
+      <tr><td><code>MCORS_CONF</code></td><td>自动解析</td><td>conf 目录路径（用于读站点字典等）</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box bad">
+    <span class="t">忘记设置 MCORS_SOURCE=live 会被误导</span>
+    <p>不设该变量时采集层默认进入 <strong>mock 模式</strong>，界面会显示模拟数据，看起来「一切正常」—— 但实际上没有连引擎。排查真实问题时务必确认该变量为 <code>live</code>。</p>
+    <p><strong>典型误判场景</strong>：引擎挂了，但界面还在动（因为有 mock 数据），于是花大量时间在引擎侧找问题。先确认这一条。</p>
+  </div>
+
+  <div class="box ok">
+    <span class="t">start-gui 会自动处理这些变量</span>
+    <p>通过 <code>start-gui</code> 启动时，引擎会自动设置 <code>MCORS_SOURCE=live</code>、<code>MCORS_HOST=127.0.0.1</code>、<code>MCORS_CONF</code> 指向正确的 conf 目录，并把大屏监听地址按「本机 / lan」模式设置好。手动启动才需要自己设。</p>
+  </div>
+
+  <h3>10.3 历史缓冲与性能相关参数</h3>
+  <p>以下参数在 <code>viz/collector/config.js</code> 中定义，一般不需要改：</p>
+  <table>
+    <thead><tr><th class="w3">参数</th><th class="w2">默认值</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td><code>satHistoryLimit</code></td><td><code>120</code></td><td>每颗卫星保留的历史历元数。决定「逐星延迟曲线」能回溯多久（按 1 Hz 采样约 2 分钟）</td></tr>
+      <tr><td><code>satHistoryMaxBaselines</code></td><td><code>12</code></td><td>最多为多少条基线保留逐星历史。超出时不再新增，避免内存无上限增长</td></tr>
+      <tr><td>广播间隔</td><td><code>1000</code> ms</td><td>WebSocket 推送频率（<strong>1 秒</strong>）。改小会更实时但更耗资源</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box warn">
+    <span class="t">调大 satHistoryLimit 会明显增加内存占用</span>
+    <p>内存占用大致与 <code>satHistoryLimit × 基线条数 × 每基线卫星数</code> 成正比。把 <code>satHistoryLimit</code> 从 120 提到 1200，内存会变成约 10 倍。<code>/api/snapshot</code> 的响应体积也会同步膨胀。</p>
+  </div>
+
+  <h3>10.4 采集层的日志</h3>
+  <p>采集层把日志写到标准输出。通过 <code>start-gui</code> 启动时，这些输出会被重定向到引擎的日志文件，可以一并在 <code>build\*.trace</code> 里看到。</p>
+  <p>手动启动时日志直接打印在命令行窗口，便于实时观察。</p>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 11 ══════════════ -->
+<section id="s11">
+  <h2 class="sec"><span class="n">11</span>常见问题 FAQ</h2>
+
+  <h3>Q1 · 改了代码，编译也过了，但行为没变</h3>
+  <p><strong>原因</strong>：用了全量 <code>cmake --build .</code>，它挂在第三方依赖上静默失败，exe 没被重新链接。</p>
+  <p><strong>解决</strong>：改用 <code>cmake --build . --target cors-engine -j 8</code>，并用时间戳核对产物是否比源码新（见 <a href="#s3">3.6 节</a>）。</p>
+
+  <h3>Q2 · 链接报 Permission denied</h3>
+  <p><strong>原因</strong>：<code>cors-engine.exe</code> 正在运行，文件被占用。</p>
+  <p><strong>解决</strong>：先 <code>taskkill /F /IM cors-engine.exe</code> 再编译。</p>
+
+  <h3>Q3 · 执行 start-gui 弹出「Windows 找不到文件 'node'」</h3>
+  <p><strong>原因</strong>：Node.js 装在非标准路径（如 WorkBuddy 托管版本目录），引擎的查找逻辑找不到它。</p>
+  <p><strong>解决</strong>：把 Node 放到下列任一位置，或装到标准路径：</p>
+  <ul>
+    <li><code>C:\Program Files\nodejs\</code></li>
+    <li><code>%USERPROFILE%\.workbuddy\binaries\node\versions\&lt;版本&gt;\</code></li>
+    <li><code>%LOCALAPPDATA%\Programs\nodejs\</code></li>
+  </ul>
+  <p>引擎会自动在这些位置查找并给出提示。</p>
+
+  <h3>Q4 · start-gui 后大屏打不开 / 数据不更新</h3>
+  <p>按顺序检查：</p>
+  <ol>
+    <li>控制台是否显示 <code>gui ready</code>？没有则看它报的错误。</li>
+    <li>引擎里是否执行过 <code>start</code>？没执行会提示 <code>cors not started yet</code>，此时界面能开但无数据。</li>
+    <li>8181 是否被占用？<code>netstat -ano | findstr :8181</code>。若有其他 node 实例占着，先结束它。</li>
+  </ol>
+  <p>若以上都正常，继续走 <a href="#s12">12.4 节</a>的逐层排查。</p>
+
+  <h3>Q5 · 界面上看到的站点表与预期不符</h3>
+  <p><strong>原因</strong>：引擎读的是 <code>build\conf\</code>，而你可能改的是项目根的 <code>conf\</code>。</p>
+  <p><strong>解决</strong>：确认改的是 <code>build\conf\ntripsources</code>，或调用 <code>POST /api/dict/reload</code> 热加载。</p>
+
+  <h3>Q6 · 用 sourceinfo &lt;站名&gt; 查不到刚加的基站</h3>
+  <p><strong>原因</strong>：引擎侧「源名」取的是<strong>挂载点（mntpnt）</strong>，不是 name。</p>
+  <p><strong>解决</strong>：用挂载点去查，或让两者填成一样。</p>
+
+  <h3>Q7 · 新增的基站重启后消失了</h3>
+  <p><strong>原因</strong>：通过界面 / 命令新增的基站是「运行期」（<code>runtimeOnly</code>）记录，不写入配置文件。</p>
+  <p><strong>解决</strong>：需要永久保留就写进 <code>build\conf\ntripsources</code>，然后重启引擎。</p>
+
+  <h3>Q8 · 大屏显示的数据像是假的 / 一直不变</h3>
+  <p><strong>原因</strong>：采集层处于 mock 模式（未设 <code>MCORS_SOURCE=live</code>）。</p>
+  <p><strong>解决</strong>：用 <code>start-gui</code> 启动（会自动设好），或手动启动时显式设置该变量。</p>
+
+  <h3>Q9 · 引擎控制台一直刷屏</h3>
+  <p><strong>原因</strong>：<code>showbls</code> 被采集层每秒轮询，每次输出条目较多。</p>
+  <p><strong>解决</strong>：默认已静默。用 <code>quiet</code> 查看状态，<code>quiet 0</code> 恢复回显，<code>quiet 1</code> 恢复静默。</p>
+
+  <h3>Q10 · 只有本机能访问，其他机器连不上</h3>
+  <p><strong>检查</strong>：</p>
+  <ul>
+    <li>引擎是否用了 <code>-b local</code>？那会只监听回环。去掉该参数即恢复对外。</li>
+    <li>大屏是否用 <code>start-gui 8181 lan</code> 启动的？不带 <code>lan</code> 时采集层只听本机。</li>
+    <li>Windows 防火墙是否放行了 8181 / 9000 / 8080 端口。</li>
+    <li>用 <code>netstat -ano | findstr :8181</code> 确认监听地址是 <code>0.0.0.0:8181</code> 而不是 <code>127.0.0.1:8181</code>。</li>
+  </ul>
+
+  <h3>Q11 · 基线表的行数、顺序、名称会变</h3>
+  <p>先分清<strong>两种完全不同的变化</strong>，不要混为一谈：</p>
+
+  <table>
+    <thead><tr><th class="w4">现象</th><th class="w4">成因</th><th>正常吗</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>行<strong>位置</strong>每几秒变一次<br>（同一批基线上下跳）</td>
+        <td>排序键不确定 —— 同一帧里所有基线的观测时刻<strong>完全相同</strong>，若拿它当决胜键，比较函数恒返回 0，顺序就取决于数据到达顺序</td>
+        <td><span class="tag no">曾有此 bug，已修</span></td>
+      </tr>
+      <tr>
+        <td>行的<strong>成员</strong>变了<br>（少一条 / 多一条，站名换掉）</td>
+        <td>基站真的上下线了。引擎下发的 <code>showbls</code> 结果里就没这条基线</td>
+        <td><span class="tag ok">正常</span> 这是真实状态</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">怎么判断是「抖动」还是「真变化」</span>
+    <p>连续取几次快照，比对基线集合（站名对）是否真的不同：</p>
+<pre style="margin:8px 0 0"><code>for /l %i in (1,1,6) do @(curl -s http://127.0.0.1:8181/api/snapshot | findstr /c:"baseName" &amp; timeout /t 3 &gt;nul)</code></pre>
+    <p>集合<strong>完全一致</strong>却看到行在动 ⇒ 排序问题；集合本身就不同 ⇒ 真实上下线，属正常。</p>
+  </div>
+
+  <h4>如果表格「一直在闪」（行序没变也在闪）</h4>
+  <p>这是一个**独立于排序**的问题，2026-10-05 实测并修复。判断特征：</p>
+  <ul>
+    <li>行<strong>数量</strong>和<strong>顺序</strong>看着都没变，但整张表持续有明暗闪动；</li>
+    <li>数值列每帧更新（定位误差等），但这不足以造成闪烁。</li>
+  </ul>
+  <p><strong>成因</strong>：表格复用 <code>&lt;tr&gt;</code> 节点时，曾把<strong>所有行</strong>每帧都搬进临时容器再搬回来。按 CSS 规范，「从文档移除再插入」会<strong>重启该元素上所有正在播放的动画</strong> —— 于是行序明明没变，行高亮的动画却每帧从头开始播，永远播不完，看上去就是不停闪。</p>
+  <p><strong>实测数据</strong>：10 行连推 5 帧，竟然发生 <strong>100 次</strong>节点移动（每行每帧都动一次）。</p>
+  <p><strong>修复</strong>：只对<strong>真正需要换位</strong>的行做移动，稳态下移动次数为 <strong>0</strong>；同时把「位置变化」的提示从整行铺底改成左侧一条细色条，降低视觉强度。</p>
+  <p>回归护栏：<code>node viz\test\bl-flicker-repro-test.js</code>（12 项）。该套件的核心断言是「稳态连推 5 帧，节点移动次数必须为 0」。</p>
+
+  <p>行位置稳定性由三层机制保证（源码位于 <code>viz/web/js/baseline-panel.js</code>），详见 <a href="#s6">6.3 节</a>的说明框。</p>
+
+  <h3>Q12 · 大屏上的数字看着不太确定</h3>
+  <p>基线表的数值列都按固定小数位显示，位数不足补零、无值显示 <code>—</code>：</p>
+  <ul>
+    <li><strong>长度</strong> 1 位小数 · <strong>龄期</strong> 整数 · <strong>参与卫星数</strong> 整数</li>
+    <li><strong>定位误差</strong> 3 位小数 · <strong>双差大气延迟</strong> 3 位小数</li>
+  </ul>
+  <p>数字用等宽字体 + <code>tabular-nums</code> 渲染，保证不同行的小数点上下对齐，便于纵向比较。</p>
+  <p>「双差大气延迟」列是全表唯一带角标的列（标注 <code>平均</code>），表示这是所有参与卫星的<strong>算术平均值</strong>，不是某一颗星的值。要看逐星明细，<strong>点那一行</strong>打开抽屉。</p>
+
+  <h3>Q13 · 引擎控制台敲了命令但好像没反应</h3>
+  <p><strong>原因</strong>：控制台的输入循环里有 <code>uv_sleep(500)</code>，最坏情况下会造成最长约 30 秒的输入粘滞 —— 期间键盘输入被吃掉。</p>
+  <p><strong>解决</strong>：耐心等待；命令本身仍会正常执行。若必须立刻操作，可另开一个 TCP 客户端连 9000 发命令，或用 <code>POST /api/console</code>。</p>
+  <p><em>备注</em>：这是已知的待优化点（理想做法是改成事件驱动的 <code>uv_timer</code> 轮询 + 状态机，而不是阻塞 sleep）。</p>
+
+  <h3>Q14 · 新增基站后，界面显示的类型 / 高程与我填的不一致</h3>
+  <p><strong>原因（历史 bug，已修）</strong>：采集层在新增基站时，如果<strong>先下发命令再登记字典</strong>，那么在这几百毫秒到数秒的窗口内，<code>sourceinfo</code> 轮询（每 3 秒一次）可能先跑到。轮询建立记录时给的<strong>类型是连接类型（如「NTRIP」而不是 M/E/O/V）且没有高程</strong>，而登记逻辑又「不覆盖已有记录」，于是你填的值被悄悄替换掉了。</p>
+  <p><strong>现象</strong>：表格里类型显示为「混合」、高程显示为 <code>—</code>。</p>
+  <p><strong>现状</strong>：已改为<strong>先登记字典、再下发命令</strong>，让用户输入成为权威首值，轮询只负责回填 srcId / ECEF / 状态。</p>
+
+  <h3>Q15 · 长基线 / 低高度角卫星的延迟数值特别大</h3>
+  <p><strong>原因</strong>：这是<strong>正常的物理现象</strong>，不是 bug。</p>
+  <ul>
+    <li><strong>基线越长</strong>，两台站的观测量所经过的大气路径差异越大，双差残差里残留的大气延迟就越大。</li>
+    <li><strong>卫星高度角越低</strong>，信号穿过大气层的斜路径越长，电离层 / 对流层延迟本身也越大。</li>
+  </ul>
+  <p><strong>怎么用这个信息</strong>：低高度角卫星对解算贡献小、误差大，通常会被高度角截止角过滤掉。如果某条基线 FIX 解不稳定，可以打开抽屉看是不是某颗低高度角卫星的延迟异常突出。</p>
+
+  <h3>Q16 · snapshot 返回的 JSON 很大，处理很慢</h3>
+  <p><strong>原因</strong>：<code>/api/snapshot</code> 会带上完整的逐星延迟历史缓冲（默认每星 120 个历元），实测可占响应的绝大部分体积。</p>
+  <p><strong>解决</strong>：</p>
+  <ul>
+    <li>只要站点清单 → 用 <code>/api/stations</code>。</li>
+    <li>只要连接状态 → 用 <code>findstr</code> 过滤，不要解析整个 JSON。</li>
+    <li>前端实时数据 → 走 WebSocket（采集层推送的是精简版，不含完整历史）。</li>
+  </ul>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 12 ══════════════ -->
+<section id="s12">
+  <h2 class="sec"><span class="n">12</span>运维与排查</h2>
+
+  <h3>12.1 查看运行状态</h3>
+<pre><code><span class="c">REM 引擎进程</span>
+tasklist | findstr cors-engine
+
+<span class="c">REM 采集层进程</span>
+tasklist | findstr node
+
+<span class="c">REM 各端口监听情况</span>
+netstat -ano | findstr "9000 8080 8181"</code></pre>
+
+  <p>正常运行时应看到：</p>
+<pre><code>TCP  0.0.0.0:9000    LISTENING   &lt;引擎PID&gt;
+TCP  0.0.0.0:8080    LISTENING   &lt;引擎PID&gt;
+TCP  127.0.0.1:8181  LISTENING   &lt;采集层PID&gt;</code></pre>
+
+  <div class="box bad">
+    <span class="t">判断服务是否真的可用，只看 LISTENING</span>
+    <p><code>tasklist</code> 里有进程<strong>不代表</strong>服务可用 —— 实测遇到过「假活」进程：进程在、trace 日志仍在增长、TCP 连接也还在，但<strong>端口没有监听</strong>，导致客户端连不上。</p>
+    <p><strong>唯一可靠的判断依据是 <code>netstat</code> 里该端口处于 <code>LISTENING</code>。</strong></p>
+  </div>
+
+  <h3>12.2 日志文件</h3>
+  <p>引擎在 <code>build\</code> 目录生成 trace 日志，文件名形如：</p>
+<pre><code>cors_engine_20261005093622.trace</code></pre>
+  <p>文件名中的时间戳是 <strong>UTC</strong>，换算成本地时间需 +8 小时。按修改时间找最新的那个：</p>
+<pre><code>dir /O-D /T:W build\*.trace</code></pre>
+
+  <div class="box warn">
+    <span class="t">trace 文件会持续增长</span>
+    <p>长时间运行会产生大量日志文件（单个可达数十 MB）。定期清理旧文件，只保留最近若干天：</p>
+<pre style="margin:8px 0 0"><code><span class="c">REM 列出 7 天前的 trace（确认无误后再删）</span>
+forfiles /P build /M *.trace /D -7 /C "cmd /c echo @file"</code></pre>
+  </div>
+
+  <div class="box tip">
+    <span class="t">-s 模式下日志为什么可能缺失</span>
+    <p><code>-s</code> 启动服务模式时，stdout / stderr 会被虚拟终端接管，某些直接写 stdout 的诊断输出可能看不到。需要打印诊断信息时，改为直接 <code>fopen</code> 写一个独立文件最稳妥。</p>
+  </div>
+
+  <h3>12.3 自检脚本</h3>
+  <p>项目提供了一批自动化测试与诊断脚本，分放在两个目录：</p>
+  <ul>
+    <li><code>viz\test\</code> —— <strong>测试套件</strong>（断言式，带通过 / 失败计数）</li>
+    <li><code>viz\tools\</code> —— <strong>诊断探针与辅助脚本</strong>（编译、探测、验证）</li>
+  </ul>
+
+  <h4>测试套件（viz\test\）</h4>
+  <table>
+    <thead><tr><th class="w4">脚本</th><th>用途</th><th class="w1">断言数</th></tr></thead>
+    <tbody>
+      <tr><td><code>run-all.js</code></td><td><strong>全量入口</strong>，依次运行下列套件并汇总</td><td><strong>450</strong></td></tr>
+      <tr><td><code>delaunay-test.js</code></td><td>Delaunay 三角剖分</td><td>22</td></tr>
+      <tr><td><code>trinet-parser-test.js</code></td><td>三角网 CSV 解析（含校验和）</td><td>24</td></tr>
+      <tr><td><code>solution-parser.test.js</code></td><td>解算报文解析</td><td>89</td></tr>
+      <tr><td><code>trend-render-test.js</code></td><td>趋势图渲染</td><td>19</td></tr>
+      <tr><td><code>atmo-avg-test.js</code></td><td>双差大气延迟平均值（单元）</td><td>26</td></tr>
+      <tr><td><code>atmo-avg-e2e.js</code></td><td>双差大气延迟平均值（端到端）</td><td>18</td></tr>
+      <tr><td><code>sat-history-test.js</code></td><td>逐星延迟历史缓冲</td><td>39</td></tr>
+      <tr><td><code>sat-delay-render-test.js</code></td><td>逐星延迟曲线渲染</td><td>54</td></tr>
+      <tr><td><code>sat-chart-interact-test.js</code></td><td>逐星延迟曲线交互</td><td>80</td></tr>
+      <tr><td><code>vrs-map-test.js</code></td><td>虚拟站网图</td><td>27</td></tr>
+      <tr><td><code>bl-sort-stability-test.js</code></td><td>基线表排序稳定性</td><td>40</td></tr>
+      <tr><td><code>bl-flicker-repro-test.js</code></td><td>基线表闪烁回归（DOM 移动语义）</td><td>12</td></tr>
+      <tr><td><code>e2e.js</code></td><td>端到端（<span class="tag mid">需独立运行</span>）</td><td>293</td></tr>
+      <tr><td><code>bl-frame-stability-live.js</code></td><td>跨帧行序稳定性（需真实快照，<strong>不列入</strong>默认套件）</td><td>5</td></tr>
+    </tbody>
+  </table>
+
+  <h4>诊断脚本（viz\tools\）</h4>
+  <table>
+    <thead><tr><th class="w4">脚本</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><code>build-engine.cmd</code></td><td>一键编译引擎（见 <a href="#s3">第 3 章</a>）</td></tr>
+      <tr><td><code>start-engine.cmd</code></td><td>启动引擎的便捷脚本</td></tr>
+      <tr><td><code>station-add-del-probe.js</code></td><td>基站增删功能实测探针（支持 <code>--rounds N</code>）</td></tr>
+      <tr><td><code>console-probe.js</code></td><td>控制台连通性探测</td></tr>
+      <tr><td><code>monitor-probe.js</code></td><td>数据流监控探测</td></tr>
+      <tr><td><code>capture-solution.js</code></td><td>抓取一帧解算数据，便于离线分析</td></tr>
+      <tr><td><code>quiet-probe.js</code></td><td>验证 <code>quiet</code> 静默机制</td></tr>
+      <tr><td><code>baseline-table-probe.js</code></td><td>基线表数据探测</td></tr>
+    </tbody>
+  </table>
+
+  <h4>运行方式</h4>
+  <p>需要 Node.js（若不在 PATH 中，用完整路径调用，例如 <code>C:\Users\&lt;你&gt;\.workbuddy\binaries\node\versions\22.22.2-3\node.exe</code>）：</p>
+<pre><code><span class="c">REM 全量测试（约 40 秒）</span>
+node viz\test\run-all.js
+
+<span class="c">REM 端到端测试（需独立运行）</span>
+node viz\test\e2e.js
+
+<span class="c">REM 基站增删探针，跑 5 轮</span>
+node viz\tools\station-add-del-probe.js --rounds 5</code></pre>
+
+  <div class="box warn">
+    <span class="t">run-all 里可能报 EBUSY，这是环境问题不是代码问题</span>
+    <p>某些套件（尤其是「控制台应答切分」）会报 <code>spawnSync ... EBUSY</code>。这通常是<strong>杀软 / 并发编译临时占用 node.exe</strong> 造成的，在受限环境里甚至可能是环境级限制（实测连 <code>node -e "console.log(42)"</code> 都返回 EBUSY）。</p>
+    <p>此时 <code>run-all.js</code> 会把它标为「<strong>需独立运行</strong>」并给出命令，<strong>不计入失败</strong>。逐个手动跑该套件即可，各套件都能独立运行并自报计数。</p>
+    <p>实测参考值：<code>run-all.js</code> 汇总 <strong>450 通过 / 0 失败</strong>（另有需独立运行的套件未计入）；<code>e2e.js</code> 单独运行 <strong>293 通过 / 0 失败</strong>。</p>
+  </div>
+
+  <h3>12.4 数据流排查顺序</h3>
+  <p>界面无数据时，<strong>严格按此顺序</strong>逐层排除。每一层都确认通过后再看下一层，不要跳步：</p>
+
+  <table>
+    <thead><tr><th class="w1">层</th><th class="w3">检查什么</th><th class="w4">命令</th><th>通过标准</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>引擎进程在吗</td><td><code>tasklist | findstr cors-engine</code></td><td>有进程</td></tr>
+      <tr><td>2</td><td>端口在听吗</td><td><code>netstat -ano | findstr "9000 8080"</code></td><td>两条都是 <code>LISTENING</code></td></tr>
+      <tr><td>3</td><td>解算服务起了吗</td><td>控制台输入 <code>start</code></td><td>无 <code>cors not started yet</code></td></tr>
+      <tr><td>4</td><td>上游连上了吗</td><td>控制台输入 <code>sourceinfo</code></td><td>各源状态为已连接</td></tr>
+      <tr><td>5</td><td>采集层在跑吗</td><td><code>netstat -ano | findstr :8181</code></td><td><code>LISTENING</code></td></tr>
+      <tr><td>6</td><td>采集层连上引擎了吗</td><td><code>curl -s http://127.0.0.1:8181/api/snapshot</code></td><td><code>solution.connected: true</code></td></tr>
+      <tr><td>7</td><td>数据在推进吗</td><td>间隔 3 秒取两次 snapshot 比 <code>frames</code></td><td>数值<strong>增长</strong></td></tr>
+      <tr><td>8</td><td>是不是 mock 模式</td><td>看采集层启动参数 / 环境变量</td><td><code>MCORS_SOURCE=live</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">最常见的三个「假故障」</span>
+    <ol style="margin:8px 0 0">
+      <li><strong>采集层在 mock 模式</strong> —— 界面在动，但数据是假的。看第 8 层。</li>
+      <li><strong>引擎没执行 start</strong> —— 端口都在听，但没数据。看第 3 层。</li>
+      <li><strong>「假活」进程</strong> —— 进程在、日志在写，但端口没 LISTENING。看第 2 层。</li>
+    </ol>
+  </div>
+
+  <h3>12.5 推荐的日常启动流程</h3>
+<pre><code><span class="c">REM 1. 清理残留（按 PID 更精确，见 5.3 节）</span>
+taskkill /F /IM cors-engine.exe
+
+<span class="c">REM 2. 启动引擎</span>
+cd build
+cors-engine.exe -o conf\cors.conf -t 1 -s -p 9000
+
+<span class="c">REM 3. 在引擎控制台依次执行</span>
+start
+start-gui</code></pre>
+
+  <div class="box ok">
+    <span class="t">一次成功的启动应该看到</span>
+<pre style="margin:8px 0 0;background:#0f172a"><code>starting gui collector ...
+  node    : C:\...\node.exe
+  entry   : D:\...\viz\collector\index.js
+  engine  : 127.0.0.1:8080 (solution stream)
+  web     : 127.0.0.1:8181  (local only)
+waiting
+gui ready: http://127.0.0.1:8181/</code></pre>
+  </div>
+
+  <h3>12.6 关键文件速查</h3>
+  <table>
+    <thead><tr><th class="w4">要改什么</th><th>改哪个文件</th></tr></thead>
+    <tbody>
+      <tr><td>上游基站清单</td><td><code>build\conf\ntripsources</code></td></tr>
+      <tr><td>基线定义</td><td><code>build\conf\beselines</code></td></tr>
+      <tr><td>虚拟站清单</td><td><code>build\conf\vrsstations</code></td></tr>
+      <tr><td>引擎全局配置</td><td><code>build\conf\cors.conf</code></td></tr>
+      <tr><td>控制台命令行为</td><td><code>src\engine\engine.c</code></td></tr>
+      <tr><td>命令行参数解析</td><td><code>src\engine\mcors.c</code></td></tr>
+      <tr><td>大屏布局</td><td><code>viz\web\index.html</code></td></tr>
+      <tr><td>大屏样式</td><td><code>viz\web\css\dashboard.css</code></td></tr>
+      <tr><td>基线表面板逻辑</td><td><code>viz\web\js\baseline-panel.js</code></td></tr>
+      <tr><td>采集层主逻辑</td><td><code>viz\collector\index.js</code></td></tr>
+      <tr><td>采集层默认参数</td><td><code>viz\collector\config.js</code></td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 13 ══════════════ -->
+<section id="s13">
+  <h2 class="sec"><span class="n">13</span>性能与资源占用</h2>
+
+  <h3>13.1 各环节的频率</h3>
+  <table>
+    <thead><tr><th class="w4">环节</th><th class="w2">频率</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>采集层下发 <code>showbls</code></td><td>1 秒</td><td>换取大屏的实时性；也是控制台刷屏的来源</td></tr>
+      <tr><td>采集层下发 <code>sourceinfo</code></td><td>3 秒</td><td>刷新站点表的连接状态</td></tr>
+      <tr><td>采集层 WebSocket 广播</td><td>1 秒</td><td>推送给浏览器</td></tr>
+      <tr><td>逐星历史采样</td><td>随解算历元</td><td>每星保留最近 120 个历元</td></tr>
+    </tbody>
+  </table>
+
+  <h3>13.2 已知的性能问题</h3>
+
+  <div class="box warn">
+    <span class="t">引擎长时间运行内存持续增长（待解决）</span>
+    <p>实测观察到引擎内存随运行时间<strong>持续增长</strong>（曾达到 GB 级别）。初步线索指向数据源增删的<strong>对称性</strong>问题：</p>
+    <ul style="margin:8px 0">
+      <li>新增源走的是<strong>同步</strong>路径；</li>
+      <li>删除源走的是<strong>异步</strong>路径。</li>
+    </ul>
+    <p>两者不对称，可能导致删除时部分资源未被释放。</p>
+    <p><strong>当前的应对</strong>：定期重启引擎（例如每天一次，或内存超过阈值时）。重启前先 <code>shutdown</code> 让引擎正常收尾。</p>
+  </div>
+
+  <div class="box tip">
+    <span class="t">控制台输入粘滞</span>
+    <p>控制台输入循环中的 <code>uv_sleep(500)</code> 会造成最长约 30 秒的输入粘滞。不影响命令执行，只影响手工交互体验。详见 <a href="#s11">FAQ Q13</a>。</p>
+  </div>
+
+  <h3>13.3 内存占用的主要来源</h3>
+  <table>
+    <thead><tr><th class="w3">进程</th><th>主要占用</th><th class="w2">可调参数</th></tr></thead>
+    <tbody>
+      <tr><td>cors-engine.exe</td><td>解算矩阵（受基线与卫星数影响）、数据源对象、日志缓冲</td><td>—</td></tr>
+      <tr><td>node.exe（采集层）</td><td>逐星延迟历史缓冲、站点字典、WebSocket 连接</td><td><code>satHistoryLimit</code>、<code>satHistoryMaxBaselines</code></td></tr>
+      <tr><td>浏览器</td><td>页面 DOM、曲线图数据点</td><td>关闭不用的曲线图</td></tr>
+    </tbody>
+  </table>
+
+  <h3>13.4 磁盘占用</h3>
+  <p>磁盘增长主要来自两个地方：</p>
+  <ul>
+    <li><strong>trace 日志</strong> —— 在 <code>build\*.trace</code>。长时间高日志级别运行会积累大量文件。</li>
+    <li><strong>数据记录文件</strong> —— 若配置了 <code>ntrip-record-file</code> / <code>monitor-record-file</code>，会持续写入。</li>
+  </ul>
+  <p>建议定期检查 <code>build\</code> 目录大小，清理过期的 trace 文件（见 <a href="#s12">12.2 节</a>）。</p>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+<!-- ══════════════ 14 ══════════════ -->
+<section id="s14">
+  <h2 class="sec"><span class="n">14</span>术语表</h2>
+
+  <table>
+    <thead><tr><th class="w3">术语</th><th>全称 / 英文</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td><strong>CORS</strong></td><td>Continuously Operating Reference Station</td><td>连续运行基准站。长期连续观测并提供差分服务的 GNSS 基准站</td></tr>
+      <tr><td><strong>NTRIP</strong></td><td>Networked Transport of RTCM via Internet Protocol</td><td>通过互联网传输 RTCM 差分数据的协议，本系统接入上游用的就是它</td></tr>
+      <tr><td><strong>RTCM</strong></td><td>Radio Technical Commission for Maritime Services</td><td>差分数据的标准格式。RTCM3 是当前主流版本</td></tr>
+      <tr><td><strong>挂载点</strong></td><td>Mount Point / mntpnt</td><td>NTRIP 服务器上某个数据流的标识名。<strong>本系统引擎把它当作「源名」</strong></td></tr>
+      <tr><td><strong>基线</strong></td><td>Baseline</td><td>两台基准站之间的观测向量。基线解算就是求这个向量</td></tr>
+      <tr><td><strong>流动站 / 基准站</strong></td><td>Rover / Base</td><td>基线两端的角色。本系统在配置里用「基准站 → 流动站」的形式标识一条基线</td></tr>
+      <tr><td><strong>模糊度</strong></td><td>Ambiguity</td><td>载波相位观测中的整周未知数。<strong>固定（FIX）</strong>后可达厘米级</td></tr>
+      <tr><td><strong>FIX / FLOAT</strong></td><td>Fixed / Float Solution</td><td>模糊度已固定 / 未固定的解。FIX 精度远高于 FLOAT</td></tr>
+      <tr><td><strong>双差</strong></td><td>Double Difference</td><td>在测站间、卫星间各做一次差分，消除卫星钟差与接收机钟差</td></tr>
+      <tr><td><strong>大气延迟</strong></td><td>Atmospheric Delay</td><td>信号穿过电离层 / 对流层产生的传播延迟，是双差残差的主要成分</td></tr>
+      <tr><td><strong>VRS</strong></td><td>Virtual Reference Station</td><td>虚拟参考站。根据附近真实站的数据算出「虚拟」的一台站，为流动站提供差分</td></tr>
+      <tr><td><strong>Delaunay 三角网</strong></td><td>Delaunay Triangulation</td><td>一种最优三角剖分。本系统用它确定基站之间的连接关系</td></tr>
+      <tr><td><strong>龄期</strong></td><td>Age</td><td>距最近一次有效解算经过的时长。龄期越小说明解越新鲜</td></tr>
+      <tr><td><strong>高度角截止角</strong></td><td>Elevation Mask</td><td>低于该高度角的卫星不参与解算（信号穿越大气的路径太长，误差大）</td></tr>
+      <tr><td><strong>椭球高</strong></td><td>Ellipsoidal Height</td><td>相对于参考椭球面的高度，与海拔（正高）不同</td></tr>
+      <tr><td><strong>ECEF</strong></td><td>Earth-Centered, Earth-Fixed</td><td>地心地固坐标系。经纬高需要转换成它才能算基线向量</td></tr>
+      <tr><td><strong>采集层</strong></td><td>Collector</td><td>本系统中 Node.js 写的中间层，把引擎数据转成 Web 可消费格式</td></tr>
+      <tr><td><strong>运行期源</strong></td><td>runtimeOnly</td><td>运行过程中动态添加、未写入配置文件的基站。<strong>重启后消失</strong></td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ 返回目录</a>
+</section>
+
+</main>
+
+<footer>
+  <p>mcors CORS 基准站网监控系统 · 使用说明书 · 2026-10-06（详版）</p>
+  <p>配套文档：<code>BUILD.md</code>（编译细节，含 Linux 构建）、<code>viz\README.md</code>（可视化模块）、<code>viz\tools\README.md</code>（工具说明）</p>
+</footer>
+
+</div>
+
+<button class="totop-btn" id="totop-btn" title="返回顶部" aria-label="返回顶部">↑</button>
+
+<script>
+(function(){
+  /* 阅读进度条 */
+  var bar=document.getElementById('progress');
+  var btn=document.getElementById('totop-btn');
+  function onScroll(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+    btn.classList.toggle('show',h.scrollTop>600);
+  }
+  addEventListener('scroll',onScroll,{passive:true});onScroll();
+  btn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+
+  /* 目录当前章节高亮 */
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  var secs=[].slice.call(document.querySelectorAll('main.content > section[id]'));
+  if('IntersectionObserver' in window){
+    var obs=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){
+            a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id);
+          });
+        }
+      });
+    },{rootMargin:'-12% 0px -78% 0px'});
+    secs.forEach(function(s){obs.observe(s);});
+  }
+
+  /* h3 自动锚点（深链可直达小节） */
+  var h3s=document.querySelectorAll('main.content h3');
+  for(var i=0;i<h3s.length;i++){
+    var h=h3s[i];
+    if(!h.id){h.id='h3-'+(i+1);}
+    var a=document.createElement('a');
+    a.className='anchor';a.href='#'+h.id;a.textContent='§';
+    a.title='复制/打开本节链接';
+    a.addEventListener('click',function(ev){
+      ev.preventDefault();
+      var url=location.href.split('#')[0]+'#'+this.parentNode.id;
+      history.replaceState(null,'',url);
+      if(navigator.clipboard) navigator.clipboard.writeText(url);
+    });
+    h.insertBefore(a,h.firstChild);
+  }
+})();
+</script>
+
+</body>
+</html>

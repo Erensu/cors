@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mcors CORS 基准站网监控</title>
+<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">◈</span>
+    <div>
+      <h1>CORS 基准站网监控</h1>
+      <span class="sub" id="sourceTag">连接中…</span>
+    </div>
+  </div>
+  <div class="status-strip" id="statusStrip">
+    <div class="stat" id="statStations"><b>—</b><span>基站</span></div>
+    <div class="stat" id="statBaselines"><b>—</b><span>基线</span></div>
+    <div class="stat" id="statFix"><b>—</b><span>固定解</span></div>
+    <div class="stat" id="statTrinet"><b>—</b><span>三角面</span></div>
+    <div class="stat" id="statOnline"><b>—</b><span>在线</span></div>
+    <div class="stat" id="statFrames"><b>—</b><span>帧率</span></div>
+  </div>
+  <div class="conn">
+    <span class="dot" id="wsDot"></span>
+    <span id="wsText">连接中</span>
+  </div>
+</header>
+
+<!-- 数据链路诊断横幅：仅在链路异常或仅星历时出现 -->
+<div class="caps-banner" id="capsBanner" style="display:none"></div>
+
+<main class="grid">
+
+  <!-- ============ 基站网图 ============ -->
+  <section class="panel" id="panelNetwork">
+    <div class="panel-head">
+      <h2>基站网图</h2>
+      <div class="tools">
+        <label class="chk"><input type="checkbox" id="optShowTrinet" checked> 三角网</label>
+        <label class="chk"><input type="checkbox" id="optTrinetFill" checked> 网形底纹</label>
+        <label class="chk"><input type="checkbox" id="optShowBaselines" checked> 基线</label>
+        <label class="chk"><input type="checkbox" id="optShowLabels" checked> 站名</label>
+        <label class="chk"><input type="checkbox" id="optShowLabels2"> 中文名</label>
+        <button class="btn ghost sm" id="btnFitView">适配视野</button>
+      </div>
+    </div>
+    <div class="panel-body no-pad">
+      <div id="networkMap" class="chart"></div>
+      <!-- 基线解状态图例：由 network-map.js 按当前站网**实际存在**的
+           状态动态渲染（含线宽/虚实示意与条数），静态列举全部 6 种
+           会让没有样本的颜色也占位，反而让人误以为有状态没画出来。 -->
+      <div class="legend" id="netLegend">
+        <span class="lg"><i class="sw tri"></i>站网三角边</span>
+        <span class="lg" id="netTopoStatus" title="三角网拓扑来源"><i class="sw"></i><b>—</b></span>
+        <!-- 站点图例：虚拟站用菱形+紫边，与图上样式一一对应。
+             计数由 network-map.js 按当前站网实时填入，
+             无虚拟站时该行隐藏，不占位（与基线状态图例同一原则）。 -->
+        <span class="lg lg-vrs" id="netVrsLegend" hidden
+              title="虚拟站 = 引擎 VRS 生成的虚拟参考点，不是物理基站。$SRCINFO 中 srcId 为负，conf/ntripsources 第10列类型为V。">
+          <i class="sw vrs"></i>虚拟站<b id="netVrsCount">0</b>
+        </span>
+        <span class="lg-sep" title="以下为基线解状态，与基线连线颜色一一对应">基线解状态</span>
+        <span id="blStateLegend" class="bl-state-legend">—</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 基线解算信息 ============ -->
+  <section class="panel" id="panelBaseline">
+    <div class="panel-head">
+      <h2>基线解算信息</h2>
+      <div class="tools">
+        <select id="blSort" class="sel">
+          <option value="fixed" selected>固定顺序（首次出现序）</option>
+          <option value="level">按解状态排序</option>
+          <option value="length">按基线长度</option>
+          <option value="ns">按参与星数</option>
+          <option value="poserr">按定位误差</option>
+          <option value="name">按站点名</option>
+        </select>
+        <button class="btn ghost sm" id="btnRefreshBl">刷新</button>
+      </div>
+    </div>
+    <div class="panel-body no-pad">
+      <div class="table-wrap">
+        <table class="tbl" id="blTable">
+          <thead>
+            <tr>
+              <th>基线</th><th>解状态</th><th class="num">长度(km)</th>
+              <th class="num">龄期(s)</th>
+              <th class="num" title="引擎 $BLSOLS 的 ns：参与解算的卫星数（区别于 GGA 报的可见星数；模糊度个数 nb 不在此列，逐星明细见点击行后的详情）">参与解算卫星数</th>
+              <th class="num" title="poserr 三分量的模（X/Y/Z 定位误差合成），点击行看分量">定位误差(m)</th>
+              <th class="num" title="所有参与解算卫星的双差大气延迟的算术平均 (m)，含对流层与电离层 —— 反映大气对基线解的残余影响；本列为平均值，非单星值，点击行看逐星明细">双差大气延迟(m)<span class="avg-tag">平均</span></th>
+            </tr>
+          </thead>
+          <tbody id="blBody">
+            <tr class="empty"><td colspan="7">暂无基线解算数据</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 基站信息 ============ -->
+  <section class="panel" id="panelStation">
+    <div class="panel-head">
+      <h2>基站信息</h2>
+      <div class="tools">
+        <input type="search" id="stSearch" class="inp" placeholder="搜索站名/ 区域">
+        <button class="btn primary sm" id="btnAddStation">+ 新增基站</button>
+      </div>
+    </div>
+    <div class="panel-body no-pad">
+      <div class="table-wrap">
+        <table class="tbl" id="stTable">
+          <thead>
+            <tr>
+              <th>名称</th>
+              <th title="优先取 conf 台账的测绘坐标；台账缺失时由引擎 $SRCINFO 的 ECEF 换算">位置</th>
+              <th>挂载点</th>
+              <th title="引擎 $SRCINFO 的 NTRIP 上游地址:端口">上游</th>
+              <th title="引擎 $SRCINFO 的天线型号 / 接收机型号">设备</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="stBody">
+            <tr class="empty"><td colspan="7">暂无基站数据</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 卫星天空图 ============ -->
+  <section class="panel" id="panelSky">
+    <div class="panel-head">
+      <h2>卫星天空图</h2>
+      <div class="tools">
+        <select id="skyStation" class="sel"><option value="">选择站点</option></select>
+      </div>
+    </div>
+    <div class="panel-body no-pad">
+      <div id="skyPlot" class="chart"></div>
+    </div>
+  </section>
+
+  <!-- ============ 定位质量趋势 ============ -->
+  <section class="panel" id="panelTrend">
+    <div class="panel-head">
+      <h2>定位质量趋势</h2>
+      <div class="tools">
+        <select id="trendMetric" class="sel">
+          <option value="hdop">HDOP</option>
+          <option value="pdop">PDOP</option>
+          <option value="hdopGsa">HDOP（GSA）</option>
+          <option value="vdop">VDOP</option>
+          <option value="numSat">参与解算星数</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel-body no-pad">
+      <div id="trendChart" class="chart"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ 新增基站对话框 ============ -->
+  <!-- ============ 站点详情抽屉 ============ -->
+  <aside class="st-drawer" id="stDrawer" hidden>
+    <div class="st-drawer-head">
+      <div>
+        <div class="st-drawer-title" id="stDrawerTitle">—</div>
+        <div class="st-drawer-sub" id="stDrawerSub">—</div>
+      </div>
+      <button class="btn icon" id="stDrawerClose" title="关闭">✕</button>
+    </div>
+    <div class="st-drawer-body" id="stDrawerBody"></div>
+  </aside>
+
+  <!-- ============ 基线双差详情抽屉 ============ -->
+  <aside class="st-drawer" id="blDrawer" hidden>
+    <div class="st-drawer-head">
+      <div>
+        <div class="st-drawer-title" id="blDrawerTitle">—</div>
+        <div class="st-drawer-sub" id="blDrawerSub">—</div>
+      </div>
+      <button class="btn icon" id="blDrawerClose" title="关闭">✕</button>
+    </div>
+    <div class="st-drawer-body" id="blDrawerBody"></div>
+  </aside>
+
+<div class="modal" id="modalStation" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>新增基站</h3>
+      <button class="btn icon" id="btnCloseModal">✕</button>
+    </div>
+    <form id="formStation" class="modal-body">
+      <div class="grid2">
+        <label class="fld">
+          <span>基站名 <i>*</i></span>
+          <input name="name" required pattern="[A-Za-z0-9_]{1,32}" placeholder="如 A101">
+          <em>字母数字下划线，作为引擎内唯一标识</em>
+        </label>
+        <label class="fld">
+          <span>类型 <i>*</i></span>
+          <select name="type">
+            <option value="M">M混合（含观测值）</option>
+            <option value="E">E 仅星历</option>
+            <option value="O">O 仅观测值</option>
+            <option value="V">V 虚拟参考站 VRS</option>
+          </select>
+          <em>决定 RTCM 报文内容</em>
+        </label>
+        <label class="fld">
+          <span>NTRIP 地址 <i>*</i></span>
+          <input name="addr" required placeholder="如 60.29.242.238">
+        </label>
+        <label class="fld">
+          <span>端口 <i>*</i></span>
+          <input name="port" required type="number" value="8002" min="1" max="65535">
+        </label>
+        <label class="fld">
+          <span>用户名</span>
+          <input name="user" value="anonymous">
+        </label>
+        <label class="fld">
+          <span>密码</span>
+          <input name="passwd" type="password" value="">
+        </label>
+        <label class="fld">
+          <span>挂载点 <i>*</i></span>
+          <input name="mntpnt" required placeholder="如 RTCM32eph">
+        </label>
+        <label class="fld">
+          <span>纬度 <i>*</i></span>
+          <input name="lat" required type="number" step="any" placeholder="40.43399312">
+          <em>十进制度，北纬正</em>
+        </label>
+        <label class="fld">
+          <span>经度 <i>*</i></span>
+          <input name="lon" required type="number" step="any" placeholder="116.38705742">
+          <em>十进度量，东经正</em>
+        </label>
+        <label class="fld">
+          <span>高程 (m) <i>*</i></span>
+          <input name="height" required type="number" step="any" value="0">
+        </label>
+      </div>
+      <p class="hint">
+        提交后经引擎控制台下发 <code>addsource</code> 命令真实创建基站。
+      </p>
+      <div class="modal-foot">
+        <button type="button" class="btn ghost" id="btnCancelModal">取消</button>
+        <button type="submit" class="btn primary">确认新增</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ 命令输出 ============ -->
+<div class="drawer" id="cmdDrawer" hidden>
+  <div class="drawer-head">
+    <h3 id="cmdTitle">命令输出</h3>
+    <button class="btn icon" id="btnCloseDrawer">✕</button>
+  </div>
+  <pre id="cmdOut" class="drawer-body"></pre>
+</div>
+<div class="mask" id="mask" hidden></div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="js/ws-client.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/delaunay.js"></script>
+<script src="js/network-map.js"></script>
+<!-- sat-delay-trend 必须在 baseline-panel 之前：后者在抽屉里 new SatDelayChart -->
+<script src="js/sat-delay-trend.js"></script>
+<script src="js/baseline-panel.js"></script>
+<script src="js/station-panel.js"></script>
+<script src="js/skyplot.js"></script>
+<script src="js/trend.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "mcors-viz-collector",
+  "version": "0.1.0",
+  "description": "mcors CORS 引擎实时监控大屏采集层",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {}
+}

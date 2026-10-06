@@ -1,0 +1,15 @@
+#基站名，NTRIP地址，NTRIP端口，NTRIP用户名，NTRIP密码，基站标识(挂载点)，纬度，经度，高程，类型(M：该基站RTCM至少包含观测值，E：该基站RTCM只有星历)
+#
+# 【可选扩展列】第 10 列起，缺省不影响运行（大屏站点详情会自动留空）：
+#   10=天线高(m)  11=天线型号  12=天线序列号  13=台站中文名  14=建站年份
+# 例：某站天线高 2.150m、CHC i80 型号
+#   ABCD0000AUS0,ntrip.example.com,2101,user,pass,ABCD0000AUS0,-33.55426,150.66561,190,M,2.150,CHC i80,SN20240001,悉尼基准站,2019#
+# 注意：字段内不能含逗号；行尾 # 之后为注释。
+# 引擎当前只读前 10 列（见 src/ntrip/ntrip.c），扩展列仅用于大屏展示。
+KURJ00AUS0,ntrip.data.gnss.ga.gov.au,2101,SuJingLan,sujinglan.123.SJL,KURJ00AUS0,-33.55426,150.66561,190,M#
+SPWD00AUS0,ntrip.data.gnss.ga.gov.au,2101,SuJingLan,sujinglan.123.SJL,SPWD00AUS0,-33.69853,150.56394,399,M#
+MGRV00AUS0,ntrip.data.gnss.ga.gov.au,2101,SuJingLan,sujinglan.123.SJL,MGRV00AUS0,-33.62651,150.83099,45,M#
+BCEP00BKG0,ntrip.data.gnss.ga.gov.au,2101,SuJingLan,sujinglan.123.SJL,BCEP00BKG0,-33.62651,150.83099,45,E#
+WGBA00AUS0,ntrip.data.gnss.ga.gov.au,2101,SuJingLan,sujinglan.123.SJL,WGBA00AUS0,-33.88643,150.59775,193,M#
+BLKT00AUS0,ntrip.data.gnss.ga.gov.au,2101,SuJingLan,sujinglan.123.SJL,BLKT00AUS0,-33.77174,150.90879,121,M#
+WSIA00AUS0,ntrip.data.gnss.ga.gov.au,2101,SuJingLan,sujinglan.123.SJL,WSIA00AUS0,-33.88615,150.70244,121,M#
