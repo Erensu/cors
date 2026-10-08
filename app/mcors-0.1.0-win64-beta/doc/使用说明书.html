@@ -317,6 +317,8 @@
 │   │   └── config.js     <span class="c"># 环境变量与默认配置</span>
 │   ├── tools/            <span class="c"># 测试与诊断工具（探针、编译脚本）</span>
 │   └── test/             <span class="c"># 自动化测试套件</span>
+├── runtime/              <span class="c"># 随包携带的 Node.js 运行时（免安装）</span>
+│   └── node.exe
 └── doc/                  <span class="c"># 文档（本文件所在处）</span>
 </code></pre>
 
@@ -690,11 +692,17 @@ taskkill /F /PID &lt;pid&gt;</code></pre>
   <h3>6.1 面板总览</h3>
 
   <figure style="margin:14px 0 18px">
-    <img src="images/dashboard-live-drawer.png" alt="实时监控大屏整体界面（真实链路，含基线详情抽屉）" style="display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)">
+    <img src="images/dashboard-live-drawer.png" alt="实时监控大屏整体界面（真实链路，含基线详情抽屉与逐星延迟曲线）" style="display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)">
     <figcaption style="margin-top:8px;font-size:12.5px;color:var(--ink3);text-align:center;line-height:1.7">
-      真实链路下的完整界面：左上「基站网图」（Delaunay 三角网，绿线为固定解基线，VRS001 虚拟站着重显示）、右上「基线解算信息」、下方依次为「定位质量趋势」「卫星天空图」「基站信息」。右侧为点开基线行后滑出的<strong>详情抽屉</strong> —— 列出该基线逐星的双差延迟明细，点击数值可弹出历史曲线（见 6.4 节）。
+      真实链路下的完整界面。左上「基站网图」（Delaunay 三角网，绿线为固定解基线，边上标注基线长度；VRS001 虚拟站以紫色菱形着重显示），右上「基线解算信息」，下方依次为「定位质量趋势」「卫星天空图」「基站信息」。右侧为点开基线行后滑出的<strong>详情抽屉</strong> —— 顶部是基线名与「固定解 · 21.0 km · 8 颗参与星」，下方逐星列出各卫星的频点、双差延迟与高度角，末行为 19 星平均值；再点其中某个延迟数值，会在右下角弹出该星的历史曲线（见 <a href="#s6">6.4 节</a>）。
     </figcaption>
   </figure>
+
+  <div class="box">
+    <span class="t">抽屉里的表怎么读</span>
+    <p>逐星表按「卫星 × 频点」逐行给出，<strong>同一颗星会出现多行</strong>（如图中的 G28 有 L1/L2/L5 三行），因为双差延迟是按频点分别解算的。表里的<strong>高度角（<code>高度角(°)</code>）</strong>是该星在这一刻的仰角，供判断观测质量用 —— 仰角越低，对流层延迟的残差越大。</p>
+    <p>抽屉顶部的<strong>「参与星」与表格行数不是一回事</strong>：参与星是参与解算的卫星<strong>数</strong>，而表格行数是「卫星 × 频点」的<strong>组合数</strong>，所以 8 颗参与星会展开成 19 行。</p>
+  </div>
 
   <table>
     <thead><tr><th class="w2">面板</th><th>内容</th><th class="w3">要点</th></tr></thead>
@@ -704,7 +712,7 @@ taskkill /F /PID &lt;pid&gt;</code></pre>
       <tr><td><strong>基站信息</strong></td><td>站名、位置、挂载点、上游、设备、状态</td><td>支持界面增删基站</td></tr>
       <tr><td><strong>卫星天空图</strong></td><td>可见卫星方位 / 高度角分布</td><td>区分参与解算与仅星历</td></tr>
       <tr><td><strong>定位质量趋势</strong></td><td>定位精度随时间变化曲线</td><td>—</td></tr>
-      <tr><td><strong>逐星延迟曲线</strong></td><td>单颗卫星的双差大气 / 电离层 / 对流层延迟历史</td><td>点击延迟数值可弹出曲线图</td></tr>
+      <tr><td><strong>逐星延迟曲线</strong></td><td>单颗卫星的双差大气 / 电离层 / 对流层延迟历史</td><td>点击延迟数值可弹出曲线图；<strong>需真实引擎数据，mock 源下该表为空</strong></td></tr>
     </tbody>
   </table>
 
@@ -782,7 +790,7 @@ taskkill /F /PID &lt;pid&gt;</code></pre>
   <p>完整操作路径：</p>
   <ol class="step">
     <li>在「基线解算信息」表中<strong>点击任意一行</strong>（不要点延迟数值单元格），右侧会滑出<strong>详情抽屉</strong>。</li>
-    <li>抽屉里列出该基线所有参与卫星，每颗星有若干延迟数值。</li>
+    <li>抽屉里按<strong>「卫星 × 频点」逐行</strong>列出该基线的所有观测记录，末行为平均值（行数通常多于顶部的「参与星」数，差异原因见 6.1 节的说明框）。</li>
     <li>点击某颗卫星的<strong>双差大气延迟 / 双差电离层延迟 / 双差对流层延迟</strong>数值，会弹出该卫星的历史曲线图。</li>
     <li>曲线图上可观察延迟随时间的变化趋势。历史缓冲长度见 <a href="#s10">10.3 节</a>。</li>
   </ol>
@@ -1126,13 +1134,15 @@ $s.stations | Select-Object -ExpandProperty name</code></pre>
   <h2 class="sec"><span class="n">10</span>采集层配置</h2>
 
   <p>采集层是 Node.js 程序（<code>viz/collector/index.js</code>），职责是：连引擎的 8080 拿解算数据、连 9000 下发控制台命令、对外提供 8181 的 HTTP + WebSocket 服务。</p>
-  <p>正常使用时由 <code>start-gui</code> 自动拉起，<strong>无需手工干预</strong>；需要单独调试时才手动启动。</p>
+  <p>发布包内已附带运行时（<code>runtime\node.exe</code>），<strong>目标机器无需安装 Node.js</strong>；<code>start.cmd</code> 优先使用它，找不到才回退到系统安装。正常使用由脚本自动拉起，<strong>无需手工干预</strong>；需要单独调试时才手动启动。</p>
 
   <h3>10.1 手动启动</h3>
+  <p>用包内运行时（推荐，无需装 Node）：</p>
 <pre><code>set MCORS_SOURCE=live
 set MCORS_HOST=127.0.0.1
 set MCORS_WEB_PORT=8181
-node viz\collector\index.js</code></pre>
+runtime\node.exe viz\collector\index.js</code></pre>
+  <p>若已自行安装 Node.js，用 <code>node</code> 代替上面的路径即可，两者行为一致。</p>
 
   <h3>10.2 环境变量</h3>
   <table>
@@ -1194,15 +1204,9 @@ node viz\collector\index.js</code></pre>
   <p><strong>原因</strong>：<code>cors-engine.exe</code> 正在运行，文件被占用。</p>
   <p><strong>解决</strong>：先 <code>taskkill /F /IM cors-engine.exe</code> 再编译。</p>
 
-  <h3>Q3 · 执行 start-gui 弹出「Windows 找不到文件 'node'」</h3>
-  <p><strong>原因</strong>：Node.js 装在非标准路径（如 WorkBuddy 托管版本目录），引擎的查找逻辑找不到它。</p>
-  <p><strong>解决</strong>：把 Node 放到下列任一位置，或装到标准路径：</p>
-  <ul>
-    <li><code>C:\Program Files\nodejs\</code></li>
-    <li><code>%USERPROFILE%\.workbuddy\binaries\node\versions\&lt;版本&gt;\</code></li>
-    <li><code>%LOCALAPPDATA%\Programs\nodejs\</code></li>
-  </ul>
-  <p>引擎会自动在这些位置查找并给出提示。</p>
+  <h3>Q3 · 提示找不到 node.exe</h3>
+  <p><strong>原因</strong>：发布包内的 <code>runtime\node.exe</code> 被删除或损坏，且本机也没有可用的 Node.js。</p>
+  <p><strong>解决</strong>：正常发布包自带 Node 运行时，<strong>不需要另外安装</strong>。确认 <code>runtime\node.exe</code> 存在即可；确实缺失时，从完整发布包恢复该文件，或自行安装 Node.js 并加入 PATH，脚本会自动改用系统安装。</p>
 
   <h3>Q4 · start-gui 后大屏打不开 / 数据不更新</h3>
   <p>按顺序检查：</p>

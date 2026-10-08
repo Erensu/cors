@@ -29,10 +29,17 @@ if "%MODE%"=="" set "MODE=all"
 set "ENGINE=%~dp0cors-engine.exe"
 set "CONF=%~dp0conf\cors.conf"
 
-REM ---- locate node.exe without any machine-specific path -------------------
+REM ---- locate node.exe: bundled runtime first, then any machine install -----
+REM The release package ships its own runtime\node.exe, so a clean Windows
+REM machine needs no Node.js installation at all. Fallbacks below only
+REM matter if someone deletes runtime\ to slim the package down.
 set "NODE="
-for %%P in ("%LOCALAPPDATA%\Programs\nodejs\node.exe" "%ProgramFiles%\nodejs\node.exe" "%ProgramFiles(x86)%\nodejs\node.exe") do (
-    if not defined NODE if exist %%P set "NODE=%%~P"
+set "BUNDLED_NODE=%~dp0runtime\node.exe"
+if exist "%BUNDLED_NODE%" set "NODE=%BUNDLED_NODE%"
+if not defined NODE (
+    for %%P in ("%LOCALAPPDATA%\Programs\nodejs\node.exe" "%ProgramFiles%\nodejs\node.exe" "%ProgramFiles(x86)%\nodejs\node.exe") do (
+        if not defined NODE if exist %%P set "NODE=%%~P"
+    )
 )
 if not defined NODE (
     for /d %%D in ("%USERPROFILE%\.workbuddy\binaries\node\versions\*") do (
@@ -65,12 +72,19 @@ if /I "%MODE%"=="engine" (
 
 :dash
 if not defined NODE (
-    echo [ERROR] node.exe not found. Install Node.js, or add it to PATH.
-    echo         The dashboard needs it to serve the web console.
+    echo [ERROR] node.exe not found.
+    echo         Expected it at %~dp0runtime\node.exe ^(bundled with this package^).
+    echo         That file is missing - restore it, or install Node.js and add it to PATH.
     popd & exit /b 1
 )
 echo === starting dashboard (web port 8181) ===
-start "mcors-dashboard" /D "%~dp0viz" cmd /c "set MCORS_SOURCE=live&& set MCORS_CONSOLE_PORT=9000&& set MCORS_WEB_PORT=8181&& "%NODE%" collector\index.js"
+REM Export into this shell and let "start" hand them to the child, instead of
+REM squeezing three SETs plus a quoted path through one nested "cmd /c" line.
+REM That nesting broke whenever NODE contained spaces.
+set "MCORS_SOURCE=live"
+set "MCORS_CONSOLE_PORT=9000"
+set "MCORS_WEB_PORT=8181"
+start "mcors-dashboard" /D "%~dp0viz" "%NODE%" collector\index.js
 ping -n 4 127.0.0.1 >nul
 start "" http://localhost:8181/
 echo.

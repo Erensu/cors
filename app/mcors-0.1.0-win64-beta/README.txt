@@ -7,9 +7,9 @@ CORS 基准站网实时监控与解算引擎 —— 开箱即用发布包。
 ----------------
 1. 双击 start.cmd
    （或命令行运行：start.cmd）
-   - 自动启动引擎（独立控制台窗口，端口 9000）
-   - 自动启动监控大屏采集层（需系统已装 Node.js）
-   - 自动打开浏览器 http://localhost:8181/
+- 自动启动引擎（独立控制台窗口，端口 9000）
+  - 自动启动监控大屏采集层（使用包内 runtime\node.exe，无需安装 Node.js）
+  - 自动打开浏览器 http://localhost:8181/
 
 2. 大屏打开后即可看到基站网图（Delaunay 三角网）与基线解算信息。
    在引擎窗口的控制台里输入 help 可查命令；start-gui 可随时重开大屏。
@@ -44,6 +44,7 @@ CORS 基准站网实时监控与解算引擎 —— 开箱即用发布包。
 目录结构
 --------
   cors-engine.exe      解算引擎（含 libuv 等 4 个运行库 DLL）
+  runtime\node.exe     随包携带的 Node.js 运行时（大屏采集层用，免安装）
   conf\                配置（ntripsources 为脱敏模板，请填入真实基站）
   viz\collector\       大屏采集层（Node.js，零第三方依赖）
   viz\web\             大屏前端（纯静态）
