@@ -16,14 +16,16 @@
   'use strict';
 
   const U = global.MCORS.util;
+  /** 语言查表：与 esc/num 同源，缺失时回落中文原文 */
+  const t = U.t;
 
   /* 指标定义。decimals 由实测量级定：
    * 大气/对流层是厘米级（0.0x~1.x m），2 位小数足以看出毫米级抖动；
    * 电离层残差常在 ±0.5m 内摆动，3 位小数才看得出正负交替。 */
   const METRICS = {
-    atmo: { label: '双差大气延迟', short: '大气', field: 'atmo', color: '#0891b2', decimals: 2 },
-    trpd: { label: '双差对流层延迟', short: '对流层', field: 'trpd', color: '#16a34a', decimals: 2 },
-    iond: { label: '双差电离层延迟', short: '电离层', field: 'iond', color: '#dc2626', decimals: 3 }
+    atmo: { label: t('双差大气延迟'), short: t('大气'), field: 'atmo', color: '#0891b2', decimals: 2 },
+    trpd: { label: t('双差对流层延迟'), short: t('对流层'), field: 'trpd', color: '#16a34a', decimals: 2 },
+    iond: { label: t('双差电离层延迟'), short: t('电离层'), field: 'iond', color: '#dc2626', decimals: 3 }
   };
 
   class SatDelayChart {
@@ -137,9 +139,11 @@
       ctx.font = '12px -apple-system, "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      /* m.label 与句子都要走 t()：直接拼 ${m.label}：暂无有效历元
+         会整段绕过语言包，英文态下露出中文（实测漏过一次）。 */
       const msg = this.series.length
-        ? `${m.label}：暂无有效历元`
-        : '正在累积历史数据，请稍候…';
+        ? t('{0}：暂无有效历元').replace('{0}', t(m.label))
+        : t('正在累积历史数据，请稍候…');
       ctx.fillText(msg, w / 2, h / 2 - 8);
       ctx.font = '11px -apple-system, "Segoe UI", sans-serif';
       ctx.fillStyle = '#a8b2c0';
@@ -263,7 +267,9 @@
       ctx.fillText(title, padL, 15);
       ctx.font = '11px ui-monospace, Consolas, monospace';
       ctx.fillStyle = '#6b7686';
-      const stats = `当前 ${cur.toFixed(m.decimals)}  最小 ${Math.min.apply(null, vals).toFixed(m.decimals)}  最大 ${Math.max.apply(null, vals).toFixed(m.decimals)}`;
+      const stats = `${t('当前')} ${cur.toFixed(m.decimals)}  ` +
+        `${t('最小')} ${Math.min.apply(null, vals).toFixed(m.decimals)}  ` +
+        `${t('最大')} ${Math.max.apply(null, vals).toFixed(m.decimals)}`;
       ctx.textAlign = 'right';
       ctx.fillText(stats, w - 12, 15);
 
@@ -271,9 +277,10 @@
       ctx.font = '10px -apple-system, "Segoe UI", sans-serif';
       ctx.fillStyle = '#8b97a6';
       ctx.textAlign = 'left';
-      ctx.fillText('← 较早', padL, h - 7);
+      ctx.fillText(t('← 较早'), padL, h - 7);
       ctx.textAlign = 'right';
-      ctx.fillText(`较近 →（${this.series.length} 历元）`, w - 12, h - 7);
+      ctx.fillText(t('较近 →（{0} 历元）').replace('{0}', this.series.length),
+                   w - 12, h - 7);
       ctx.textAlign = 'left';
     }
   }

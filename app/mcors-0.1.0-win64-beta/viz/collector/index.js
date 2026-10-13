@@ -283,39 +283,39 @@ function diagnoseCapabilities() {
   // 正是用来复现真实上游「只推星历」条件的，若被 MOCK 提前截断就验证不到横幅。
   let level = 'ok';
   let code = 'OK';
-  let msg = '数据正常';
+  let msg = 'OK';
   let hint = '';
 
   if (frames > 0 && withObs === 0) {
     level = 'warn';
     code = 'EPH_ONLY';
-    msg = isMock ? '仅星历模式（模拟）' : '仅收到星历，无观测值';
+    msg = isMock ? 'Ephemeris-only mode (mock)' : 'Ephemeris only, no observations';
     hint =
-      '上游 NTRIP 挂点（RTCM32eph）只推星历报文，不含 MSM 观测值。' +
-      '基线解算与卫星天空图需要观测值（107x/108x/109x/111x）才能工作。' +
-      '星历分发本身不受影响。';
+      'The upstream NTRIP mount point (RTCM32eph) publishes ephemeris messages only, with no MSM observations. ' +
+      'Baseline solving and the sky plot need observations (107x/108x/109x/111x) to work. ' +
+      'Ephemeris distribution itself is unaffected.';
   } else if (isMock) {
     code = 'MOCK';
-    msg = '模拟数据模式';
-    hint = '当前为 mock 数据源，未连接真实引擎。设置 MCORS_SOURCE=live 可切换到真实链路。';
+    msg = 'Mock data mode';
+    hint = 'Running on the mock data source; no real engine is connected. Set MCORS_SOURCE=live to switch to the live link.';
   } else if (!store.solution.connected) {
     level = 'error';
     code = 'NO_SOLUTION';
-    msg = '未连接 solution 数据源';
-    hint = `无法连接 solution 推送服务（${cfg.solution.port} 端口）。`
-         + '请确认 cors-engine 已启动：该服务由 src/cors/solution.c 提供，'
-         + '随引擎 start 一起拉起。';
+    msg = 'Not connected to the solution stream';
+    hint = `Cannot reach the solution push service (port ${cfg.solution.port}).`
+         + 'Check that cors-engine is running: this service comes from src/cors/solution.c '
+         + 'and starts together with the engine start command.';
   } else if (frames === 0) {
     level = 'warn';
     code = 'NO_FRAMES';
-    msg = '已连接但无数据帧';
-    hint = 'solution 通道已连接但一帧未收到。正常情况下每 1.5s 应到一轮'
-         + '（$SRCINFO/$NET/$BLSOLS/$SRCSOLS 各一帧）。';
+    msg = 'Connected but no data frames';
+    hint = 'The solution channel is connected but not a single frame has arrived. '
+         + 'Normally a round arrives every 1.5 s ($SRCINFO/$NET/$BLSOLS/$SRCSOLS, one frame each).';
   } else if (!store.baselines.length) {
     level = 'warn';
     code = 'NO_BASELINE';
-    msg = '有观测值但无基线';
-    hint = '已收到观测数据，但尚未建立基线。可在下方"基站管理"中配置基线关系。';
+    msg = 'Observations present but no baselines';
+    hint = 'Observation data is arriving, but no baselines are set up yet. Configure them under Station management below.';
   }
 
   return {
@@ -396,8 +396,8 @@ function snapshot() {
        * 用 null 更诚实 —— 前端 num() 会显示「—」。 */
       height: null,
       type: 'V',
-      typeLabel: '虚拟',
-      typeDesc: '虚拟参考站',
+      typeLabel: 'VRS',
+      typeDesc: 'Virtual reference station',
       isVirtual: true,
       runtimeOnly: true,
       lat: r.lat,
@@ -581,7 +581,7 @@ function onSolutionFrame(frame) {
     case 'BLSOLS':  onBlsolsFrame(frame.payload);  break;
     case 'SRCSOLS': onSrcSolsFrame(frame);         break;
     default:
-      log('warn', `未知帧类型: ${frame.type}`);
+      log('warn', `Unknown frame type: ${frame.type}`);
   }
   store.solution.frames++;
   store.solution.byType[frame.type] = (store.solution.byType[frame.type] || 0) + 1;
@@ -943,14 +943,14 @@ function readBody(req) {
     let d = '';
     req.on('data', (c) => {
       d += c;
-      if (d.length > 1e6) reject(new Error('请求体过大'));
+      if (d.length > 1e6) reject(new Error('Request body too large'));
     });
     req.on('end', () => {
       if (!d) return resolve({});
       try {
         resolve(JSON.parse(d));
       } catch (e) {
-        reject(new Error('JSON 解析失败'));
+        reject(new Error('JSON parse failed'));
       }
     });
     req.on('error', reject);
@@ -960,7 +960,7 @@ function readBody(req) {
 /** 执行控制台命令（供 REST 调用） */
 async function execConsoleCommand(cmd) {
   if (!store.consoleClient || !store.consoleClient.connected) {
-    return { ok: false, error: '引擎控制台未连接，无法下发命令' };
+    return { ok: false, error: 'Engine console not connected; cannot send command' };
   }
   try {
     const out = await store.consoleClient.send(cmd);
@@ -1010,7 +1010,7 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/console' && req.method === 'POST') {
       const body = await readBody(req);
       if (!body.cmd || typeof body.cmd !== 'string') {
-        return jsonRes(res, 400, { ok: false, error: '缺少 cmd 字段' });
+        return jsonRes(res, 400, { ok: false, error: 'Missing cmd field' });
       }
       // 白名单校验：只允许已知的引擎命令
       const ALLOWED = [
@@ -1023,7 +1023,7 @@ const server = http.createServer(async (req, res) => {
       if (ALLOWED.indexOf(verb) < 0) {
         return jsonRes(res, 403, {
           ok: false,
-          error: `命令 "${verb}" 不在只读白名单内`,
+          error: `Command "${verb}" is not in the read-only whitelist`,
           allowed: ALLOWED
         });
       }
@@ -1074,7 +1074,7 @@ const server = http.createServer(async (req, res) => {
 
       const r = await execConsoleCommand(cmd);
       if (r.ok) {
-        log('info', `已下发基站新增命令: ${body.name}`);
+        log('info', `Add-station command sent: ${body.name}`);
         /* 走 upsertRuntime 而不是直接 sources.set()：
          *   1) 直接 set 漏了 runtimeOnly=true，而 pruneRuntimeStations 只
          *      清理 runtimeOnly 的记录 → 该源会变成永久残影，delsource
@@ -1087,11 +1087,11 @@ const server = http.createServer(async (req, res) => {
 
     if (p === '/api/station/del' && req.method === 'POST') {
       const body = await readBody(req);
-      if (!body.name) return jsonRes(res, 400, { ok: false, error: '缺少 name 字段' });
+      if (!body.name) return jsonRes(res, 400, { ok: false, error: 'Missing name field' });
       const r = await execConsoleCommand(`delsource ${body.name}`);
       if (r.ok && store.stationDict) {
         store.stationDict.sources.delete(body.name);
-        log('info', `已下发基站删除命令: ${body.name}`);
+        log('info', `Delete-station command sent: ${body.name}`);
       }
       return jsonRes(res, 200, r);
     }
@@ -1100,7 +1100,7 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/baseline/add' && req.method === 'POST') {
       const body = await readBody(req);
       if (!body.base || !body.rover) {
-        return jsonRes(res, 400, { ok: false, error: '缺少 base / rover 字段（基站名）' });
+        return jsonRes(res, 400, { ok: false, error: 'Missing base / rover field (station name)' });
       }
       // engine.c cmd_rtkpos_addbl: rtkpos -b <base> -r <rover>
       const r = await execConsoleCommand(`rtkpos -b ${body.base} -r ${body.rover}`);
@@ -1110,7 +1110,7 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/baseline/del' && req.method === 'POST') {
       const body = await readBody(req);
       if (!body.base || !body.rover) {
-        return jsonRes(res, 400, { ok: false, error: '缺少 base / rover 字段（基站名）' });
+        return jsonRes(res, 400, { ok: false, error: 'Missing base / rover field (station name)' });
       }
       const r = await execConsoleCommand(`rtkpos -d -b ${body.base} -r ${body.rover}`);
       return jsonRes(res, 200, r);
@@ -1145,7 +1145,7 @@ const server = http.createServer(async (req, res) => {
 /** 基站参数校验 */
 function validateStation(s) {
   if (!s.name || !/^[A-Za-z0-9_]{1,32}$/.test(s.name)) {
-    return '基站名非法：仅允许字母数字下划线，长度 1-32';
+    return 'Invalid station name: letters, digits and underscore only, length 1-32';
   }
   /* ⚠ 原来的 /^[0-9.]+$/ 只校验「字符集」，999.999.1.1 这种明显非法的
    * 地址会一路通过、被下发到引擎。引擎拿它去解析/连接，失败路径会
@@ -1155,7 +1155,7 @@ function validateStation(s) {
    * 主机名兜底上 —— 否则 "999.999.1.1" 会被当成合法主机名放行
    * （这正是第一版修复没拦住的原因）。
    * 只有含字母/连字符的才走主机名规则。 */
-  if (!s.addr) return 'NTRIP 地址非法（不能为空）';
+  if (!s.addr) return 'Invalid NTRIP address (must not be empty)';
   const addr = String(s.addr).trim();
   const isIPv4 = (a) => {
     const parts = a.split('.');
@@ -1167,23 +1167,23 @@ function validateStation(s) {
   if (/^[0-9.]+$/.test(addr)) {
     /* 只用数字和点：按 IPv4 严格校验，不合法即拒。 */
     if (!isIPv4(addr)) {
-      return 'NTRIP 地址非法：应为合法 IPv4（如 192.168.1.10）';
+      return 'Invalid NTRIP address: must be a valid IPv4 (for example 192.168.1.10)';
     }
   } else if (!isHostname(addr)) {
-    return 'NTRIP 地址非法：应为合法 IPv4 或主机名';
+    return 'Invalid NTRIP address: must be a valid IPv4 or hostname';
   }
   const port = Number(s.port);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) return '端口非法';
+  if (!Number.isInteger(port) || port < 1 || port > 65535) return 'Invalid port';
   const lat = Number(s.lat);
   const lon = Number(s.lon);
-  if (!Number.isFinite(lat) || lat < -90 || lat > 90) return '纬度非法';
-  if (!Number.isFinite(lon) || lon < -180 || lon > 180) return '经度非法';
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) return 'Invalid latitude';
+  if (!Number.isFinite(lon) || lon < -180 || lon > 180) return 'Invalid longitude';
   const h = Number(s.height);
-  if (!Number.isFinite(h)) return '高程非法';
+  if (!Number.isFinite(h)) return 'Invalid height';
   if (!['M', 'E', 'O', 'V'].includes(String(s.type || '').toUpperCase())) {
-    return '类型非法：应为 M(混合)/E(仅星历)/O(仅观测)/V(VRS)';
+    return 'Invalid type: must be M (mixed) / E (ephemeris only) / O (observation) / V (VRS)';
   }
-  if (!s.mntpnt) return '挂载点不能为空';
+  if (!s.mntpnt) return 'Mount point must not be empty';
   return null;
 }
 
@@ -1192,7 +1192,7 @@ function validateStation(s) {
 const wsl = new WSLite(server);
 wsl.on('connection', (client) => {
   client.send(snapshot());
-  log('info', `前端已连接 (${wsl.clients.size} 个客户端)`);
+  log('info', `Front end connected (${wsl.clients.size} clients)`);
 });
 
 function broadcast() {
@@ -1203,13 +1203,13 @@ function broadcast() {
      * 完整数据仍可通过 /api/snapshot 获取。 */
     snap = snapshotForPush();
   } catch (e) {
-    log('error', `快照生成失败: ${e.message}`);
+    log('error', `Snapshot generation failed: ${e.message}`);
     return;
   }
   try {
     wsl.broadcast(snap);
   } catch (e) {
-    log('error', `广播失败: ${e.message}`);
+    log('error', `Broadcast failed: ${e.message}`);
   }
 }
 
@@ -1250,7 +1250,7 @@ function startMock() {
   // 模拟源产生的帧走与 live 一致的处理入口，保证两条路径行为一致
   store.onMockFrame = onMockFrame;
   store.mock = createMockEngine(store);
-  log('info', '已启用模拟数据源（MCORS_SOURCE=mock）');
+  log('info', 'Mock data source enabled (MCORS_SOURCE=mock)');
 }
 
 function start() {
@@ -1259,10 +1259,10 @@ function start() {
   if (store.stationDict.load()) {
     store.stationDict.enrichNames();
     const st = store.stationDict.stats();
-    log('info', `站点字典已加载: ${st.total} 站, 基站信息 ${st.baseInfoCount} 条, sourcetable ${st.sourcetableCount} 条`);
-    if (st.errors.length) st.errors.forEach((e) => log('warn', `字典: ${e}`));
+    log('info', `Station dictionary loaded: ${st.total} stations, ${st.baseInfoCount} base-info entries, ${st.sourcetableCount} sourcetable entries`);
+    if (st.errors.length) st.errors.forEach((e) => log('warn', `Dictionary: ${e}`));
   } else {
-    log('error', '站点字典加载失败，站网图将为空');
+    log('error', 'Station dictionary load failed; the network map will be empty');
   }
 
   if (store.source === 'mock') {
@@ -1309,17 +1309,17 @@ function start() {
   broadcastTimer = setInterval(broadcast, 1000);
 
   server.listen(cfg.web.port, cfg.web.host, () => {
-    log('info', `大屏服务已启动: http://localhost:${cfg.web.port}`);
-    log('info', `数据来源: ${store.source}`);
+    log('info', `Dashboard service started: http://localhost:${cfg.web.port}`);
+    log('info', `Data source: ${store.source}`);
     if (store.source === 'live') {
-      log('info', `数据源 solution ${cfg.solution.hostCandidates.join('/')}:${cfg.solution.port}`);
-      log('info', `控制台（仅控制命令）${cfg.console.hostCandidates.join('/')}:${cfg.console.port}`);
+      log('info', `Solution stream ${cfg.solution.hostCandidates.join('/')}:${cfg.solution.port}`);
+      log('info', `Console (control commands only) ${cfg.console.hostCandidates.join('/')}:${cfg.console.port}`);
     }
   });
 }
 
 function shutdown() {
-  log('info', '正在关闭...');
+  log('info', 'Shutting down...');
   if (pollTimer) clearInterval(pollTimer);
   if (broadcastTimer) clearInterval(broadcastTimer);
   if (store.consoleClient) store.consoleClient.close();

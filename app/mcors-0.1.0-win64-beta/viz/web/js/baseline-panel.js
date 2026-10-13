@@ -6,6 +6,11 @@
   'use strict';
 
   const U = global.MCORS.util;
+  /**
+   * 语言查表。本文件内部大量使用 t 作为局部变量名（解状态权重表、
+   * setTimeout 句柄），故i18n 用独立别名，避免被内层 const t 遮蔽。
+   */
+  const i18nT = U.t;
 
   /* 数值 → 显示串。null/undefined/NaN 统一显示为破折号。
    * $BLSOLS 的数值字段在「该历元无解」时可能缺失，直接 U.num 会显示
@@ -194,7 +199,7 @@
    * 表头写着「按定位误差」而实际是升序，最该先看的那几条沉在底下。 */
   const MODES = {
     level: {
-      label: '解状态',
+      label: i18nT('解状态'),
       /* 解状态天生离散，序号即档位。FIXDEG 视作 FIX 同档（都是固定解，
        * 差别只在是否用了 GGA 辅助，不值得让行跳位置）。 */
       band: (b) => {
@@ -571,18 +576,18 @@
      */
     _emptyReason() {
       const c = this.caps;
-      if (!c) return ['暂无基线解算数据', '引擎未运行或尚未建立基线'];
+      if (!c) return [i18nT('暂无基线解算数据'), '引擎未运行或尚未建立基线'];
       if (c.code === 'NO_SOLUTION')
         return ['未连接 solution 数据源', c.hint || '请确认 cors-engine 已启动'];
       if (c.code === 'NO_FRAMES')
-        return ['已连接但无数据帧', c.hint || '上游未推流'];
+        return [i18nT('已连接但无数据帧'), c.hint || '上游未推流'];
       if (c.code === 'EPH_ONLY')
         return ['上游仅提供星历，无法解算基线', c.hint || '缺少 MSM 观测值'];
       if (c.code === 'NO_BASELINE')
         return ['尚未建立基线', c.hint || '可在基站管理中配置基线关系'];
       if (c.code === 'MOCK')
-        return ['暂无基线解算数据', '当前为 mock 数据模式'];
-      return ['暂无基线解算数据', '引擎未运行或尚未建立基线'];
+        return [i18nT('暂无基线解算数据'), '当前为 mock 数据模式'];
+      return [i18nT('暂无基线解算数据'), '引擎未运行或尚未建立基线'];
     }
 
     render() {
@@ -1267,7 +1272,7 @@
     _fillRow(tr, b) {
       const base = b.baseName || `ID${b.baseSrcId}`;
       const rover = b.roverName || `ID${b.roverSrcId}`;
-      const label = b.label || U.labelOf(b.stat);
+      const label = (U.i18nOn() ? U.labelOf(b.stat) : b.label) || U.labelOf(b.stat);
       /* 时间戳作为整行 title 悬停提示：它原本是独立一整行（<div> 块级），
        * 把行高从 ~29px 撑到 ~65px，12 条基线一屏放不下；
        * 同行显示也会挤占首列宽度导致站名被截断。 */
@@ -1291,9 +1296,10 @@
           `<td><span class="badge"></span></td>` +
           `<td class="num"></td>` +
           `<td class="num"></td>` +
-          `<td class="num" title="引擎 $BLSOLS 的 ns：参与解算卫星数"></td>` +
-          `<td class="num" title="poserr 合成模（X/Y/Z）"></td>` +
-          `<td class="num" title="所有参与解算卫星的双差大气延迟算术平均 (m)，含对流层与电离层；本列取平均，非单星值"><span class="avg-tag"></span></td>`;
+          `<td class="num" title="${i18nT('引擎 $BLSOLS 的 ns：参与解算卫星数')}"></td>` +
+          `<td class="num" title="${i18nT('poserr 合成模（X/Y/Z）')}"></td>` +
+          `<td class="num" title="${i18nT('所有参与解算卫星的双差大气延迟算术平均 (m)，含对流层与电离层；本列取平均，非单星值')}">` +
+            `<span class="avg-tag"></span></td>`;
 
         const td = tr.children;
         /* 骨架必须齐 7 格才能按下标取引用。理论上 innerHTML 刚写完
@@ -1367,10 +1373,11 @@
        * 数值之后**重新挂回** avgTag（它被缓存了引用，节点不会重建）。 */
       if (C.atmoTd.lastChild !== C.avgTag) C.atmoTd.appendChild(C.avgTag);
 
-      const vTag = '平均' + (atmoN ? String(atmoN) : '');
+      const vTag = i18nT('平均') + (atmoN ? String(atmoN) : '');
       if (sig.tag !== vTag) { C.avgTag.textContent = vTag; sig.tag = vTag; }
 
-      const wantTagTitle = `该值为 ${atmoN} 颗参与星双差大气延迟的算术平均`;
+      const wantTagTitle = i18nT('该值为 {0} 颗参与星双差大气延迟的算术平均')
+        .replace('{0}', atmoN);
       if (C._tagTitle !== wantTagTitle) { C.avgTag.title = wantTagTitle; C._tagTitle = wantTagTitle; }
     }
 
@@ -1391,12 +1398,12 @@
         `<td><span class="badge ${U.esc(b.stat || 'NONE')}">${U.esc(label)}</span></td>` +
         `<td class="num">${U.num(b.baselineKm, 1)}</td>` +
         `<td class="num">${U.num(b.ageS, 0)}</td>` +
-        `<td class="num" title="引擎 $BLSOLS 的 ns：参与解算卫星数">${numOrDash(b.ns)}</td>` +
-        `<td class="num" title="poserr 合成模（X/Y/Z）">${numOrDash(b.poserrNorm, 3)}</td>` +
-        `<td class="num" title="所有参与解算卫星的双差大气延迟算术平均 (m)，含对流层与电离层；本列取平均，非单星值">` +
+        `<td class="num" title="${i18nT('引擎 $BLSOLS 的 ns：参与解算卫星数')}">${numOrDash(b.ns)}</td>` +
+        `<td class="num" title="${i18nT('poserr 合成模（X/Y/Z）')}">${numOrDash(b.poserrNorm, 3)}</td>` +
+        `<td class="num" title="${i18nT('所有参与解算卫星的双差大气延迟算术平均 (m)，含对流层与电离层；本列取平均，非单星值')}">` +
           `${numOrDash(atmo, 3)}` +
-          `<span class="avg-tag" title="该值为 ${U.esc(String(atmoN))} 颗参与星双差大气延迟的算术平均">` +
-            `平均${atmoN ? U.esc(String(atmoN)) : ''}` +
+          `<span class="avg-tag" title="${i18nT('该值为 {0} 颗参与星双差大气延迟的算术平均').replace('{0}', U.esc(String(atmoN)))}">` +
+            `${i18nT('平均')}${atmoN ? U.esc(String(atmoN)) : ''}` +
           `</span>` +
         `</td>`;
     }
@@ -1474,7 +1481,7 @@
     this.drawerTitle.textContent = base + ' \u2192 ' + rover;
 
     const sub = [];
-    sub.push(b.label || U.labelOf(b.stat));
+    sub.push((U.i18nOn() ? U.labelOf(b.stat) : b.label) || U.labelOf(b.stat));
     if (Number.isFinite(b.baselineKm)) sub.push(U.num(b.baselineKm, 1) + ' km');
     if (Number.isFinite(b.ns)) sub.push(b.ns + ' 颗参与星');
     this.drawerSub.textContent = sub.join(' \u00b7 ');
@@ -1482,8 +1489,8 @@
     let h = '';
 
     /* ---- 解状态（$BLSOLS 汇总行的各字段一一对应）---- */
-    h += grp('解状态');
-    h += kv('解状态', (b.label || U.labelOf(b.stat)) + '（' + (b.stat || '-') + '）');
+    h += grp(i18nT('解状态'));
+    h += kv(i18nT('解状态'), ((U.i18nOn() ? U.labelOf(b.stat) : b.label) || U.labelOf(b.stat)) + '（' + (b.stat || '-') + '）');
     h += kv('观测时刻', b.time);
     h += kv('基线长度', Number.isFinite(b.baselineKm) ? U.num(b.baselineKm, 3) + ' km' : null);
     h += kv('差分龄期', Number.isFinite(b.ageS) ? U.num(b.ageS, 0) + ' s' : null);
@@ -1569,7 +1576,7 @@
         + '<span id="satChartTitle">—</span>'
         + '<span class="sat-chart-tabs" id="satChartTabs"></span>'
         + '<button type="button" class="sat-chart-close" id="satChartClose"'
-        + ' title="关闭曲线">✕</button>'
+        + ` title="${i18nT('关闭曲线')}">✕</button>`
         + '</div>'
         + '<div class="sat-chart-canvas" id="satChartCanvas"></div>'
         + '<div class="dd-note" id="satChartNote"></div>'

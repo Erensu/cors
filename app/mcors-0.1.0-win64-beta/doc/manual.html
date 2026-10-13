@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mcors CORS Network Monitor · User Manual</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1f2937; --ink2:#4b5563; --ink3:#6b7280;
+    --line:#e2e8f0; --line2:#cbd5e1; --accent:#2563eb; --accent-soft:#eff6ff;
+    --ok:#059669; --warn:#d97706; --bad:#dc2626; --code-bg:#f1f5f9;
+    --mono:"Cascadia Mono","Consolas","SFMono-Regular","Menlo",monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px 96px}
+
+  /* ── Header ── */
+  header{
+    background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);
+    color:#fff; padding:44px 0 38px; margin-bottom:36px;
+    box-shadow:0 4px 20px rgba(37,99,235,.18);
+  }
+  header .wrap{padding-bottom:0}
+  header h1{margin:0 0 10px;font-size:29px;letter-spacing:.4px}
+  header p{margin:0;opacity:.9;font-size:14px}
+  header .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px}
+  header .meta span{
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+    padding:4px 12px;border-radius:999px;font-size:12.5px;
+  }
+
+  /* ── Table of contents ── */
+  nav.toc{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:20px 26px;margin-bottom:36px;box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  nav.toc h2{margin:0 0 14px;font-size:15px;color:var(--ink3);font-weight:600;
+    text-transform:uppercase;letter-spacing:1px}
+  nav.toc ol{margin:0;padding-left:22px;columns:2;column-gap:36px}
+  nav.toc li{margin:5px 0;break-inside:avoid}
+  nav.toc a{color:var(--accent);text-decoration:none}
+  nav.toc a:hover{text-decoration:underline}
+
+  /* ── Sections ── */
+  section{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:30px 34px;margin-bottom:26px;box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  h2.sec{
+    margin:0 0 22px;padding-bottom:12px;border-bottom:2px solid var(--accent-soft);
+    font-size:21px;display:flex;align-items:center;gap:11px;
+  }
+  h2.sec .n{
+    background:var(--accent);color:#fff;width:29px;height:29px;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:700;flex-shrink:0;
+  }
+  h3{margin:30px 0 12px;font-size:16.5px;color:var(--ink);border-left:3px solid var(--accent);padding-left:11px}
+  h3:first-of-type{margin-top:6px}
+  h4{margin:20px 0 9px;font-size:14.5px;color:var(--ink2)}
+  p{margin:11px 0;color:var(--ink2)}
+  ul,ol{margin:11px 0;padding-left:24px;color:var(--ink2)}
+  li{margin:6px 0}
+  strong{color:var(--ink);font-weight:600}
+  code{
+    font-family:var(--mono);font-size:13px;background:var(--code-bg);
+    padding:2px 6px;border-radius:4px;color:#b91c1c;border:1px solid #e2e8f0;
+  }
+  pre{
+    background:#0f172a;color:#e2e8f0;border-radius:9px;padding:16px 18px;
+    overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65;
+    margin:13px 0;border:1px solid #1e293b;
+  }
+  pre code{background:none;color:inherit;padding:0;border:none;font-size:13px}
+  pre .c{color:#64748b}
+  pre .k{color:#7dd3fc}
+
+  /* ── Tables ── */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.8px}
+  th,td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#f8fafc;color:var(--ink);font-weight:600;font-size:13px;
+    border-bottom:2px solid var(--line2);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fafbfc}
+  td code{font-size:12.5px;white-space:nowrap}
+  /* For narrow-column layouts */
+  th.w1{width:12%} th.w2{width:18%} th.w3{width:22%} th.w4{width:26%}
+
+  /* ── Callout boxes ── */
+  .box{border-radius:9px;padding:14px 17px;margin:15px 0;font-size:14px;
+    border-left:4px solid;background:#f8fafc}
+  .box p{margin:6px 0}
+  .box p:first-child{margin-top:0}
+  .box p:last-child{margin-bottom:0}
+  .box .t{font-weight:700;display:block;margin-bottom:6px}
+  .box.tip{border-color:var(--accent);background:var(--accent-soft)}
+  .box.tip .t{color:var(--accent)}
+  .box.warn{border-color:var(--warn);background:#fffbeb}
+  .box.warn .t{color:var(--warn)}
+  .box.bad{border-color:var(--bad);background:#fef2f2}
+  .box.bad .t{color:var(--bad)}
+  .box.ok{border-color:var(--ok);background:#f0fdf4}
+  .box.ok .t{color:var(--ok)}
+
+  .step{counter-reset:s;margin:16px 0}
+  .step>li{margin:14px 0}
+
+  /* Badges */
+  .tag{display:inline-block;padding:1.5px 8px;border-radius:5px;font-size:11.5px;
+    font-weight:600;font-family:var(--mono);vertical-align:1px}
+  .tag.ok{background:#dcfce7;color:#166534}
+  .tag.no{background:#fee2e2;color:#991b1b}
+  .tag.mid{background:#fef3c7;color:#92400e}
+  .tag.info{background:#dbeafe;color:#1e40af}
+
+  /* Flow arrows */
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0;
+    font-size:13.5px;font-family:var(--mono)}
+  .flow .n2{background:#f1f5f9;border:1px solid var(--line2);border-radius:7px;
+    padding:6px 12px;color:var(--ink)}
+  .flow .ar{color:var(--ink3);font-weight:700}
+
+  hr{border:none;border-top:1px dashed var(--line2);margin:26px 0}
+
+  footer{text-align:center;color:var(--ink3);font-size:13px;padding:26px 0 0}
+  footer a{color:var(--accent)}
+
+  /* For the "back to top" link (plain-text list at the end) */
+  .totop{display:inline-block;margin-top:6px;font-size:12.5px;color:var(--ink3);text-decoration:none}
+  .totop:hover{color:var(--accent)}
+
+  /* ── Reading progress bar ── */
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+    background:linear-gradient(90deg,var(--accent),var(--ok));
+    transition:width .12s linear;pointer-events:none;border-radius:0 2px 2px 0}
+
+  /* ── Floating back-to-top button ── */
+  .totop-btn{
+    position:fixed;right:26px;bottom:30px;width:42px;height:42px;border-radius:12px;
+    background:var(--accent);color:#fff;border:none;cursor:pointer;z-index:98;
+    font-size:18px;line-height:1;box-shadow:0 4px 14px rgba(37,99,235,.35);
+    opacity:0;visibility:hidden;transform:translateY(8px);
+    transition:opacity .2s,transform .2s,visibility .2s;
+  }
+  .totop-btn.show{opacity:1;visibility:visible;transform:none}
+  .totop-btn:hover{background:#1d4ed8}
+
+  /* ── Two-column layout: the TOC follows scrolling on wide screens ── */
+  @media (min-width:1180px){
+    .wrap.layout{
+      max-width:1360px;display:grid;align-items:start;
+      grid-template-columns:240px minmax(0,1fr);column-gap:28px;
+    }
+    .wrap.layout>nav.toc{
+      grid-column:1;grid-row:1/-1;
+      position:sticky;top:18px;margin-bottom:0;
+      max-height:calc(100vh - 36px);overflow-y:auto;
+      padding:16px 18px;
+    }
+    .wrap.layout>nav.toc ol{columns:1;padding-left:0;list-style:none}
+    .wrap.layout>nav.toc li{margin:2px 0}
+    .wrap.layout>nav.toc a{
+      display:block;padding:6px 10px;border-radius:7px;font-size:13.5px;
+      border-left:3px solid transparent;
+    }
+    .wrap.layout>nav.toc a:hover{text-decoration:none;background:var(--accent-soft)}
+    .wrap.layout>nav.toc a.active{
+      font-weight:700;background:var(--accent-soft);
+      border-left-color:var(--accent);
+    }
+    .wrap.layout>section{grid-column:2}
+    .wrap.layout>footer{grid-column:2}
+  }
+
+  /* Anchor targets stay clear of the sticky header; h3 hover permalinks */
+  section{scroll-margin-top:16px}
+  h3{scroll-margin-top:16px;position:relative}
+  h3 .anchor{position:absolute;left:-20px;top:2px;color:var(--ink3);
+    text-decoration:none;font-weight:400;font-size:14px;opacity:0;transition:opacity .15s}
+  h3:hover .anchor{opacity:1}
+
+  /* Print */
+  @media print{
+    #progress,.totop-btn,nav.toc{display:none}
+    body{background:#fff}
+    .wrap{max-width:none;padding:0}
+    .wrap.layout{display:block}
+    section{box-shadow:none;border:none;padding:8px 0;break-inside:auto;page-break-inside:auto}
+    pre,table,.box,figure{break-inside:avoid}
+    header{box-shadow:none}
+  }
+
+  @media (max-width:760px){
+    nav.toc ol{columns:1}
+    section{padding:22px 18px}
+    .wrap{padding:0 14px 60px}
+    header h1{font-size:22px}
+    table{font-size:13px}
+  }
+
+    position:fixed; top:14px; right:18px; z-index:100;
+    min-width:54px; padding:7px 13px;
+    font:600 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+    color:#fff; background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.34); border-radius:8px;
+    cursor:pointer; transition:background .18s,border-color .18s;
+  }
+
+  /* ══════════ Latin typography overrides ══════════
+     Latin and CJK text need different spacing, so this block is appended
+     after the base styles:
+       · Latin-first font stack, with CJK fonts kept as fallback
+       · Line height 1.75 -> 1.62: CJK glyphs need looser leading, Latin tighter
+       · Body 15px -> 15.5px: Latin glyphs read smaller, so nudge up slightly
+       · Allow long words to break, so URLs and long identifiers cannot burst a column
+     ───────────────────────────────────── */
+  body{
+    font:15.5px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
+         "Helvetica Neue",Arial,"Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  header h1{ letter-spacing:0; line-height:1.28 }
+  h2.sec,h3,h4{ letter-spacing:0 }
+  p,li{ overflow-wrap:break-word }
+  td,th{ overflow-wrap:break-word; word-break:normal; hyphens:auto }
+  /* English headers are longer; allow two lines and centring */
+  th{ vertical-align:middle; line-height:1.4 }
+  pre,code{ font-variant-ligatures:none }
+  /* Tabular figures in numeric columns, for easy column comparison */
+  .num,td.num{ font-variant-numeric:tabular-nums }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<header>
+  <div class="wrap">
+    <h1>mcors · CORS Network Monitor<br>User Manual</h1>
+    <p>Deployment, configuration and day-to-day operation guide for the engine (<code style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">cors-engine</code>) and the web dashboard</p>
+    <div class="meta">
+      <span>Version 2026-10-06 (detailed)</span>
+      <span>Platform Windows / MinGW-w64 · Linux (compatible)</span>
+      <span>Engine port 9000 · Data stream 8080 · Dashboard 8181</span>
+    </div>
+  </div>
+</header>
+
+
+<div class="wrap layout">
+
+<nav class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s1">System Overview and Principles</a></li>
+    <li><a href="#s2">Quick Start</a></li>
+    <li><a href="#s3">Building</a></li>
+    <li><a href="#s4">Configuration</a></li>
+    <li><a href="#s5">Start and Stop</a></li>
+    <li><a href="#s6">The Dashboard</a></li>
+    <li><a href="#s7">Adding and Removing Stations</a></li>
+    <li><a href="#s8">Console Commands</a></li>
+    <li><a href="#s9">HTTP API</a></li>
+    <li><a href="#s10">Collector Configuration</a></li>
+    <li><a href="#s11">FAQ</a></li>
+    <li><a href="#s12">Operations and Troubleshooting</a></li>
+    <li><a href="#s13">Performance and Resource Use</a></li>
+    <li><a href="#s14">Glossary</a></li>
+  </ol>
+</nav>
+
+<main class="content">
+
+<!-- ══════════════ 1 ══════════════ -->
+<section id="s1">
+  <h2 class="sec"><span class="n">1</span>System Overview and Principles</h2>
+
+  <p>mcors is a <strong>CORS (Continuously Operating Reference Station) network solution and monitoring system</strong>. It has two parts:</p>
+  <ul>
+    <li><strong>C/C++ engine</strong> (<code>cors-engine.exe</code>) — NTRIP data ingestion, baseline solving, error modelling, virtual reference station (VRS) service, and console command handling.</li>
+    <li><strong>Web dashboard</strong> — the collector (Node.js) converts engine data into a web-consumable format; the front end renders it live in the browser.</li>
+  </ul>
+
+  <h3>1.1 How Data Flows</h3>
+  <p>Understanding this chain is the foundation for every troubleshooting step that follows. Data travels from the upstream stations to your browser through five stages:</p>
+
+  <div class="flow">
+    <span class="n2">Upstream stations<br>NTRIP server</span><span class="ar">→</span>
+    <span class="n2">Engine · NTRIP client</span><span class="ar">→</span>
+    <span class="n2">Engine · solution core<br>(baselines / VRS / atmospheric modelling)</span><span class="ar">→</span>
+    <span class="n2">Solution data stream<br>TCP 8080</span><span class="ar">→</span>
+    <span class="n2">Collector<br>Node.js</span><span class="ar">→</span>
+    <span class="n2">Browser dashboard<br>8181</span>
+  </div>
+
+  <p>Two design points worth remembering:</p>
+  <ol>
+    <li><strong>The engine and the collector are decoupled.</strong> The engine only computes, then broadcasts results to port 8080; the collector connects outward to 8080 to fetch them. So a collector failure does not stop solving, and restarting the engine does not affect the collector start order.</li>
+    <li><strong>The console has two entry points, and they do not use the same protocol.</strong> The engine itself exposes a <strong>plain TCP text</strong> console on 9000; the collector forwards an <strong>HTTP</strong> <code>/api/console</code> on 8181. You <strong>cannot</strong> reach the engine with <code>curl http://&lt;engine-IP&gt;:9000/api/console</code> — that port does not speak HTTP and returns an empty response. HTTP requests must go to 8181.</li>
+  </ol>
+
+  <h3>1.2 The Four Ports</h3>
+  <table>
+    <thead><tr><th class="w1">Port</th><th class="w2">Service</th><th>Purpose</th><th class="w2">Protocol</th></tr></thead>
+    <tbody>
+      <tr><td><code>9000</code></td><td>Engine console</td><td>Accepts command text (add/remove stations, query status, and so on); also the input point for <code>start-gui</code> and similar commands</td><td>Plain TCP text</td></tr>
+      <tr><td><code>8080</code></td><td>Solution data stream</td><td>Streams solution results continuously (stations / baselines / satellites / atmospheric delay)</td><td>TCP broadcast</td></tr>
+      <tr><td><code>7999</code></td><td>Monitor</td><td>Station monitoring data (optional standalone monitor service)</td><td>TCP</td></tr>
+      <tr><td><code>8181</code></td><td>Dashboard (web)</td><td>The browser UI; also serves a REST API and WebSocket</td><td>HTTP / WebSocket</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">Listening address unified to 0.0.0.0</span>
+    <p>The engine's ports 9000 / 8080 / 7999 bind to <code>0.0.0.0</code> by default, which means <strong>both the local host (127.0.0.1) and other machines on the LAN can connect</strong>. To restrict access to the local host, add <code>-b local</code>.</p>
+    <p>Dashboard port 8181 is listened on by the collector: <code>127.0.0.1</code> by default (local host only). Run <code>start-gui 8181 lan</code> to let others reach it. See <a href="#s5">Section 5.1</a>.</p>
+  </div>
+
+  <h3>1.3 Directory Layout</h3>
+<pre><code>mcors-20260826/
+├── BUILD.md              <span class="c"># Build notes</span>
+├── conf/                 <span class="c"># Configuration templates (note: runtime uses build/conf/)</span>
+├── include/              <span class="c"># Shared headers (cors.h and others)</span>
+├── src/                  <span class="c"># Engine source</span>
+│   ├── engine/           <span class="c"># Main engine + console commands (engine.c / mcors.c)</span>
+│   ├── cors/             <span class="c"># Solution core + solution data stream</span>
+│   ├── ntrip/            <span class="c"># NTRIP client / broadcaster / proxy</span>
+│   ├── nrtk/             <span class="c"># Network RTK</span>
+│   ├── pnt/  vrs/        <span class="c"># Positioning / virtual reference station</span>
+│   ├── dtrignet/         <span class="c"># Delaunay triangulation</span>
+│   └── monitor/          <span class="c"># Monitoring service</span>
+├── build/                <span class="c"># Build output (including the runtime conf/)</span>
+│   ├── cors-engine.exe   <span class="c"># ★ main program</span>
+│   ├── conf/cors.conf    <span class="c"># ★ the configuration actually used</span>
+│   └── *.trace           <span class="c"># Run logs (named by timestamp)</span>
+├── lib/                  <span class="c"># Third-party libraries (libuv / openblas / gsl …)</span>
+├── viz/                  <span class="c"># Dashboard</span>
+│   ├── web/              <span class="c"># Front end (HTML/CSS/JS)</span>
+│   │   ├── index.html    <span class="c"># Main page (panel DOM structure)</span>
+│   │   ├── css/dashboard.css
+│   │   └── js/           <span class="c"># Per-panel rendering (baseline-panel.js and others)</span>
+│   ├── collector/        <span class="c"># Collector (Node.js)</span>
+│   │   ├── index.js      <span class="c"># Entry point: engine link / HTTP server / broadcast</span>
+│   │   └── config.js     <span class="c"># Environment variables and defaults</span>
+│   ├── tools/            <span class="c"># Test and diagnostic tools (probes, build scripts)</span>
+│   └── test/             <span class="c"># Automated test suite</span>
+├── runtime/              <span class="c"># Bundled Node.js runtime (no install needed)</span>
+│   └── node.exe
+└── doc/                  <span class="c"># Documentation (this file lives here)</span>
+</code></pre>
+
+  <div class="box warn">
+    <span class="t">Use the build/conf/ copies of the config files</span>
+    <p>When the engine is started from the <code>build/</code> directory it reads <code>build/conf/cors.conf</code>, <strong>not</strong> the project-root <code>conf/</code>. If the two differ you will be editing the wrong file and wondering why nothing changes. At runtime, always use the files under <code>build/conf/</code>.</p>
+  </div>
+
+  <h3>1.4 How to Use This Manual</h3>
+  <table>
+    <thead><tr><th class="w3">Your goal</th><th>Suggested reading</th></tr></thead>
+    <tbody>
+      <tr><td>Getting the system running for the first time</td><td><a href="#s2">Chapter 2 Quick Start</a> → <a href="#s6">Chapter 6 The Dashboard</a></td></tr>
+      <tr><td>Changing source requires a rebuild</td><td><a href="#s3">Chapter 3 Building</a></td></tr>
+      <tr><td>Adding or removing a station</td><td><a href="#s7">Chapter 7 Adding and Removing Stations</a></td></tr>
+      <tr><td>Integrating via script or program</td><td><a href="#s8">Chapter 8 Console Commands</a> + <a href="#s9">Chapter 9 HTTP API</a></td></tr>
+      <tr><td>Something broke and the UI shows no data</td><td><a href="#s12">Chapter 12 Operations and Troubleshooting</a> (includes the layer-by-layer order) → <a href="#s11">Chapter 11 FAQ</a></td></tr>
+      <tr><td>Understanding a term</td><td><a href="#s14">Chapter 14 Glossary</a></td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 2 ══════════════ -->
+<section id="s2">
+  <h2 class="sec"><span class="n">2</span>Quick Start</h2>
+
+  <p>Assuming the build is done (see <a href="#s3">Chapter 3</a>), getting the system running from scratch takes three steps, all in one command window.</p>
+
+  <h3>Step 1 · Start the Engine</h3>
+  <p>Open a command prompt (cmd), change to the project root and enter <code>build</code>:</p>
+<pre><code>cd build
+cors-engine.exe -o conf\cors.conf -t 1 -s -p 9000</code></pre>
+
+  <p>Parameter reference (full description in <a href="#s5">Section 5.1</a>):</p>
+  <table>
+    <thead><tr><th class="w1">Parameter</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>-o conf\cors.conf</code></td><td>Specifies the configuration file. Relative paths resolve against the <strong>current working directory</strong> (that is, <code>build\</code>)</td></tr>
+      <tr><td><code>-t 1</code></td><td>Log level 1 (fairly detailed); use this when troubleshooting</td></tr>
+      <tr><td><code>-s</code></td><td>Start in service mode. Note that in this mode stdout is taken over by a virtual terminal</td></tr>
+      <tr><td><code>-p 9000</code></td><td>Console listening port</td></tr>
+    </tbody>
+  </table>
+
+  <p>Seeing the version number and the listening notice means it started. This window is now the <strong>engine console</strong>; issue <code>start</code> and <code>start-gui</code> here.</p>
+
+  <div class="box warn">
+    <span class="t">Keep this window open, and avoid long mouse clicks inside it</span>
+    <p>Closing the window terminates the engine process. Note also that in <code>-s</code> mode the console input loop has a known <code>uv_sleep</code> blocking issue (see <a href="#s11">FAQ Q13</a>): while it is stuck, keystrokes are swallowed, though commands themselves still run.</p>
+  </div>
+
+  <h3>Step 2 · Start the Solution Service</h3>
+  <p>In the same window (the engine console), type and press Enter:</p>
+<pre><code>start</code></pre>
+  <p>This starts the CORS solution service, which begins pulling upstream station data as configured.</p>
+
+  <div class="box bad">
+    <span class="t">Command matching — always type the full command name</span>
+    <p>The engine matches your input by <em>substring</em> against its command table and takes the <strong>first</strong> hit. Typing <code>start</code> has a small chance of matching <code>start-gui</code>, which sits earlier in the table. <strong>Always type the full command name.</strong> See <a href="#s8">Section 8.6</a>.</p>
+  </div>
+
+  <h3>Step 3 · Open the Dashboard</h3>
+  <p>In the engine console, enter:</p>
+<pre><code>start-gui</code></pre>
+  <p>The engine starts the collector and opens the browser automatically at <code>http://127.0.0.1:8181/</code>.</p>
+
+  <div class="box ok">
+    <span class="t">Success indicators</span>
+    <p>The console shows:</p>
+<pre style="margin:8px 0 0"><code>gui ready: http://127.0.0.1:8181/</code></pre>
+    <p>Once the browser opens you should see the "Network Map" and "Baseline Solutions" panels, with a healthy data connection shown in the top-right corner.</p>
+  </div>
+
+  <h3>2.1 Sharing the Dashboard on the LAN</h3>
+  <p>To let other machines on the LAN access it:</p>
+<pre><code>start-gui 8181 lan</code></pre>
+  <p>The collector is now listening on <code>0.0.0.0:8181</code>; the console prints an extra line with the NIC address:</p>
+<pre><code>lan access: http://192.168.x.x:8181/</code></pre>
+  <p>Share this address with your colleagues.</p>
+
+  <h3>2.2 start vs. start-gui</h3>
+  <table>
+    <thead><tr><th class="w2">Command</th><th>What it starts</th><th>Consequence of skipping it</th></tr></thead>
+    <tbody>
+      <tr><td><code>start</code></td><td><strong>Engine side</strong>: the CORS solution service (ingests data, solves baselines)</td><td>The engine idles and produces no solutions</td></tr>
+      <tr><td><code>start-gui</code></td><td><strong>Presentation side</strong>: the collector plus the browser UI</td><td>No UI to look at</td></tr>
+    </tbody>
+  </table>
+  <p>The two are <strong>independent</strong>, so run both:</p>
+  <ul>
+    <li><code>start</code> only, without <code>start-gui</code> → the engine computes, but there is no UI.</li>
+    <li><code>start-gui</code> only, without <code>start</code> → the UI opens but shows no data. Its console reports <code>cors not started yet</code>.</li>
+  </ul>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 3 ══════════════ -->
+<section id="s3">
+  <h2 class="sec"><span class="n">3</span>Building</h2>
+
+  <h3>3.1 One-Shot Build (Recommended)</h3>
+<pre><code>viz\tools\build-engine.cmd</code></pre>
+  <p>The script performs four steps and produces <code>build\cors-engine.exe</code>:</p>
+  <table>
+    <thead><tr><th class="w1">Step</th><th class="w2">Goal</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1/4</td><td><code>openblas_static</code></td><td>The slowest step (LAPACK is thousands of C files); the first full build takes a long time, and afterwards it is incremental and nearly free</td></tr>
+      <tr><td>2/4</td><td><code>libcors</code></td><td>Project core static library</td></tr>
+      <tr><td>3/4</td><td><code>cors-engine</code></td><td>Link to produce the exe</td></tr>
+      <tr><td>4/4</td><td>Copy DLLs</td><td><code>libuv.dll</code> and other runtime dependencies</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Incremental build</strong>: the script does not clean intermediate artifacts, so just re-run it after editing code. One <code>.c</code> file takes about 30 seconds.</p>
+
+  <h3>3.2 Building Only the Engine Target (Most Common)</h3>
+  <p>If the build directory is already configured and you only need to rebuild the engine quickly:</p>
+<pre><code><span class="c"># Step 1: make sure no engine instance holds the exe (otherwise linking fails with Permission denied)</span>
+taskkill /F /IM cors-engine.exe
+
+<span class="c"># Step 2: enter build/ and build only the cors-engine target</span>
+cd build
+cmake --build . --target cors-engine -j 8</code></pre>
+
+  <div class="box bad">
+    <span class="t">Never run a full cmake --build .</span>
+    <p>A full build hangs on the third-party dependency <code>lib/gsl/ampl/thirdparty/test-support</code> (missing <code>asl.h</code>) and <strong>fails silently</strong> — there is no obvious error, but <code>cors-engine.exe</code> is never relinked, producing the maddening "I changed the code but nothing happened" symptom.</p>
+    <p><strong>Always name the target explicitly</strong>: <code>--target cors-engine</code>.</p>
+  </div>
+
+  <div class="box warn">
+    <span class="t">End the engine process before linking</span>
+    <p>On Windows a running process holds the exe, so the linker cannot overwrite it and reports <code>Permission denied</code> (or <code>cannot open output file</code> under MinGW). Run <code>taskkill /F /IM cors-engine.exe</code> first.</p>
+    <p>If <code>taskkill</code> says no such process, nothing was running and you can proceed.</p>
+  </div>
+
+  <h3>3.3 Build Time Reference</h3>
+  <table>
+    <thead><tr><th class="w3">Scenario</th><th class="w1">Time</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>First full build (including openblas)</td><td>Long</td><td>One-off; afterwards the <code>openblas_static</code> target is up to date and is skipped</td></tr>
+      <tr><td>Change one <code>.c</code> file</td><td>About 30 seconds</td><td>Recompiles only that file, then relinks</td></tr>
+      <tr><td>Change a header file</td><td>1–3 minutes</td><td>Every <code>.c</code> that depends on it is recompiled</td></tr>
+      <tr><td>Add a source file</td><td>Requires configure first</td><td>see 3.5 Section </td></tr>
+      <tr><td>Nothing changed</td><td>A few seconds</td><td>CMake considers the target up to date and only prints <code>Built target</code>. <strong>This is the key clue for whether a rebuild actually happened</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.4 Toolchain Paths (on This Machine)</h3>
+  <table>
+    <thead><tr><th class="w2">Tool</th><th>Path</th></tr></thead>
+    <tbody>
+      <tr><td>MinGW</td><td><code>D:\x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0\mingw64</code></td></tr>
+      <tr><td>CMake</td><td><code>D:\CMAKE\bin\cmake.exe</code></td></tr>
+      <tr><td>make</td><td><code>&lt;MinGW&gt;\bin\mingw32-make.exe</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.5 Modifying CMakeLists or Adding Source Files</h3>
+<pre><code>viz\tools\build-engine.cmd --configure</code></pre>
+  <p>Without <code>--configure</code>, an existing <code>build\CMakeCache.txt</code> is enough to go incremental. But <strong>new source files require a re-configure first</strong>, otherwise they never enter the build graph and you get "undefined symbol", or more insidiously, the old code keeps running.</p>
+
+  <h3>3.6 Confirming Your Changes Actually Took Effect</h3>
+  <p>This is one of the easiest traps in the system. Check in this order:</p>
+  <ol class="step">
+    <li><strong>Look for <code>Linking CXX executable ... cors-engine.exe</code> in the build output</strong>       <p>If only <code>Built target cors-engine</code> appears with <strong>no</strong> Linking line, CMake considered the target current — the file was not rewritten.</p></li>
+    <li><strong>Compare the timestamps of the artifact and the sources</strong>. The artifact must be newer than every source: <pre><code>dir /T:W build\cors-engine.exe src\ntrip\ntripclient.c</code></pre>       <p>If the exe is older than the sources, it was not really rebuilt (usually the silent-failure problem above).</p></li>
+    <li><strong>Confirm no old instance is running</strong>: <pre><code>tasklist | findstr cors-engine</code></pre>       <p>If a process is alive you may be talking to the <strong>old</strong> one, so of course behaviour looks stale. <code>taskkill</code> first, then start again.</p></li>
+  </ol>
+
+  <div class="box tip">
+    <span class="t">Checking timestamps with one command</span>
+<pre style="margin:8px 0 0"><code>dir /T:W build\cors-engine.exe &amp;&amp; dir /O-D /T:W src\*.c src\*\*.c</code></pre>
+    <p>Look at the exe write time first, then at the head of the sources sorted by modification time descending — the comparison tells the story at once.</p>
+  </div>
+
+  <h3>3.7 Building on Linux (compatible)</h3>
+  <p>The engine code is already dual-platform (Win32 / POSIX branches chosen automatically). On Linux, build with the shell script; the artifact is <code>build/cors-engine</code> (no <code>.exe</code> suffix):</p>
+<pre><code>./viz/tools/build-engine.sh                <span class="c"># incremental build</span>
+./viz/tools/build-engine.sh --configure   <span class="c"># re-configure after editing CMakeLists.txt</span></code></pre>
+  <div class="box warn">
+    <span class="t">The stack size must be raised manually at runtime</span>
+    <p>The MinGW linker option <code>-Wl,--stack</code> does not exist on Linux/ELF. Engine threads use large stack arrays, and the default 8 MB Linux stack can segfault outright — run <code>ulimit -s 102400</code> (100 MB, in KB) before starting. Requirements: gcc, make, cmake ≥ 3.16. For details, including a Windows-vs-Linux difference table, see the "Linux build" chapter of <code>BUILD.md</code>.</p>
+  </div>
+  <div class="box tip">
+    <span class="t">Verification status (2026-10-06)</span>
+    <p>All 68 source files under src/ have passed a <strong>genuine Linux build check</strong> for the <code>x86_64-linux-gnu</code> target (Zig cross-compilation, glibc header environment, zero errors); the Windows side passes regression as well. A full link and runtime check still requires running <code>build-engine.sh</code> once on a real Linux machine — if it errors, inspect the third-party subdirectories under lib/ (openblas/gsl/boost) for platform assumptions rather than src/.</p>
+  </div>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 4 ══════════════ -->
+<section id="s4">
+  <h2 class="sec"><span class="n">4</span>Configuration</h2>
+
+  <p>The configuration file is <code>build\conf\cors.conf</code>, in <code>key = value</code> form, one per line. The full set of settings:</p>
+
+  <table>
+    <thead><tr><th class="w3">Setting</th><th>Meaning</th><th class="w3">Typical Value</th></tr></thead>
+    <tbody>
+      <tr><td><code>ntrip-sources-file</code></td><td>NTRIP data source list (the upstream station inventory)</td><td><code>conf\ntripsources</code></td></tr>
+      <tr><td><code>trace-file</code></td><td>Log output file (empty uses the default name <code>cors_engine_&lt;timestamp&gt;.trace</code>)</td><td>(empty)</td></tr>
+      <tr><td><code>baselines-file</code></td><td>Baseline list (which stations form baselines with which)</td><td><code>conf\beselines</code></td></tr>
+      <tr><td><code>base-stations-info-file</code></td><td>Station information dictionary (station name → type and other metadata)</td><td>(empty)</td></tr>
+      <tr><td><code>virtual-stations-file</code></td><td>Virtual reference station (VRS) list</td><td><code>conf\vrsstations</code></td></tr>
+      <tr><td><code>rtk-conf-file</code></td><td>RTK parameter file</td><td>(empty)</td></tr>
+      <tr><td><code>agent-user-file</code></td><td>NTRIP proxy user table</td><td><code>conf\agentuser</code></td></tr>
+      <tr><td><code>ntrip-record-file</code></td><td>NTRIP data record file</td><td><code>ntrip_record.dat</code></td></tr>
+      <tr><td><code>monitor-record-file</code></td><td>Monitor record file</td><td><code>monitor_record.dat</code></td></tr>
+      <tr><td><code>sourcetable-file</code></td><td>Mount point table (the source list NTRIP clients can see)</td><td><code>conf\sourcetable</code></td></tr>
+      <tr><td><code>monitor-port</code></td><td>Monitor service port</td><td><code>7999</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">Relative paths resolve against the working directory at start-up</span>
+    <p>When the configuration contains a relative path such as <code>conf\ntripsources</code>, the engine resolves it against the <strong>directory it was started from</strong>. That is why the official start command says to <code>cd build</code> first — only then does <code>conf\</code> point at <code>build\conf\</code>. Start it from anywhere else and every relative path breaks.</p>
+  </div>
+
+  <h3>4.1 Data source list format (ntripsources)</h3>
+  <p><code>build\conf\ntripsources</code> holds one upstream station per line, fields separated by whitespace, in a fixed order:</p>
+<pre><code><span class="c"># name   IP address      port   user       pass    mount point  lat       lon       height  type</span>
+A001     60.29.242.238   8002   chuNtrip   xxxx   RTCM32eph   40.4339   116.2831   50.0   M</code></pre>
+  <p>Lines beginning with <code>#</code> are comments; blank lines are ignored.</p>
+
+  <h4>Type field values</h4>
+  <table>
+    <thead><tr><th class="w1">Value</th><th class="w2">Meaning</th><th>Role in the solution</th></tr></thead>
+    <tbody>
+      <tr><td><code>M</code></td><td>Master</td><td>The reference; other stations form baselines with it</td></tr>
+      <tr><td><code>E</code></td><td>Secondary / ephemeris only</td><td>Supplies ephemeris only, takes no part in observation-based solving</td></tr>
+      <tr><td><code>O</code></td><td>Ordinary (observation)</td><td>Supplies observations and participates in the solution</td></tr>
+      <tr><td><code>V</code></td><td>virtual station（Virtual）</td><td>Generated by the VRS algorithm, not a real upstream source</td></tr>
+    </tbody>
+  </table>
+
+  <p>The "Station Info" panel translates this type for display (for example "Mixed", "Ephemeris only"). If the type you see differs from what you wrote, see <a href="#s11">FAQ Q14</a>.</p>
+
+  <h3>4.2 Virtual station list format (vrsstations)</h3>
+  <p>One virtual reference station per line; the fields resemble the data source format but are fewer:</p>
+<pre><code><span class="c"># name     lat        lon        height</span>
+VRS001    40.4500   116.3000   48.5</code></pre>
+
+  <h3>4.3 How configuration changes take effect</h3>
+  <table>
+    <thead><tr><th class="w3">What Changed</th><th class="w3">How It Takes Effect</th><th>Command / action</th></tr></thead>
+    <tbody>
+      <tr><td>Most settings</td><td>restartengine</td><td>Restart after <code>shutdown</code></td></tr>
+      <tr><td>Station dictionary file</td><td><span class="tag ok">hot reload</span></td><td><code>POST /api/dict/reload</code>, no restart needed</td></tr>
+      <tr><td>Adding or removing stations</td><td><span class="tag ok">immediate</span></td><td>Through the UI or the <code>addsource</code>/<code>delsource</code> commands; no configuration edit needed</td></tr>
+      <tr><td>RTK / positioning parameters</td><td><span class="tag ok">immediate</span></td><td><code>loadopt</code> / <code>updpntopt</code> / <code>updrtkopt</code></td></tr>
+      <tr><td>Observation update rate</td><td><span class="tag ok">immediate</span></td><td><code>setobsudfrq</code> / <code>setrtkudfrq</code></td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 5 ══════════════ -->
+<section id="s5">
+  <h2 class="sec"><span class="n">5</span>Start and Stop</h2>
+
+  <h3>5.1 Command-line parameters</h3>
+<pre><code>cors-engine.exe -o conf\cors.conf -t 1 -s -p 9000</code></pre>
+  <table>
+    <thead><tr><th class="w1">Parameter</th><th>Meaning</th><th class="w3">Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>-o &lt;file&gt;</code></td><td>Configuration file path</td><td><code>-o conf\cors.conf</code></td></tr>
+      <tr><td><code>-t &lt;level&gt;</code></td><td>Log level (1 = fairly detailed; higher numbers are more verbose)</td><td><code>-t 1</code></td></tr>
+      <tr><td><code>-s</code></td><td>Start in service mode. <strong>Side effect</strong>: stdout/stderr are taken over by a virtual terminal, so content written straight to stdout with <code>fprintf</code> may not appear</td><td><code>-s</code></td></tr>
+      <tr><td><code>-p &lt;port&gt;</code></td><td>Console listening port</td><td><code>-p 9000</code></td></tr>
+      <tr><td><code>-b &lt;addr&gt;</code></td><td>Service listening address</td><td><code>-b any</code> / <code>-b local</code></td></tr>
+    </tbody>
+  </table>
+
+  <h4><code>-b</code> parameter values</h4>
+  <table>
+    <thead><tr><th class="w3">Value</th><th class="w2">Equivalent</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td><code>any</code> / <code>0.0.0.0</code> / <code>*</code></td><td>Default</td><td><span class="tag ok">Recommended</span> Reachable from outside and from the local host</td></tr>
+      <tr><td><code>local</code> / <code>localhost</code></td><td><code>127.0.0.1</code></td><td>Only the local host can connect; outside access is refused</td></tr>
+      <tr><td><code>auto</code></td><td>Local NIC IP</td><td>Legacy behaviour: binds a single NIC, which breaks after a network change or IP change</td></tr>
+      <tr><td>Specific IP</td><td>—</td><td>Bind the given address</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">Why the default is 0.0.0.0 rather than a specific IP</span>
+    <p>Binding a specific NIC address (say <code>192.168.83.1</code>) has three problems:</p>
+    <ul>
+      <li>Only that NIC can connect; other subnets are cut off;</li>
+      <li>After switching Wi-Fi or changing IP the service becomes unreachable and must be reconfigured;</li>
+      <li><code>127.0.0.1</code> from the local host fails too, because the loopback interface is not bound.</li>
+    </ul>
+    <p><code>0.0.0.0</code> means "accept connections on every NIC, loopback included", so the local host can use <code>127.0.0.1</code> and others can use any NIC address. It is the safest choice.</p>
+  </div>
+
+  <h3>5.2 stopengine</h3>
+  <p>In the engine console, enter:</p>
+<pre><code>shutdown</code></pre>
+  <p>The engine prints <code>cors server shutdown ...</code> and exits after about a second. You can also kill it with a system command:</p>
+<pre><code>taskkill /F /IM cors-engine.exe</code></pre>
+
+  <div class="box warn">
+    <span class="t">stop and shutdown are two different things</span>
+    <table style="margin:10px 0 0">
+      <thead><tr><th class="w1">Command</th><th class="w2">Scope</th><th>Process State</th></tr></thead>
+      <tbody>
+        <tr><td><code>stop</code></td><td>Stops only the CORS solution service</td><td><span class="tag mid">Process still alive</span>; you can <code>start</code> again</td></tr>
+        <tr><td><code>shutdown</code></td><td>Exits the entire engine process</td><td><span class="tag no">Process terminated</span>; the console returns to the system prompt</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:10px">Once the engine exits, the collector loses its data source and the UI stops updating.</p>
+  </div>
+
+  <div class="box bad">
+    <span class="t">Do not confuse "the UI says the engine exited" with "the engine crashed"</span>
+    <p>If the UI shows something like "engine has exited", the first reaction should not be "it crashed" — first check <strong>whether anyone typed <code>stop</code> or <code>shutdown</code> in the console</strong>. This was a real misdiagnosis in testing: it looked like a crash, but someone had stopped the service by hand.</p>
+  </div>
+
+  <h3>5.3 stopcollector</h3>
+<pre><code>taskkill /F /IM node.exe</code></pre>
+  <div class="box bad">
+    <span class="t">This command kills every node process on the machine</span>
+    <p>If other Node applications run on this machine (other projects, other services), terminate by PID instead:</p>
+<pre style="margin:8px 0 0"><code><span class="c">REM 1. Find the PID holding 8181 (last column)</span>
+netstat -ano | findstr :8181
+
+<span class="c">REM 2. Terminate by PID</span>
+taskkill /F /PID &lt;pid&gt;</code></pre>
+  </div>
+
+  <h3>5.4 Full start / stop sequence</h3>
+  <table>
+    <thead><tr><th class="w1">Order</th><th class="w3">Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Clear leftover processes</td><td><code>taskkill</code> the engine first, then end the collector by PID</td></tr>
+      <tr><td>2</td><td>startengine</td><td><code>cd build</code> then run <code>cors-engine.exe ...</code></td></tr>
+      <tr><td>3</td><td>Start the solution service</td><td>Type <code>start</code> in the console</td></tr>
+      <tr><td>4</td><td>startdashboard</td><td>Type <code>start-gui</code> in the console (or <code>start-gui 8181 lan</code>)</td></tr>
+      <tr><td>—</td><td colspan="2"><em>Below is the stop sequence</em></td></tr>
+      <tr><td>5</td><td>Stop the solution service (optional)</td><td><code>stop</code>. Skipping it is fine; <code>shutdown</code> handles it</td></tr>
+      <tr><td>6</td><td>exitengine</td><td><code>shutdown</code></td></tr>
+      <tr><td>7</td><td>End the collector</td><td><code>shutdown</code> takes it down; if it survives, end it by PID</td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 6 ══════════════ -->
+<section id="s6">
+  <h2 class="sec"><span class="n">6</span>The Dashboard</h2>
+
+  <p>Open <code>http://127.0.0.1:8181/</code> in a browser. The UI is made up of several panels, and data arrives over WebSocket, broadcast by the collector <strong>once per second</strong>.</p>
+
+  <h3>6.1 Panel overview</h3>
+
+  <figure style="margin:14px 0 18px">
+    <img src="images/dashboard-live-drawer.png" alt="The dashboard on a live link, including the baseline detail drawer and per-satellite delay chart" style="display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)">
+    <figcaption style="margin-top:8px;font-size:12.5px;color:var(--ink3);text-align:center;line-height:1.7">The complete UI on a live link. Top left is the <strong>Network Map</strong> (Delaunay triangulation; green lines are fixed-solution baselines with their lengths labelled; the VRS001 virtual station is emphasised in purple). Top right is <strong>Baseline Solutions</strong>, and below are the <strong>Positioning Quality Trend</strong>, <strong>Sky Plot</strong> and <strong>Station Info</strong> panels. On the right, the <strong>detail drawer</strong> slides out when you click a baseline row — the header shows the baseline name with "Fixed · 21.0 km · 8 satellites used", and beneath it every satellite is listed with its frequency, double-differenced delay and elevation, ending with a 19-row average. Clicking one of the delay values pops up that satellite's history chart in the bottom-right corner (see <a href="#s6">Section 6.4</a>).</figcaption>
+  </figure>
+
+  <div class="box">
+    <span class="t">How to read the table in the drawer</span>
+    <p>The per-satellite table is laid out row by row as "satellite × frequency", so <strong>one satellite occupies several rows</strong> (G28 in the figure has L1/L2/L5, three rows), because double-differenced delays are solved per frequency. The <strong>elevation column (<code>Elevation(°)</code>)</strong> is that satellite's elevation angle at this instant, useful for judging observation quality — the lower the elevation, the larger the residual tropospheric delay.</p>
+    <p>The <strong>"satellites used" figure at the top of the drawer is not the same thing as the row count</strong>: satellites used is a <strong>count of satellites</strong>, whereas the table rows are the <strong>number of satellite × frequency combinations</strong>, so 8 satellites expand into 19 rows.</p>
+  </div>
+
+  <table>
+    <thead><tr><th class="w2">Panel</th><th>Content</th><th class="w3">Note</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Network Map</strong></td><td>Station topology and the Delaunay triangulation</td><td>Virtual stations (VRS) are emphasised</td></tr>
+      <tr><td><strong>Baseline Solutions</strong></td><td>Solution status, length, age, satellites used and double-differenced atmospheric delay for each baseline</td><td>The delay column is the average across all satellites; <strong>clicking a row opens the detail drawer</strong></td></tr>
+      <tr><td><strong>Station Info</strong></td><td>Station name, position, mount point, upstream, equipment, status</td><td>Add and remove stations from the UI</td></tr>
+      <tr><td><strong>Sky Plot</strong></td><td>Azimuth / elevation distribution of visible satellites</td><td>Distinguishes satellites used in the solution from ephemeris-only ones</td></tr>
+      <tr><td><strong>Positioning Quality Trend</strong></td><td>Positioning accuracy over time</td><td>—</td></tr>
+      <tr><td><strong>Per-satellite Delay Charts</strong></td><td>Double-differenced atmospheric / ionospheric / tropospheric delay history for a single satellite</td><td>Click a delay value to pop up its chart; <strong>requires real engine data — this table is empty with the mock source</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.2 How the network map connects stations</h3>
+  <p>Connections between stations use a <strong>Delaunay triangulation</strong>: the engine runs the triangulation algorithm to produce authoritative vertex / edge / triangle data, exports it as CSV (with a checksum) via the <code>showtrinet</code> command, and the front end renders from that. Virtual stations are overlaid on the map and emphasised.</p>
+
+  <div class="box tip">
+    <span class="t">Why Delaunay rather than connecting each point to its nearest neighbours</span>
+    <p>The Delaunay triangulation has several mathematical properties that suit a reference station network:</p>
+    <ul>
+      <li><strong>No overlaps, no holes</strong> — every point in the covered area is enclosed by triangles, so no station ends up isolated without a baseline;</li>
+      <li><strong>Maximises the minimum angle</strong> — avoids long thin triangles, keeping baseline lengths evenly distributed and solutions more stable;</li>
+      <li><strong>Uniqueness</strong> — for a given point set (with no degenerate four-points-on-a-circle case) the result is unique, so the engine and the front end can derive the same network independently, which makes verification possible.</li>
+    </ul>
+  </div>
+
+  <h3>6.3 The Baseline Solutions panel in detail</h3>
+  <p>This is the panel you will watch most. The table has <strong>7 columns</strong>:</p>
+  <table>
+    <thead><tr><th class="w2">Column</th><th>Meaning</th><th class="w3">Display Format</th></tr></thead>
+    <tbody>
+      <tr><td><strong>baseline</strong></td><td>A "base station → rover" station-name pair, separated by an arrow, with the names in a monospaced font</td><td>for example <code>VRS001 → WSIA00AUS0</code></td></tr>
+      <tr><td><strong>Status</strong></td><td>The type of the current solution</td><td>see the status table below</td></tr>
+      <tr><td><strong>Length</strong></td><td>Baseline length</td><td>1 decimal place, in km</td></tr>
+      <tr><td><strong>age</strong></td><td>Time since the last valid solution</td><td>integer, in seconds</td></tr>
+      <tr><td><strong>Satellites</strong></td><td>Number of satellites taking part in this baseline solution</td><td>integer</td></tr>
+      <tr><td><strong>position error</strong></td><td>Normalised value of the position residual</td><td>3 decimal places</td></tr>
+      <tr><td><strong>DD atmospheric delay</strong><sup style="color:var(--accent)">avg</sup></td><td><strong>Arithmetic mean</strong> across all satellites used</td><td>3 decimal places, in m</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Solution status values</h4>
+  <table>
+    <thead><tr><th class="w2">Status</th><th>Meaning</th><th class="w2">Quality</th></tr></thead>
+    <tbody>
+      <tr><td><code>FIX</code></td><td>Integer ambiguities fixed; centimetre level</td><td><span class="tag ok">Best</span></td></tr>
+      <tr><td><code>FIXDEG</code></td><td>Fixed but degraded in accuracy (some satellites are poor)</td><td><span class="tag ok">Good</span></td></tr>
+      <tr><td><code>FLOAT</code></td><td>Float solution, ambiguities not fixed; decimetre to metre level</td><td><span class="tag mid">Usable</span></td></tr>
+      <tr><td><code>PPP</code></td><td>Precise point positioning</td><td><span class="tag mid">Usable</span></td></tr>
+      <tr><td><code>DGPS</code></td><td>Differential GPS, sub-metre level</td><td><span class="tag mid">Fair</span></td></tr>
+      <tr><td><code>SBAS</code></td><td>Satellite-based augmentation</td><td><span class="tag mid">Fair</span></td></tr>
+      <tr><td><code>SINGLE</code></td><td>Single-point positioning, metre level</td><td><span class="tag no">Poor</span></td></tr>
+      <tr><td><code>DR</code></td><td>Dead reckoning (observations lost; propagated by inertia)</td><td><span class="tag no">Bad</span></td></tr>
+      <tr><td><code>NONE</code> / none</td><td>No solution</td><td><span class="tag no">None</span></td></tr>
+    </tbody>
+  </table>
+
+  <h4>The six sort modes</h4>
+  <p>The sort dropdown above the table switches the ordering:</p>
+  <table>
+    <thead><tr><th class="w3">Mode</th><th>Sort Rule</th><th>Use Case</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Stable (first-seen order)</strong> (default)</td><td>Ordered by when each baseline <strong>first appeared</strong> in this run; row positions then never move, and new baselines are appended at the end</td><td>Day-to-day monitoring — stable row positions make it obvious at a glance which one is new</td></tr>
+      <tr><td><strong>By solution status</strong></td><td>FIX first, down to no solution; ties broken by station name</td><td>Quickly find which baseline failed to solve</td></tr>
+      <tr><td><strong>By baseline length</strong></td><td>Length <strong>descending</strong></td><td>Focus on long baselines (harder to solve)</td></tr>
+      <tr><td><strong>By satellites used</strong></td><td>Satellite count <strong>descending</strong></td><td>Find baselines running on too few satellites</td></tr>
+      <tr><td><strong>By position error</strong></td><td>Error <strong>descending</strong> (worst first)</td><td>See the worst-quality baselines at a glance</td></tr>
+      <tr><td><strong>By station name</strong></td><td>Literal ascending order of the "base → rover" pair</td><td>Finding a particular station, or when you want a stable, predictable order</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">Why row order no longer jumps, and why a removed baseline lingers for 30 seconds</span>
+    <p>Earlier versions had a problem where a batch of baselines jumped up and down every few seconds. The <strong>roster model</strong> now guarantees stability structurally:</p>
+    <ol style="margin:8px 0 0">
+      <li><strong>The roster only grows and updates; data jitter never removes rows</strong> — table rows come from a roster rather than from the last frame. If a baseline misses a round, its row <strong>stays in place</strong> and merely loses opacity after 4 seconds without a fresh solution (greyed out to signal "this number is stale"), then recovers when data returns. Only a genuine engine disconnect clears and rebuilds the roster.</li>
+      <li><strong>Stable order = first-seen order</strong> — new baselines are appended at the end, and the relative order of existing rows never changes (this is what the default "stable" mode sorts by).</li>
+      <li><strong>Removed baselines get a 30-second buffer</strong> — once a baseline leaves the network topology (station removed, or dropped by re-triangulation) and solving for it has stopped, the row <strong>does not vanish immediately</strong>: it stays visible for 30 seconds and then fades out. If data returns during that window, the countdown is cancelled. This lets operators see that it was just removed, and keeps the row count from jumping.</li>
+      <li><strong>A single tie-breaker plus band hysteresis</strong> — in the non-stable modes the "base → rover" name pair is the final comparison key; jittery keys such as position error are quantised into bands (0.1 m for error, 1 km for length) with one band of tolerance, so positions only swap on a real change.</li>
+    </ol>
+    <p style="margin-top:8px">The accompanying visual cues: a newly appeared baseline <strong>fades in green</strong>, a row that stopped updating goes <strong>grey</strong>, a removed baseline <strong>fades out after 30 seconds</strong>, a row that moves <strong>flashes pale yellow</strong>, and a status that worsens <strong>flashes pale yellow</strong> (improvements do not flash). If you see a colour cue, the data really changed — it is not render jitter.</p>
+  </div>
+
+  <h3>6.4 Viewing a single satellite's delay history</h3>
+  <p>The full path:</p>
+  <ol class="step">
+    <li>In the "Baseline Solutions" table, <strong>click any row</strong> (not the delay value cell); the <strong>detail drawer</strong> slides out on the right.</li>
+    <li>The drawer lists every observation record for that baseline <strong>row by row as "satellite × frequency"</strong>, with an average row at the bottom (there are usually more rows than the "satellites used" figure at the top — see the note in Section 6.1 for why).</li>
+    <li>Click a satellite's <strong>DD atmospheric / DD ionospheric / DD tropospheric delay</strong> value to pop up that satellite's history chart.</li>
+    <li>The chart shows how the delay varies over time. For the history buffer length see <a href="#s10">Section 10.3</a>.</li>
+  </ol>
+
+  <div class="box tip">
+    <span class="t">Two ways to click, two different results</span>
+    <ul style="margin:8px 0 0">
+      <li>Click <strong>elsewhere in the row</strong> → opens the baseline detail drawer (all satellites of that baseline).</li>
+      <li>Click <strong>the value in the "DD atmospheric delay" column</strong> directly → opens that baseline's delay chart (no need to open the drawer first).</li>
+    </ul>
+  </div>
+
+  <h3>6.5 Data connection status</h3>
+  <p>The top-right corner of the UI shows the data connection status. If it reports a disconnect or the data stops updating, check in this order:</p>
+  <ol>
+    <li>Is the engine running — <code>tasklist | findstr cors-engine</code></li>
+    <li>Has <code>start</code> been issued in the engine — otherwise the UI reports <code>cors not started yet</code></li>
+    <li>Is the collector running — <code>netstat -ano | findstr :8181</code>; you want to see <code>LISTENING</code></li>
+    <li>Is data advancing — <code>curl http://127.0.0.1:8181/api/snapshot</code>; check whether <code>frames</code> is growing</li>
+  </ol>
+  <p>For the detailed layer-by-layer order see <a href="#s12">Section 12.4</a>.</p>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 7 ══════════════ -->
+<section id="s7">
+  <h2 class="sec"><span class="n">7</span>Adding and Removing Stations</h2>
+
+  <p>Stations can be managed <strong>from the UI</strong>, or through <strong>console commands</strong> or the <strong>HTTP API</strong>. All three ultimately send the engine's <code>addsource</code> / <code>delsource</code> command, so the effect is identical.</p>
+
+  <h3>7.1 From the UI</h3>
+  <ol class="step">
+    <li>In the "Station Info" panel, click <strong>Add station</strong> to open the form.</li>
+    <li>Fill in the fields (see the table below) and confirm.</li>
+    <li>The new station appears in the list immediately, tagged "runtime" to show it was added dynamically at runtime and is not in the configuration file.</li>
+  </ol>
+  <p><strong>Removing</strong>: click delete in that row's action column.</p>
+
+  <h3>7.2 Fields for a new station</h3>
+  <table>
+    <thead><tr><th class="w1">Field</th><th>Description</th><th class="w3">Constraint and Validation</th></tr></thead>
+    <tbody>
+      <tr><td><code>name</code></td><td>Station name</td><td>Required, unique; duplicates are rejected (the engine ignores them silently)</td></tr>
+      <tr><td><code>addr</code></td><td>NTRIP server IP</td><td>Required, a valid IPv4 address (for example <code>192.168.1.100</code>)</td></tr>
+      <tr><td><code>port</code></td><td>Port</td><td>Required, an integer from 1 to 65535</td></tr>
+      <tr><td><code>user</code></td><td>NTRIP username</td><td>required</td></tr>
+      <tr><td><code>passwd</code></td><td>NTRIP password</td><td>required</td></tr>
+      <tr><td><code>mntpnt</code></td><td>mount point（Mount Point）</td><td>Required; <strong>the engine uses this as the "source name"</strong></td></tr>
+      <tr><td><code>lat</code></td><td>Latitude (degrees, decimal)</td><td>required，−90 ~ 90</td></tr>
+      <tr><td><code>lon</code></td><td>Longitude (degrees, decimal)</td><td>required，−180 ~ 180</td></tr>
+      <tr><td><code>height</code></td><td>Height (metres, ellipsoidal)</td><td>required</td></tr>
+      <tr><td><code>type</code></td><td>Type</td><td>Required; one of <code>M</code> / <code>E</code> / <code>O</code> / <code>V</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box warn">
+    <span class="t">The mntpnt / name relationship is easy to get wrong</span>
+    <p>When looking up whether a source exists, <strong>the engine uses the mount point (mntpnt) as the source name</strong>. So if <code>name</code> and <code>mntpnt</code> differ, <code>sourceinfo &lt;name&gt;</code> may not find it — look it up by mount point instead.</p>
+    <p><strong>Filling both with the same value is recommended</strong> to avoid confusion. If they genuinely must differ (several stations sharing different mount points on one NTRIP server, say), remember to query by mntpnt.</p>
+  </div>
+
+  <h3>7.3 From console commands</h3>
+<pre><code><span class="c"># Add a station (fixed argument order, 10 arguments)</span>
+addsource NAME HOST PORT USER PASS MOUNT LAT LON HEIGHT TYPE
+
+<span class="c"># example</span>
+addsource TEST01 192.168.1.100 2101 user pass RTCM32 40.01 116.01 50.0 M
+
+<span class="c"># Remove a station</span>
+delsource TEST01
+
+<span class="c"># Show details for one data source</span>
+sourceinfo TEST01
+
+<span class="c"># Show all data sources</span>
+sourceinfo</code></pre>
+
+  <div class="box bad">
+    <span class="t">Every argument is mandatory — missing ones produce an unfriendly error</span>
+    <p><code>addsource</code> strictly requires <strong>10 parameters</strong> (ten after the command name, eleven tokens in total). With too few it prints a one-line ASCII usage hint:</p>
+<pre style="margin:8px 0 0"><code>usage: addsource NAME HOST PORT USER PASS MOUNT LAT LON H TYPE
+       TYPE = E(eph only) M(mixed) O(obs) V(virtual)</code></pre>
+    <p>Note that the hint is in <strong>ASCII English</strong>, not garbled text — the console transports over latin1, so Chinese would come out mangled, which is why English is used deliberately here.</p>
+  </div>
+
+  <h3>7.4 From the HTTP API</h3>
+  <p>The collector exposes a REST API for the UI or your scripts (port 8181):</p>
+<pre><code><span class="c"># Add a station</span>
+curl -X POST http://127.0.0.1:8181/api/station/add \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"TEST01\",\"addr\":\"192.168.1.100\",\"port\":2101,
+       \"user\":\"user\",\"passwd\":\"pass\",\"mntpnt\":\"TEST01\",
+       \"lat\":40.01,\"lon\":116.01,\"height\":50.0,\"type\":\"M\"}"
+
+<span class="c"># Remove a station</span>
+curl -X POST http://127.0.0.1:8181/api/station/del \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"TEST01\"}"</code></pre>
+
+  <div class="box tip">
+    <span class="t">Validation rejects invalid input</span>
+    <p>The API returns <code>400</code> with a reason for missing fields, invalid IPs, invalid ports (0 or &gt;65535), out-of-range coordinates and invalid types, and <strong>does not forward them to the engine</strong>. Rejected stations never enter the station table.</p>
+    <p>This means adding through the 8181 API is <strong>safer</strong> than typing the <code>addsource</code> command directly, because there is a validation layer.</p>
+  </div>
+
+  <h3>7.5 About the "runtime" tag</h3>
+  <p>Stations added through the UI or a command carry the <code>runtimeOnly</code> flag and show as "runtime" in the UI. These records <strong>exist only at runtime</strong>:</p>
+  <ul>
+    <li>they disappear when the engine restarts (they are not in the configuration file)</li>
+    <li>once deleted they are cleaned out of the station table and the data tables, leaving nothing behind (see the lifecycle note below)</li>
+  </ul>
+  <p>For a <strong>permanent</strong> station, write it into <code>build\conf\ntripsources</code> and restart the engine.</p>
+
+  <h4>Data lifecycle after removing a station</h4>
+  <p>Removing a station is a <strong>staged convergence</strong> process, with different timings per stage:</p>
+  <table>
+    <thead><tr><th class="w2">Time</th><th>What Happens</th><th>What You See in the UI</th></tr></thead>
+    <tbody>
+      <tr><td>Immediately (&lt;1 second)</td><td>The source table entry is removed; the network is re-triangulated (that station's vertex and its edges disappear); the corresponding baselines are removed from the baseline table</td><td>The station and its links vanish from the network map; the baseline rows enter a 30-second buffer</td></tr>
+      <tr><td>10 to 15 seconds</td><td>The station's orphaned data (observations, station info, satellite status, solution status and so on) is purged from shared-memory tables by the <strong>lifecycle reclaimer</strong> — after deletion these entries stop updating, and anything not refreshed for over 10 seconds is treated as expired and reclaimed</td><td>Not noticeable (internal cleanup)</td></tr>
+      <tr><td>30 seconds</td><td>The baseline table buffer expires</td><td>The corresponding baseline rows fade out</td></tr>
+    </tbody>
+  </table>
+  <p>The reverse works the same way: when a station is <strong>added</strong>, its data is under active management from creation and will never be reclaimed as long as it keeps updating. If a newly added source never streams (a non-existent caster, say), those zero-valued entries are reclaimed 10 seconds after registration once the station is deleted.</p>
+
+  <h3>7.6 Comparing the three methods</h3>
+  <table>
+    <thead><tr><th class="w2">Method</th><th>Pros</th><th>Cons</th><th class="w2">Use When</th></tr></thead>
+    <tbody>
+      <tr><td>UI</td><td>Intuitive, with form validation and immediate feedback</td><td>Requires someone to open a browser</td><td>Day-to-day operations</td></tr>
+      <tr><td>Console Commands</td><td>No browser needed; can be driven from the engine side</td><td>Positional parameters, no validation, unfriendly hints when arguments are missing</td><td>Troubleshooting, quick verification</td></tr>
+      <tr><td>HTTP API</td><td>Scriptable and integrable; full field validation</td><td>Requires the collector to be running</td><td>Automation, bulk operations</td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 8 ══════════════ -->
+<section id="s8">
+  <h2 class="sec"><span class="n">8</span>Console Commands</h2>
+
+  <p>The engine console supports the commands below. Command lines must end with <strong>CRLF</strong> (the collector's TCP client adds it automatically, and telnet does by default); sending only <code>\n</code> may be treated as part of the command.</p>
+
+  <h3>8.1 Service control</h3>
+  <table>
+    <thead><tr><th class="w3">Command</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>start-gui [port] [lan]</code></td><td>Start the dashboard (automatically brings up the collector and opens the browser). With no arguments it uses the default port 8181 on the local host only; add <code>lan</code> to expose it</td></tr>
+      <tr><td><code>start</code></td><td>Start the CORS solution service</td></tr>
+      <tr><td><code>stop</code></td><td>Stop the CORS solution service (the engine process keeps running; you can <code>start</code> again)</td></tr>
+      <tr><td><code>shutdown</code></td><td>exitengineprocess</td></tr>
+      <tr><td><code>quiet [0|1]</code></td><td>Query or set the silent state of <code>showbls</code>. No argument = query; <code>quiet 0</code> restores echo; <code>quiet 1</code> silences it</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.2 Data source management</h3>
+  <table>
+    <thead><tr><th class="w3">Command</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>addsource</code></td><td>Add an NTRIP data source (station). Requires 10 parameters, see <a href="#s7">Section 7.3</a></td></tr>
+      <tr><td><code>delsource &lt;station&gt;</code></td><td>Remove a data source</td></tr>
+      <tr><td><code>sourceinfo [station]</code></td><td>Query data source details (with no argument, list them all). <strong>Use the mount point as the station name</strong></td></tr>
+      <tr><td><code>monisrcinfo</code></td><td>Data source monitoring information</td></tr>
+      <tr><td><code>loadopt</code></td><td>Reload the configuration</td></tr>
+      <tr><td><code>updpntopt</code> / <code>updrtkopt</code></td><td>Update positioning / RTK parameters</td></tr>
+      <tr><td><code>setobsudfrq &lt;seconds&gt;</code> / <code>setrtkudfrq &lt;seconds&gt;</code></td><td>Set the observation / RTK update rate</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.3 Querying solution information</h3>
+  <table>
+    <thead><tr><th class="w3">Command</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>showbls</code></td><td>Show a solution-status overview for all baselines. <strong>This is the main data source for the dashboard</strong></td></tr>
+      <tr><td><code>showblsols</code></td><td>Show detailed baseline solution results</td></tr>
+      <tr><td><code>showblsif</code> / <code>showblswl</code></td><td>Show baseline IF (ionosphere-free) / WL (wide-lane) solution information</td></tr>
+      <tr><td><code>showambdds</code></td><td>Show double-differenced ambiguities</td></tr>
+      <tr><td><code>showatmodddelay</code></td><td>Show double-differenced atmospheric delays</td></tr>
+      <tr><td><code>navidata</code> / <code>observ</code> / <code>satellite</code></td><td>Ephemeris / observations / satellite information</td></tr>
+      <tr><td><code>rtkpos</code></td><td>RTK positioning results</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box warn">
+    <span class="t">showbls is polled by the collector once per second</span>
+    <p>To feed the dashboard, the collector issues <code>showbls</code> <strong>once per second</strong>. That command produces a lot of output, and without silencing it the console becomes unusable.</p>
+    <p>The system therefore <strong>silences</strong> this command by default. To read it by hand, run <code>quiet 0</code> to restore echo, then <code>quiet 1</code> to silence it again.</p>
+  </div>
+
+  <h3>8.4 Triangulation and virtual stations</h3>
+  <table>
+    <thead><tr><th class="w3">Command</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>showdtrigs</code></td><td>Show triangulation vertices</td></tr>
+      <tr><td><code>showsubnet</code></td><td>Show sub-network information</td></tr>
+      <tr><td><code>drawdtrignet</code></td><td>Draw / export the triangulation</td></tr>
+      <tr><td><code>showtrinet</code></td><td>Export the <strong>authoritative</strong> triangulation CSV (vertices / edges / triangles plus a checksum trailer); this is the data basis for the dashboard's network rendering</td></tr>
+      <tr><td><code>addvsta</code> / <code>delvsta</code></td><td>add / removevirtual reference station（VRS）</td></tr>
+      <tr><td><code>showvstas</code></td><td>List virtual reference stations</td></tr>
+      <tr><td><code>drawvsta</code></td><td>Draw virtual station positions</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">What the checksum trailer on showtrinet is for</span>
+    <p>The checksum appended to the CSV is used to <strong>confirm the data is complete and untruncated</strong>. Network transfer or buffer-boundary problems can drop the tail of the CSV, in which case the checksum will not match — the front end uses this to decide whether the triangulation it received is trustworthy, so it never renders a broken network.</p>
+  </div>
+
+  <h3>8.5 Users and monitoring</h3>
+  <table>
+    <thead><tr><th class="w3">Command</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>adduser</code> / <code>deluser</code> / <code>showusers</code></td><td>NTRIP user management</td></tr>
+      <tr><td><code>addmonitor</code> / <code>delmonitor</code></td><td>Monitoring source management</td></tr>
+      <tr><td><code>addntripagent</code> / <code>delntripagent</code></td><td>NTRIP proxy management</td></tr>
+      <tr><td><code>agentinfo</code></td><td>Proxy information</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.6 Command matching rules (important)</h3>
+
+  <div class="box tip">
+    <span class="t">Commands are matched exactly</span>
+    <p>The engine matches commands by comparing the first token of your input against the command table item by item with an <strong>exact, case-sensitive equality test</strong>, and runs the hit. That means:</p>
+    <ol style="margin:8px 0">
+      <li><strong>You must type the full command name</strong> — <code>start-g</code> or <code>st</code> match nothing and only produce <code>unknown command</code>;</li>
+      <li><strong>Similar commands do not interfere</strong> — <code>start</code> and <code>start-gui</code> are separate commands, and neither can steal the other's match.</li>
+    </ol>
+  </div>
+
+  <p>The full command table (grouped by function, 38 in total):</p>
+<pre><code>start-gui   start       stop        addsource   delsource   loadopt
+navidata    observ      satellite   sourceinfo  rtkpos      addvsta
+delvsta     showdtrigs  showbls     showsubnet  adduser     deluser
+showvstas   showusers   monisrcinfo agentinfo   addmonitor  addntripagent
+delmonitor  delntripagent  updpntopt  updrtkopt  showblsols  drawdtrignet
+drawvsta    showambdds  showblsif   showblswl   showatmodddelay
+setobsudfrq setrtkudfrq shutdown</code></pre>
+
+  <div class="box tip">
+    <span class="t">Two things to check when a command reports "unknown command"</span>
+    <ol style="margin:8px 0 0">
+      <li><strong>The spelling of the command name</strong> — a missing or extra character does not match, because the comparison is exact.</li>
+      <li><strong>Whether you passed arguments it does not expect</strong> — most commands print a <code>usage:</code> line when arguments are missing, though a few ignore the problem silently.</li>
+    </ol>
+  </div>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 9 ══════════════ -->
+<section id="s9">
+  <h2 class="sec"><span class="n">9</span>HTTP API</h2>
+
+  <p>The collector (port 8181 by default) exposes the following endpoints for the front end and automation scripts. All responses are <strong>synchronous JSON</strong>.</p>
+
+  <h3>9.1 Endpoint list</h3>
+  <table>
+    <thead><tr><th class="w1">Method</th><th class="w3">Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td><code>/api/snapshot</code></td><td>Full state snapshot (connection status, station table, dictionary statistics, historical data and so on)</td></tr>
+      <tr><td>GET</td><td><code>/api/stations</code></td><td>Station list (lighter than snapshot)</td></tr>
+      <tr><td>POST</td><td><code>/api/console</code></td><td>Run a console command; request body <code>{"cmd":"showbls"}</code></td></tr>
+      <tr><td>POST</td><td><code>/api/station/add</code></td><td>Add a station (with field validation)</td></tr>
+      <tr><td>POST</td><td><code>/api/station/del</code></td><td>removestation</td></tr>
+      <tr><td>POST</td><td><code>/api/dict/reload</code></td><td>Reload the station dictionary (hot reload)</td></tr>
+      <tr><td>POST</td><td><code>/api/baseline/add</code></td><td>addbaseline</td></tr>
+      <tr><td>POST</td><td><code>/api/baseline/del</code></td><td>removebaseline</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box bad">
+    <span class="t">There are only these 8 routes</span>
+    <p>There is no <code>/api/state</code>, no <code>/api/health</code> and no <code>/api/version</code>. Requesting a non-existent path returns 404. For a health check use <code>/api/snapshot</code>.</p>
+  </div>
+
+  <h3>9.2 Checking status</h3>
+<pre><code>curl http://127.0.0.1:8181/api/snapshot</code></pre>
+  <p>Returns JSON with these key fields:</p>
+<pre><code>{
+  "solution": { "connected": true, "frames": 5625, "errors": 0 },
+  "console":  { "connected": true },
+  "stations": [ ... ],
+  "dictStats": { ... }
+}</code></pre>
+
+  <table>
+    <thead><tr><th class="w3">Field</th><th>Meaning</th><th class="w2">Health Check</th></tr></thead>
+    <tbody>
+      <tr><td><code>solution.connected</code></td><td>Whether the collector has connected to the engine's 8080 data stream</td><td>should be <code>true</code></td></tr>
+      <tr><td><code>solution.frames</code></td><td>Number of solution frames received</td><td><strong>should grow between two consecutive reads</strong></td></tr>
+      <tr><td><code>solution.errors</code></td><td>Parse error count</td><td>should be <code>0</code>, or at least stable and not growing</td></tr>
+      <tr><td><code>console.connected</code></td><td>Whether the collector has connected to the engine's 9000 console</td><td>should be <code>true</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">To tell whether data is flowing, watch the frames delta, not connected</span>
+    <p><code>connected: true</code> only means the TCP connection was established; it does not mean data is flowing. <strong>The only reliable signal is that frames is growing</strong>. Read it twice a few seconds apart and compare:</p>
+<pre style="margin:8px 0 0"><code>curl -s http://127.0.0.1:8181/api/snapshot | findstr /C:"frames" &amp; timeout /t 3 &gt;nul &amp; curl -s http://127.0.0.1:8181/api/snapshot | findstr /C:"frames"</code></pre>
+  </div>
+
+  <h3>9.3 Running an arbitrary console command</h3>
+<pre><code>curl -X POST http://127.0.0.1:8181/api/console \
+  -H "Content-Type: application/json" \
+  -d "{\"cmd\":\"sourceinfo\"}"</code></pre>
+
+  <div class="box warn">
+    <span class="t">The request body field is cmd, not command</span>
+    <p>Spelling it <code>command</code> returns <code>400</code> directly. This is a trap we hit in testing.</p>
+  </div>
+
+  <h3>9.4 Health check script</h3>
+<pre><code><span class="c">REM Simplest: confirm snapshot is reachable and the stream is connected</span>
+curl -s http://127.0.0.1:8181/api/snapshot | findstr /C:"\"connected\":true"
+
+<span class="c">REM More reliable: confirm frames is really advancing (two different readings mean it is fine)</span>
+curl -s http://127.0.0.1:8181/api/snapshot | findstr /C:"frames"</code></pre>
+
+  <h3>9.5 Getting structured data with PowerShell</h3>
+  <p>When you need to extract specific field values, PowerShell is handier than <code>findstr</code>:</p>
+<pre><code><span class="c"># Read the solution connection state and frame count</span>
+$s = Invoke-RestMethod http://127.0.0.1:8181/api/snapshot
+$s.solution | Select-Object connected, frames, errors
+
+<span class="c"># List all station names</span>
+$s.stations | Select-Object -ExpandProperty name</code></pre>
+
+  <div class="box tip">
+    <span class="t">The snapshot response can be very large</span>
+    <p><code>/api/snapshot</code> includes the full per-satellite delay history buffer and can reach hundreds of KB in practice. If you only need the station list, use the lighter <code>/api/stations</code>. The front end gets live data over WebSocket, not through this endpoint.</p>
+  </div>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 10 ══════════════ -->
+<section id="s10">
+  <h2 class="sec"><span class="n">10</span>Collector Configuration</h2>
+
+  <p>The collector is a Node.js program (<code>viz/collector/index.js</code>). Its job is to connect to the engine's 8080 for solution data, connect to 9000 to issue console commands, and serve HTTP + WebSocket on 8181.</p>
+  <p>The release package ships a bundled runtime (<code>runtime\node.exe</code>), so <strong>the target machine does not need Node.js installed</strong>; <code>start.cmd</code> prefers it and only falls back to a system installation if it is missing. Normal use is handled automatically by the script and <strong>needs no manual intervention</strong>; start it by hand only when debugging.</p>
+
+  <h3>10.1 Starting it manually</h3>
+  <p>Using the bundled runtime (recommended; no Node installation needed):</p>
+<pre><code>set MCORS_SOURCE=live
+set MCORS_HOST=127.0.0.1
+set MCORS_WEB_PORT=8181
+runtime\node.exe viz\collector\index.js</code></pre>
+  <p>If you have installed Node.js yourself, substitute <code>node</code> for the path above; behaviour is identical.</p>
+
+  <h3>10.2 Environment variables</h3>
+  <table>
+    <thead><tr><th class="w3">Variable</th><th class="w2">Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>MCORS_SOURCE</code></td><td><code>mock</code></td><td><code>live</code> = connect to a real engine; <code>mock</code> = built-in simulated data</td></tr>
+      <tr><td><code>MCORS_HOST</code></td><td>auto-detected</td><td>Engine address</td></tr>
+      <tr><td><code>MCORS_CONSOLE_PORT</code></td><td><code>9000</code></td><td>consoleport</td></tr>
+      <tr><td><code>MCORS_SOLUTION_PORT</code></td><td><code>8080</code></td><td>data streamport</td></tr>
+      <tr><td><code>MCORS_WEB_PORT</code></td><td><code>8181</code></td><td>dashboard HTTP port</td></tr>
+      <tr><td><code>MCORS_WEB_HOST</code></td><td><code>0.0.0.0</code></td><td>Dashboard listening address</td></tr>
+      <tr><td><code>MCORS_CONF</code></td><td>resolved automatically</td><td>Path to the conf directory (used to read the station dictionary and so on)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box bad">
+    <span class="t">Forgetting MCORS_SOURCE=live will mislead you</span>
+    <p>With this variable unset the collector defaults to <strong>mock mode</strong>: the UI shows simulated data and looks perfectly healthy, while in fact nothing is connected to an engine. When diagnosing a real problem, always confirm this variable is <code>live</code>.</p>
+    <p><strong>The classic misdiagnosis</strong>: the engine is down but the UI keeps moving (because of the mock data), so you waste a lot of time looking for the problem on the engine side. Check this first.</p>
+  </div>
+
+  <div class="box ok">
+    <span class="t">start-gui sets these variables for you</span>
+    <p>When started through <code>start-gui</code>, the engine sets <code>MCORS_SOURCE=live</code>, <code>MCORS_HOST=127.0.0.1</code> and <code>MCORS_CONF</code> to the right conf directory, and configures the dashboard listening address for local or LAN mode. You only set these yourself when starting it by hand.</p>
+  </div>
+
+  <h3>10.3 History buffer and performance settings</h3>
+  <p>These are defined in <code>viz/collector/config.js</code> and normally need no changes:</p>
+  <table>
+    <thead><tr><th class="w3">Parameter</th><th class="w2">default value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>satHistoryLimit</code></td><td><code>120</code></td><td>Number of historical epochs kept per satellite. This determines how far back the per-satellite delay chart can reach (about 2 minutes at 1 Hz sampling)</td></tr>
+      <tr><td><code>satHistoryMaxBaselines</code></td><td><code>12</code></td><td>Maximum number of baselines for which per-satellite history is kept. Beyond this no new history is added, so memory cannot grow without bound</td></tr>
+      <tr><td>Broadcast interval</td><td><code>1000</code> ms</td><td>WebSocket push rate (<strong>1 second</strong>). Lowering it is more real-time but costs more resources</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box warn">
+    <span class="t">Raising satHistoryLimit noticeably increases memory use</span>
+    <p>Memory use is roughly proportional to <code>satHistoryLimit × baseline count × satellites per baseline</code>. Raising <code>satHistoryLimit</code> from 120 to 1200 multiplies memory by about 10, and the size of a <code>/api/snapshot</code> response grows with it.</p>
+  </div>
+
+  <h3>10.4 Collector logging</h3>
+  <p>The collector writes logs to standard output. When started through <code>start-gui</code> that output is redirected into the engine log file, so you can read it alongside everything else in <code>build\*.trace</code>.</p>
+  <p>When started by hand the logs print directly in the command window, which is convenient for live observation.</p>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 11 ══════════════ -->
+<section id="s11">
+  <h2 class="sec"><span class="n">11</span>FAQ</h2>
+
+  <h3>Q1 · I changed the code and it compiled, but behaviour did not change</h3>
+  <p><strong>Cause</strong>: you used a full <code>cmake --build .</code>, which hangs on a third-party dependency and fails silently, so the exe was never relinked.</p>
+  <p><strong>Fix</strong>: use <code>cmake --build . --target cors-engine -j 8</code>, and verify with timestamps that the artifact is newer than the sources (see <a href="#s3">Section 3.6</a>).</p>
+
+  <h3>Q2 · The link fails with Permission denied</h3>
+  <p><strong>Cause</strong>: <code>cors-engine.exe</code> is running, so the file is locked.</p>
+  <p><strong>Fix</strong>: run <code>taskkill /F /IM cors-engine.exe</code> before building.</p>
+
+  <h3>Q3 · It says node.exe cannot be found</h3>
+  <p><strong>Cause</strong>: the bundled <code>runtime\node.exe</code> was deleted or damaged, and there is no usable Node.js on the machine either.</p>
+  <p><strong>Fix</strong>: a normal release package ships its own Node runtime, so <strong>no separate installation is needed</strong>. Just confirm <code>runtime\node.exe</code> exists; if it is genuinely missing, restore it from a complete package, or install Node.js and add it to PATH and the script will fall back to the system installation.</p>
+
+  <h3>Q4 · After start-gui the dashboard will not open, or data does not update</h3>
+  <p>Check in this order:</p>
+  <ol>
+    <li>Does the console show <code>gui ready</code>? If not, read the error it reports.</li>
+    <li>Has <code>start</code> been issued in the engine? If not it reports <code>cors not started yet</code>, and the UI opens but shows no data.</li>
+    <li>Is 8181 already in use? <code>netstat -ano | findstr :8181</code>. If another node instance holds it, end that process first.</li>
+  </ol>
+  <p>If all of the above is fine, continue with the layer-by-layer procedure in <a href="#s12">Section 12.4</a>.</p>
+
+  <h3>Q5 · The station table in the UI does not match expectations</h3>
+  <p><strong>Cause</strong>: the engine reads <code>build\conf\</code>, while you may have edited the project-root <code>conf\</code>.</p>
+  <p><strong>Fix</strong>: make sure you edited <code>build\conf\ntripsources</code>, or call <code>POST /api/dict/reload</code> to hot reload.</p>
+
+  <h3>Q6 · sourceinfo &lt;station&gt; cannot find a station I just added</h3>
+  <p><strong>Cause</strong>: on the engine side the "source name" is the <strong>mount point (mntpnt)</strong>, not name.</p>
+  <p><strong>Fix</strong>: query by mount point, or make the two values the same.</p>
+
+  <h3>Q7 · A station I added disappears after a restart</h3>
+  <p><strong>Cause</strong>: stations added through the UI or a command are "runtime" (<code>runtimeOnly</code>) records and are not written to the configuration file.</p>
+  <p><strong>Fix</strong>: for a permanent station, write it into <code>build\conf\ntripsources</code> and restart the engine.</p>
+
+  <h3>Q8 · The dashboard data looks fake, or never changes</h3>
+  <p><strong>Cause</strong>: the collector is in mock mode (<code>MCORS_SOURCE=live</code> was not set).</p>
+  <p><strong>Fix</strong>: start through <code>start-gui</code> (which sets it for you), or set the variable explicitly when starting by hand.</p>
+
+  <h3>Q9 · The engine console keeps scrolling endlessly</h3>
+  <p><strong>Cause</strong>: <code>showbls</code> is polled by the collector every second, and each run emits many lines.</p>
+  <p><strong>Fix</strong>: it is silenced by default. Use <code>quiet</code> to check the state, <code>quiet 0</code> to restore echo and <code>quiet 1</code> to silence it again.</p>
+
+  <h3>Q10 · Only the local host can reach it; other machines cannot connect</h3>
+  <p><strong>Check</strong>:</p>
+  <ul>
+    <li>Did the engine start with <code>-b local</code>? That listens on loopback only. Remove the flag to restore external access.</li>
+    <li>Was the dashboard started with <code>start-gui 8181 lan</code>? Without <code>lan</code> the collector listens on the local host only.</li>
+    <li>Has the Windows firewall allowed ports 8181 / 9000 / 8080?</li>
+    <li>Use <code>netstat -ano | findstr :8181</code> to confirm the listening address is <code>0.0.0.0:8181</code> rather than <code>127.0.0.1:8181</code>.</li>
+  </ul>
+
+  <h3>Q11 · Rows, order or names in the baseline table keep changing</h3>
+  <p>First distinguish <strong>two very different kinds of change</strong>; do not conflate them:</p>
+
+  <table>
+    <thead><tr><th class="w4">Symptom</th><th class="w4">Cause</th><th>Normal?</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Row <strong>positions</strong> change every few seconds<br>(the same batch of baselines bounces up and down)</td>
+        <td>The sort key is not deterministic — within one frame every baseline carries the <strong>identical</strong> observation time, so using it as a tie-breaker makes the comparator always return 0, leaving order to depend on data arrival order</td>
+        <td><span class="tag no">Was a bug; fixed</span></td>
+      </tr>
+      <tr>
+        <td>The row <strong>membership</strong> changes<br>(one disappears or appears; a station name is swapped)</td>
+        <td>A station really did go offline or come online. That baseline is simply absent from the engine's <code>showbls</code> output</td>
+        <td><span class="tag ok">Normal</span> — this reflects real state</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">Telling jitter apart from a real change</span>
+    <p>Take several snapshots in a row and compare whether the baseline set (station-name pairs) really differs:</p>
+<pre style="margin:8px 0 0"><code>for /l %i in (1,1,6) do @(curl -s http://127.0.0.1:8181/api/snapshot | findstr /c:"baseName" &amp; timeout /t 3 &gt;nul)</code></pre>
+    <p>If the sets are <strong>identical</strong> yet rows move, it is a sorting problem; if the sets themselves differ, stations really are going offline and online, which is normal.</p>
+  </div>
+
+  <h4>If the table "keeps flickering" (even when row order is unchanged)</h4>
+  <p>This is a problem <strong>separate from sorting</strong>, measured and fixed on 2026-10-05. How to tell it apart:</p>
+  <ul>
+    <li>Neither the <strong>number</strong> nor the <strong>order</strong> of rows appears to change, yet the whole table keeps pulsing between light and dark;</li>
+    <li>the value columns update every frame (position error and so on), but that alone is not enough to cause flicker.</li>
+  </ul>
+  <p><strong>Cause</strong>: when the table reused <code>&lt;tr&gt;</code> nodes it once moved <strong>every row</strong> into a temporary container and back each frame. Per the CSS specification, "removing an element from the document and reinserting it" <strong>restarts every running animation on that element</strong> — so although row order never changed, the row highlight animation restarted from the beginning every frame, could never finish, and looked like continuous flicker.</p>
+  <p><strong>Measured</strong>: 10 rows pushed across 5 frames produced <strong>100</strong> node moves (every row, every frame).</p>
+  <p><strong>Fix</strong>: only rows that <strong>genuinely need to swap</strong> are moved, so in steady state the move count is <strong>0</strong>; at the same time the "position changed" cue was changed from a full-row wash to a thin coloured bar on the left edge, reducing its visual weight.</p>
+  <p>Regression guard: <code>node viz\test\bl-flicker-repro-test.js</code> (12 assertions). The core assertion is "push 5 frames in steady state; the node move count must be 0".</p>
+
+  <p>Row-position stability rests on three mechanisms (source in <code>viz/web/js/baseline-panel.js</code>); see the note in <a href="#s6">Section 6.3</a>.</p>
+
+  <h3>Q12 · The numbers on the dashboard feel uncertain</h3>
+  <p>Every numeric column in the baseline table uses a fixed number of decimal places, padded with zeros, and shows <code>—</code> when there is no value:</p>
+  <ul>
+    <li><strong>Length</strong> 1 decimal · <strong>Age</strong> integer · <strong>Satellites used</strong> integer</li>
+    <li><strong>Position error</strong> 3 decimals · <strong>DD atmospheric delay</strong> 3 decimals</li>
+  </ul>
+  <p>Numbers render in a monospaced font with <code>tabular-nums</code>, so decimal points line up across rows and compare easily down a column.</p>
+  <p>The "DD atmospheric delay" column is the only one in the table carrying a superscript tag (<code>avg</code>), meaning it is the <strong>arithmetic mean</strong> across all satellites used, not a value from one satellite. For the per-satellite detail, <strong>click that row</strong> to open the drawer.</p>
+
+  <h3>Q13 · I typed a command in the engine console and nothing seemed to happen</h3>
+  <p><strong>Cause</strong>: the console input loop contains <code>uv_sleep(500)</code>, which in the worst case causes up to about 30 seconds of input lag, during which keystrokes are swallowed.</p>
+  <p><strong>Fix</strong>: wait patiently; the command still runs normally. If you must act immediately, open another TCP client to 9000 and send the command there, or use <code>POST /api/console</code>.</p>
+  <p><em>Note</em>: this is a known improvement target (ideally it becomes an event-driven <code>uv_timer</code> poll plus a state machine instead of a blocking sleep).</p>
+
+  <h3>Q14 · After adding a station, the type or height shown differs from what I entered</h3>
+  <p><strong>Cause (a historical bug, since fixed)</strong>: when adding a station the collector used to <strong>send the command first and register the dictionary entry afterwards</strong>, so within that window of a few hundred milliseconds to several seconds the <code>sourceinfo</code> poll (every 3 seconds) could run first. The record created by the poll carried the <strong>connection type (for example "NTRIP" rather than M/E/O/V) and no height</strong>, and because the registration logic "does not overwrite existing records", your values were quietly replaced.</p>
+  <p><strong>Symptom</strong>: the type column shows "Mixed" and the height shows <code>—</code>.</p>
+  <p><strong>Current state</strong>: changed to <strong>register the dictionary entry first, then send the command</strong>, so the user's input becomes the authoritative initial value and the poll only fills in srcId / ECEF / status.</p>
+
+  <h3>Q15 · Very large delay values on long baselines or low-elevation satellites</h3>
+  <p><strong>Cause</strong>: this is <strong>normal physical behaviour</strong>, not a bug.</p>
+  <ul>
+    <li><strong>The longer the baseline</strong>, the more the atmospheric paths taken by the two stations' observations differ, and the more atmospheric delay survives in the double-difference residual.</li>
+    <li><strong>The lower a satellite's elevation</strong>, the longer its slanted path through the atmosphere, and the larger the ionospheric / tropospheric delay itself.</li>
+  </ul>
+  <p><strong>How to use this</strong>: low-elevation satellites contribute little to the solution and carry large errors, so they are usually filtered out by the elevation mask. If a baseline will not hold a stable FIX, open the drawer and see whether one low-elevation satellite stands out with an anomalous delay.</p>
+
+  <h3>Q16 · The snapshot JSON is huge and slow to process</h3>
+  <p><strong>Cause</strong>: <code>/api/snapshot</code> carries the full per-satellite delay history buffer (120 epochs per satellite by default), which in practice accounts for most of the response size.</p>
+  <p><strong>Fix</strong>:</p>
+  <ul>
+    <li>Only need the station list → use <code>/api/stations</code>.</li>
+    <li>Only need connection status → filter with <code>findstr</code> instead of parsing the whole JSON.</li>
+    <li>Live front-end data → use WebSocket (the collector pushes a trimmed version without the full history).</li>
+  </ul>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 12 ══════════════ -->
+<section id="s12">
+  <h2 class="sec"><span class="n">12</span>Operations and Troubleshooting</h2>
+
+  <h3>12.1 Checking runtime status</h3>
+<pre><code><span class="c">REM engine process</span>
+tasklist | findstr cors-engine
+
+<span class="c">REM collector process</span>
+tasklist | findstr node
+
+<span class="c">REM Port listening state</span>
+netstat -ano | findstr "9000 8080 8181"</code></pre>
+
+  <p>In normal operation you should see:</p>
+<pre><code>TCP  0.0.0.0:9000    LISTENING   &lt;engine PID&gt;
+TCP  0.0.0.0:8080    LISTENING   &lt;engine PID&gt;
+TCP  127.0.0.1:8181  LISTENING   &lt;collector PID&gt;</code></pre>
+
+  <div class="box bad">
+    <span class="t">The only real test of availability is LISTENING</span>
+    <p>A process in <code>tasklist</code> <strong>does not</strong> mean the service is usable — we have seen "zombie-alive" processes: the process exists, the trace log keeps growing and the TCP connection is still there, yet <strong>the port is not listening</strong>, so clients cannot connect.</p>
+    <p><strong>The only reliable indicator is that the port shows <code>LISTENING</code> in <code>netstat</code>.</strong></p>
+  </div>
+
+  <h3>12.2 Log files</h3>
+  <p>The engine writes trace logs in the <code>build\</code> directory, with names like:</p>
+<pre><code>cors_engine_20261005093622.trace</code></pre>
+  <p>The timestamp in the filename is <strong>UTC</strong>; add 8 hours to get local time. To find the newest one, sort by modification time:</p>
+<pre><code>dir /O-D /T:W build\*.trace</code></pre>
+
+  <div class="box warn">
+    <span class="t">Trace files keep growing</span>
+    <p>Long runs generate a lot of log files (a single one can reach tens of MB). Clean up old files periodically, keeping only the last few days:</p>
+<pre style="margin:8px 0 0"><code><span class="c">REM List trace files older than 7 days (delete only after checking)</span>
+forfiles /P build /M *.trace /D -7 /C "cmd /c echo @file"</code></pre>
+  </div>
+
+  <div class="box tip">
+    <span class="t">Why logs may be missing in -s mode</span>
+    <p>When started with <code>-s</code> in service mode, stdout / stderr are taken over by a virtual terminal, so some diagnostics written straight to stdout may not be visible. When you need diagnostic output, the most reliable approach is to <code>fopen</code> a dedicated file and write there.</p>
+  </div>
+
+  <h3>12.3 Self-check scripts</h3>
+  <p>The project ships a set of automated test and diagnostic scripts in two directories:</p>
+  <ul>
+    <li><code>viz\test\</code> — the <strong>test suite</strong> (assertion-based, with pass / fail counts)</li>
+    <li><code>viz\tools\</code> — <strong>diagnostic probes and helper scripts</strong> (build, probe, verify)</li>
+  </ul>
+
+  <h4>Test suite (viz\test\)</h4>
+  <table>
+    <thead><tr><th class="w4">Script</th><th>Purpose</th><th class="w1">Assertions</th></tr></thead>
+    <tbody>
+      <tr><td><code>run-all.js</code></td><td><strong>Full entry point</strong>; runs the suites below in order and summarises</td><td><strong>450</strong></td></tr>
+      <tr><td><code>delaunay-test.js</code></td><td>Delaunay triangulation</td><td>22</td></tr>
+      <tr><td><code>trinet-parser-test.js</code></td><td>Triangulation CSV parsing (including the checksum)</td><td>24</td></tr>
+      <tr><td><code>solution-parser.test.js</code></td><td>Solution message parsing</td><td>89</td></tr>
+      <tr><td><code>trend-render-test.js</code></td><td>Trend chart rendering</td><td>19</td></tr>
+      <tr><td><code>atmo-avg-test.js</code></td><td>DD atmospheric delay average (unit)</td><td>26</td></tr>
+      <tr><td><code>atmo-avg-e2e.js</code></td><td>DD atmospheric delay average (end-to-end)</td><td>18</td></tr>
+      <tr><td><code>sat-history-test.js</code></td><td>Per-satellite delay history buffer</td><td>39</td></tr>
+      <tr><td><code>sat-delay-render-test.js</code></td><td>Per-satellite delay chart rendering</td><td>54</td></tr>
+      <tr><td><code>sat-chart-interact-test.js</code></td><td>Per-satellite delay chart interaction</td><td>80</td></tr>
+      <tr><td><code>vrs-map-test.js</code></td><td>Virtual station network map</td><td>27</td></tr>
+      <tr><td><code>bl-sort-stability-test.js</code></td><td>Baseline table sort stability</td><td>40</td></tr>
+      <tr><td><code>bl-flicker-repro-test.js</code></td><td>Baseline table flicker regression (DOM move semantics)</td><td>12</td></tr>
+      <tr><td><code>e2e.js</code></td><td>End-to-end (<span class="tag mid">must run separately</span>)</td><td>293</td></tr>
+      <tr><td><code>bl-frame-stability-live.js</code></td><td>Cross-frame row-order stability (needs real snapshots; <strong>excluded</strong> from the default suite)</td><td>5</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Diagnostic scripts (viz\tools\)</h4>
+  <table>
+    <thead><tr><th class="w4">Script</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>build-engine.cmd</code></td><td>One-shot engine build (see <a href="#s3">Chapter 3</a>)</td></tr>
+      <tr><td><code>start-engine.cmd</code></td><td>Convenience script for starting the engine</td></tr>
+      <tr><td><code>station-add-del-probe.js</code></td><td>Live probe for add/remove station behaviour (supports <code>--rounds N</code>)</td></tr>
+      <tr><td><code>console-probe.js</code></td><td>Console connectivity probe</td></tr>
+      <tr><td><code>monitor-probe.js</code></td><td>Data stream monitoring probe</td></tr>
+      <tr><td><code>capture-solution.js</code></td><td>Capture one frame of solution data for offline analysis</td></tr>
+      <tr><td><code>quiet-probe.js</code></td><td>Verify the <code>quiet</code> silencing mechanism</td></tr>
+      <tr><td><code>baseline-table-probe.js</code></td><td>Baseline table data probe</td></tr>
+    </tbody>
+  </table>
+
+  <h4>How to run them</h4>
+  <p>Node.js is required (if it is not on PATH, call it by full path, for example <code>C:\Users\&lt;you&gt;\.workbuddy\binaries\node\versions\22.22.2-3\node.exe</code>):</p>
+<pre><code><span class="c">REM Full test run (about 40 seconds)</span>
+node viz\test\run-all.js
+
+<span class="c">REM End-to-end test (must run separately)</span>
+node viz\test\e2e.js
+
+<span class="c">REM add/remove station probe, 5 rounds</span>
+node viz\tools\station-add-del-probe.js --rounds 5</code></pre>
+
+  <div class="box warn">
+    <span class="t">run-all may report EBUSY — an environment issue, not a code issue</span>
+    <p>Some suites (notably the console reply-splitting one) report <code>spawnSync ... EBUSY</code>. This is usually caused by <strong>antivirus software or a concurrent build briefly holding node.exe</strong>, and in restricted environments it can even be an environment-level limit (we have seen <code>node -e "console.log(42)"</code> return EBUSY).</p>
+    <p>When that happens <code>run-all.js</code> marks the suite as <strong>"must run separately"</strong> and prints the command, <strong>without counting it as a failure</strong>. Just run that suite by hand; every suite runs independently and reports its own counts.</p>
+    <p>Reference values measured here: <code>run-all.js</code> summarises <strong>450 passed / 0 failed</strong> (separately-run suites not counted); <code>e2e.js</code> run on its own gives <strong>293 passed / 0 failed</strong>.</p>
+  </div>
+
+  <h3>12.4 Data flow troubleshooting order</h3>
+  <p>When the UI shows no data, work through these layers <strong>strictly in this order</strong>. Confirm each layer before moving to the next; do not skip:</p>
+
+  <table>
+    <thead><tr><th class="w1">Layer</th><th class="w3">What to check</th><th class="w4">Command</th><th>Pass criterion</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Is the engine process there</td><td><code>tasklist | findstr cors-engine</code></td><td>a process exists</td></tr>
+      <tr><td>2</td><td>Are the ports listening</td><td><code>netstat -ano | findstr "9000 8080"</code></td><td>both show <code>LISTENING</code></td></tr>
+      <tr><td>3</td><td>Is the solution service started</td><td>Type <code>start</code> in the console</td><td>no <code>cors not started yet</code></td></tr>
+      <tr><td>4</td><td>Are the upstream sources connected</td><td>type <code>sourceinfo</code> in the console</td><td>every source reports connected</td></tr>
+      <tr><td>5</td><td>Is the collector running</td><td><code>netstat -ano | findstr :8181</code></td><td><code>LISTENING</code></td></tr>
+      <tr><td>6</td><td>Has the collector connected to the engine</td><td><code>curl -s http://127.0.0.1:8181/api/snapshot</code></td><td><code>solution.connected: true</code></td></tr>
+      <tr><td>7</td><td>Is data advancing</td><td>take two snapshots 3 seconds apart and compare <code>frames</code></td><td>the value <strong>grows</strong></td></tr>
+      <tr><td>8</td><td>Is it in mock mode</td><td>check the collector start arguments / environment</td><td><code>MCORS_SOURCE=live</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip">
+    <span class="t">The three most common false alarms</span>
+    <ol style="margin:8px 0 0">
+      <li><strong>The collector is in mock mode</strong> — the UI moves, but the data is simulated. See layer 8.</li>
+      <li><strong>The engine never ran start</strong> — the ports are listening, but there is no data. See layer 3.</li>
+      <li><strong>A "zombie-alive" process</strong> — the process exists and logs are being written, but no port is LISTENING. See layer 2.</li>
+    </ol>
+  </div>
+
+  <h3>12.5 Recommended daily start-up procedure</h3>
+<pre><code><span class="c">REM 1. Clear leftovers (by PID is safer, see Section 5.3)</span>
+taskkill /F /IM cors-engine.exe
+
+<span class="c">REM 2. Start the engine</span>
+cd build
+cors-engine.exe -o conf\cors.conf -t 1 -s -p 9000
+
+<span class="c">REM 3. Run these in the engine console, in order</span>
+start
+start-gui</code></pre>
+
+  <div class="box ok">
+    <span class="t">What a successful start looks like</span>
+<pre style="margin:8px 0 0;background:#0f172a"><code>starting gui collector ...
+  node    : C:\...\node.exe
+  entry   : D:\...\viz\collector\index.js
+  engine  : 127.0.0.1:8080 (solution stream)
+  web     : 127.0.0.1:8181  (local only)
+waiting
+gui ready: http://127.0.0.1:8181/</code></pre>
+  </div>
+
+  <h3>12.6 Key files at a glance</h3>
+  <table>
+    <thead><tr><th class="w4">To change</th><th>Edit</th></tr></thead>
+    <tbody>
+      <tr><td>Upstream station list</td><td><code>build\conf\ntripsources</code></td></tr>
+      <tr><td>Baseline definitions</td><td><code>build\conf\beselines</code></td></tr>
+      <tr><td>Virtual station list</td><td><code>build\conf\vrsstations</code></td></tr>
+      <tr><td>Engine global configuration</td><td><code>build\conf\cors.conf</code></td></tr>
+      <tr><td>Console command behaviour</td><td><code>src\engine\engine.c</code></td></tr>
+      <tr><td>Command-line argument parsing</td><td><code>src\engine\mcors.c</code></td></tr>
+      <tr><td>Dashboard layout</td><td><code>viz\web\index.html</code></td></tr>
+      <tr><td>Dashboard styling</td><td><code>viz\web\css\dashboard.css</code></td></tr>
+      <tr><td>Baseline panel logic</td><td><code>viz\web\js\baseline-panel.js</code></td></tr>
+      <tr><td>Collector main logic</td><td><code>viz\collector\index.js</code></td></tr>
+      <tr><td>collectordefaultparameter</td><td><code>viz\collector\config.js</code></td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 13 ══════════════ -->
+<section id="s13">
+  <h2 class="sec"><span class="n">13</span>Performance and Resource Use</h2>
+
+  <h3>13.1 Frequencies in each stage</h3>
+  <table>
+    <thead><tr><th class="w4">Stage</th><th class="w2">Frequency</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Collector issues <code>showbls</code></td><td>1 second</td><td>Buys the dashboard its real-time feel; also the source of console scrolling</td></tr>
+      <tr><td>Collector issues <code>sourceinfo</code></td><td>3 seconds</td><td>Refreshes the connection status in the station table</td></tr>
+      <tr><td>Collector WebSocket broadcast</td><td>1 second</td><td>pushed to the browser</td></tr>
+      <tr><td>Per-satellite history sampling</td><td>per solution epoch</td><td>keeps the last 120 epochs per satellite</td></tr>
+    </tbody>
+  </table>
+
+  <h3>13.2 Known performance issues</h3>
+
+  <div class="box warn">
+    <span class="t">Engine memory grows over long runs (unresolved)</span>
+    <p>We have observed engine memory <strong>growing continuously</strong> over time (reaching the GB range at one point). Initial evidence points at an <strong>asymmetry</strong> in how data sources are added and removed:</p>
+    <ul style="margin:8px 0">
+      <li>adding a source takes a <strong>synchronous</strong> path;</li>
+      <li>removing a source takes an <strong>asynchronous</strong> path.</li>
+    </ul>
+    <p>The two are not symmetric, which may leave some resources unreleased on removal.</p>
+    <p><strong>Current mitigation</strong>: restart the engine periodically (once a day, say, or when memory crosses a threshold). Run <code>shutdown</code> first so the engine can close down cleanly.</p>
+  </div>
+
+  <div class="box tip">
+    <span class="t">Console input lag</span>
+    <p>The <code>uv_sleep(500)</code> in the console input loop causes up to about 30 seconds of input lag. It does not affect command execution, only manual interaction. See <a href="#s11">FAQ Q13</a>.</p>
+  </div>
+
+  <h3>13.3 Main sources of memory use</h3>
+  <table>
+    <thead><tr><th class="w3">process</th><th>Main consumer</th><th class="w2">Tunable setting</th></tr></thead>
+    <tbody>
+      <tr><td>cors-engine.exe</td><td>Solution matrices (driven by baseline and satellite counts), data source objects, log buffers</td><td>—</td></tr>
+      <tr><td>node.exe（collector）</td><td>Per-satellite delay history buffer, station dictionary, WebSocket connections</td><td><code>satHistoryLimit</code>、<code>satHistoryMaxBaselines</code></td></tr>
+      <tr><td>Browser</td><td>Page DOM, chart data points</td><td>close charts you are not using</td></tr>
+    </tbody>
+  </table>
+
+  <h3>13.4 Disk usage</h3>
+  <p>Disk growth comes mainly from two places:</p>
+  <ul>
+    <li><strong>Trace logs</strong> — in <code>build\*.trace</code>. Running for a long time at a high log level accumulates a lot of files.</li>
+    <li><strong>Data record files</strong> — if <code>ntrip-record-file</code> / <code>monitor-record-file</code> are configured, these are written continuously.</li>
+  </ul>
+  <p>Check the size of the <code>build\</code> directory periodically and clean up expired trace files (see <a href="#s12">Section 12.2</a>).</p>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+<!-- ══════════════ 14 ══════════════ -->
+<section id="s14">
+  <h2 class="sec"><span class="n">14</span>Glossary</h2>
+
+  <table>
+    <thead><tr><th class="w3">Term</th><th>Full name</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><strong>CORS</strong></td><td>Continuously Operating Reference Station</td><td>Continuously Operating Reference Station. A GNSS reference station that observes continuously over the long term and provides differential correction services</td></tr>
+      <tr><td><strong>NTRIP</strong></td><td>Networked Transport of RTCM via Internet Protocol</td><td>The protocol for transporting RTCM differential data over the internet; this is what the system uses to reach upstream sources</td></tr>
+      <tr><td><strong>RTCM</strong></td><td>Radio Technical Commission for Maritime Services</td><td>The standard format for differential data. RTCM3 is the current mainstream version</td></tr>
+      <tr><td><strong>mount point</strong></td><td>Mount Point / mntpnt</td><td>The identifier of a data stream on an NTRIP server. <strong>This system's engine treats it as the "source name"</strong></td></tr>
+      <tr><td><strong>baseline</strong></td><td>Baseline</td><td>The observation vector between two reference stations. Baseline solving is the process of determining that vector</td></tr>
+      <tr><td><strong>rover / base station</strong></td><td>Rover / Base</td><td>The roles at either end of a baseline. This system identifies a baseline in its configuration as "base → rover"</td></tr>
+      <tr><td><strong>ambiguity</strong></td><td>Ambiguity</td><td>The integer cycle unknown in carrier-phase observations. Once <strong>fixed (FIX)</strong>, centimetre accuracy is reachable</td></tr>
+      <tr><td><strong>FIX / FLOAT</strong></td><td>Fixed / Float Solution</td><td>A solution whose ambiguities are fixed or unfixed. FIX is far more accurate than FLOAT</td></tr>
+      <tr><td><strong>double difference</strong></td><td>Double Difference</td><td>Differencing once between stations and once between satellites, cancelling satellite and receiver clock errors</td></tr>
+      <tr><td><strong>atmospheric delay</strong></td><td>Atmospheric Delay</td><td>Propagation delay as the signal crosses the ionosphere / troposphere; the dominant component of double-difference residuals</td></tr>
+      <tr><td><strong>VRS</strong></td><td>Virtual Reference Station</td><td>Virtual Reference Station. A "virtual" station computed from the data of nearby real stations, providing differential corrections to rovers</td></tr>
+      <tr><td><strong>Delaunay triangulation</strong></td><td>Delaunay Triangulation</td><td>An optimal form of triangulation. This system uses it to determine the connections between stations</td></tr>
+      <tr><td><strong>age</strong></td><td>Age</td><td>Time elapsed since the last valid solution. A smaller age means a fresher solution</td></tr>
+      <tr><td><strong>elevation mask</strong></td><td>Elevation Mask</td><td>Satellites below this elevation do not take part in the solution (the signal path through the atmosphere is too long, so the error is large)</td></tr>
+      <tr><td><strong>ellipsoidal height</strong></td><td>Ellipsoidal Height</td><td>Height relative to the reference ellipsoid, different from altitude (orthometric height)</td></tr>
+      <tr><td><strong>ECEF</strong></td><td>Earth-Centered, Earth-Fixed</td><td>Earth-Centered, Earth-Fixed coordinate system. Latitude, longitude and height must be converted into it before baseline vectors can be computed</td></tr>
+      <tr><td><strong>collector</strong></td><td>Collector</td><td>The Node.js middleware layer in this system, which converts engine data into a web-consumable format</td></tr>
+      <tr><td><strong>Runtime-only source</strong></td><td>runtimeOnly</td><td>A station added dynamically while running and not written to the configuration file. <strong>Disappears after a restart</strong></td></tr>
+    </tbody>
+  </table>
+
+  <a class="totop" href="#top">↑ Back to contents</a>
+</section>
+
+</main>
+
+<footer>
+  <p>mcors CORS Network Monitor · User Manual · 2026-10-06 (detailed edition)</p>
+  <p>Related documents: <code>BUILD.md</code> (build details, including Linux), <code>viz\README.md</code> (visualisation module), <code>viz\tools\README.md</code> (tool reference)</p>
+</footer>
+
+</div>
+
+<button class="totop-btn" id="totop-btn" title="Back to top" aria-label="Back to top">↑</button>
+
+<script>
+(function(){
+  /* Reading progress bar */
+  var bar=document.getElementById('progress');
+  var btn=document.getElementById('totop-btn');
+  function onScroll(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+    btn.classList.toggle('show',h.scrollTop>600);
+  }
+  addEventListener('scroll',onScroll,{passive:true});onScroll();
+  btn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+
+  /* Highlight the current section in the TOC */
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  var secs=[].slice.call(document.querySelectorAll('main.content > section[id]'));
+  if('IntersectionObserver' in window){
+    var obs=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){
+            a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id);
+          });
+        }
+      });
+    },{rootMargin:'-12% 0px -78% 0px'});
+    secs.forEach(function(s){obs.observe(s);});
+  }
+
+  /* Auto anchors on h3 so deep links reach a subsection */
+  var h3s=document.querySelectorAll('main.content h3');
+  for(var i=0;i<h3s.length;i++){
+    var h=h3s[i];
+    if(!h.id){h.id='h3-'+(i+1);}
+    var a=document.createElement('a');
+    a.className='anchor';a.href='#'+h.id;a.textContent='§';
+    a.title='Copy or open the link to this section';
+    a.addEventListener('click',function(ev){
+      ev.preventDefault();
+      var url=location.href.split('#')[0]+'#'+this.parentNode.id;
+      history.replaceState(null,'',url);
+      if(navigator.clipboard) navigator.clipboard.writeText(url);
+    });
+    h.insertBefore(a,h.firstChild);
+  }
+})();
+</script>
+
+
+</body>
+</html>

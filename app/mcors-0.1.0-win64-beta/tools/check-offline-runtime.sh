@@ -110,9 +110,15 @@ ok "WebSocket 握手 101，收到 $FRAMES 帧推送"
 # 6) 说明书引用的本地资源必须都在包里
 #    踩过的坑：doc\images\ 整个目录没进发布包，说明书 6.1 节的配图
 #    变成裂图，但打包流程当时没有任何一环会报错。
-MANUAL="$ROOT/doc/使用说明书.html"
-if [ -f "$MANUAL" ]; then
-  MISSING=$("$NODE" -e "
+#    中英文两份都要查 —— 英文版同样引用 images/，漏了照样是裂图。
+check_manual_assets() {
+  manual="$1"
+  label="$2"
+  if [ ! -f "$manual" ]; then
+    echo "[SKIP] 未找到$label，跳过资源检查"
+    return 0
+  fi
+  missing=$("$NODE" -e "
     const fs=require('fs'),path=require('path');
     const dir=path.dirname(process.argv[1]);
     const h=fs.readFileSync(process.argv[1],'utf8');
@@ -120,12 +126,16 @@ if [ -f "$MANUAL" ]; then
     const local=[...new Set(refs)].filter(r=>!/^(https?:|#|data:|mailto:)/.test(r));
     const bad=local.filter(r=>!fs.existsSync(path.join(dir,r)));
     console.log(bad.join(','));
-  " "$MANUAL" 2>/dev/null | tr -d '\r')
-  [ -z "$MISSING" ] && ok "说明书本地资源引用完整" \
-                  || fail "说明书引用了包内不存在的资源：$MISSING"
-else
-  echo "[SKIP] 未找到说明书，跳过资源检查"
-fi
+  " "$manual" 2>/dev/null | tr -d '\r')
+  if [ -z "$missing" ]; then
+    ok "$label本地资源引用完整"
+  else
+    fail "$label引用了包内不存在的资源：$missing"
+  fi
+}
+
+check_manual_assets "$ROOT/doc/manual.html" "英文说明书（主）"
+check_manual_assets "$ROOT/doc/manual.zh.html" "中文说明书"
 
 echo
 echo "全部通过：发布包可脱离系统 Node.js 独立运行。"

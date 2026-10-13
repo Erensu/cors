@@ -53,7 +53,7 @@ class ConsoleClient {
   _tryHosts(hosts, idx, port) {
     if (this.stopped) return;
     if (idx >= hosts.length) {
-      console.error(`[console] 全部候选地址均不可用: ${hosts.join(', ')}:${port}`);
+      console.error(`[console] no candidate address reachable: ${hosts.join(', ')}:${port}`);
       this.connected = false;
       this.scheduleReconnect();
       return;
@@ -85,7 +85,7 @@ class ConsoleClient {
       clearTimeout(timer);
       this.connected = true;
       this.host = host;
-      console.log(`[console] 已连接 ${host}:${port}`);
+      console.log(`[console] connected ${host}:${port}`);
     });
 
     sock.on('data', (d) => this.onData(d));
@@ -95,14 +95,14 @@ class ConsoleClient {
       settled = true;
       clearTimeout(timer);
       this.connected = false;
-      console.error(`[console] ${host}:${port} 连接失败: ${e.message}`);
+      console.error(`[console] ${host}:${port} connection failed: ${e.message}`);
       this._tryHosts(hosts, idx + 1, port);
     });
 
     sock.on('close', () => {
       if (!connectedOnce) return; // 候选切换/连接失败，不算掉线
       this.connected = false;
-      this.failAllWaiters(new Error('console 连接已断开'));
+      this.failAllWaiters(new Error('console connection closed'));
       this.scheduleReconnect();
     });
   }
@@ -190,7 +190,7 @@ class ConsoleClient {
   _sendNow(command, timeout) {
     const tmo = timeout || this.cfg.replyTimeout;
     if (!this.connected || !this.socket) {
-      return Promise.reject(new Error('console 未连接'));
+      return Promise.reject(new Error('console not connected'));
     }
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -198,7 +198,7 @@ class ConsoleClient {
         if (i >= 0) this.waiters.splice(i, 1);
         // 超时也要清空缓冲，否则残留会串到下一条命令
         this.buffer = '';
-        resolve('(超时未收到应答)');
+        resolve('(no reply before timeout)');
       }, tmo);
 
       this.waiters.push({

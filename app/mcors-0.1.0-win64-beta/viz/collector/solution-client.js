@@ -116,7 +116,7 @@ class SolutionClient {
       settled = true;
       clearTimeout(timer);
       this.connected = false;
-      this.onError(new Error(`${host}:${port} 连接失败: ${e.message}`));
+      this.onError(new Error(`${host}:${port} connection failed: ${e.message}`));
       this._tryHosts(hosts, idx + 1, port);
     });
 

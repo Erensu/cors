@@ -1,58 +1,77 @@
 mcors 0.1.0 (Windows x64)
 ==========================
 
-CORS 基准站网实时监控与解算引擎 —— 开箱即用发布包。
+Real-time CORS reference station network monitor and solution engine,
+as a ready-to-run release package.
 
-快速开始（3 步）
+Quick start (3 steps)
+---------------------
+1. Double-click start.cmd
+   (or run it from a command line: start.cmd)
+   - Starts the engine automatically (its own console window, port 9000)
+   - Starts the dashboard collector automatically (uses the bundled
+     runtime\node.exe, so no Node.js installation is needed)
+   - Opens the browser at http://localhost:8181/
+
+2. Once the dashboard opens you should see the station network map
+   (Delaunay triangulation) and the baseline solution table.
+   Type help in the engine console to list the available commands;
+   start-gui reopens the dashboard at any time.
+
+3. To stop: double-click stop.cmd (or close both mcors-* windows).
+
+Starting only one part
+----------------------
+  start.cmd engine      engine only
+  start.cmd dash        dashboard only (the engine must already be running)
+
+Configuring your data sources (optional)
+----------------------------------------
+  By default conf\ntripsources holds redacted examples only
+  (STATION001/002 enabled, the rest commented out).
+  Add your real NTRIP stations in the same format:
+
+    name,NTRIPhost,port,user,password,mountpoint,lat,lon,height,type#
+
+  Save, then restart the engine (stop.cmd followed by start.cmd). While a
+  station is not connected you can also add it live, either from the
+  dashboard's Station management panel or with the console addsource
+  command (runtime only).
+
+Important notes
+---------------
+- The engine must own a real console window; it cannot run as a
+  windowless background process.
+- The engine listens on one of this machine's NIC IPs (not 127.0.0.1 or
+  0.0.0.0). The collector detects it automatically, so no manual
+  configuration is needed.
+- Ports: dashboard 8181, solution stream 8080, console 9000. If one is
+  already taken, stop the process holding it first.
+- agentuser contains sample credentials (test1/password) for NTRIP client
+  authentication. Change them before deploying.
+- For day-to-day operation and troubleshooting, see doc\manual.html
+  (English); the Chinese edition is doc\manual.zh.html.
+- The dashboard defaults to English. The language toggle in the top-right
+  corner switches to Chinese, and the choice is remembered.
+
+Directory layout
 ----------------
-1. 双击 start.cmd
-   （或命令行运行：start.cmd）
-- 自动启动引擎（独立控制台窗口，端口 9000）
-  - 自动启动监控大屏采集层（使用包内 runtime\node.exe，无需安装 Node.js）
-  - 自动打开浏览器 http://localhost:8181/
+  cors-engine.exe      Solution engine (plus libuv and 3 other runtime DLLs)
+  runtime\node.exe     Bundled Node.js runtime for the dashboard collector;
+                       nothing to install
+  conf\                Configuration (ntripsources is a redacted template;
+                       fill in your real stations)
+  viz\collector\       Dashboard collector (Node.js, zero third-party deps)
+  viz\web\             Dashboard front end (static, English/Chinese)
+  doc\manual.html      Full manual - English (build, config, API, FAQ)
+  doc\manual.zh.html   Full manual - Chinese (same content, separate file)
+  README.zh.txt        This readme in Chinese
 
-2. 大屏打开后即可看到基站网图（Delaunay 三角网）与基线解算信息。
-   在引擎窗口的控制台里输入 help 可查命令；start-gui 可随时重开大屏。
-
-3. 停止：双击 stop.cmd（或关闭两个 mcors-* 窗口）。
-
-只启动其中一个
-----------------
-  start.cmd engine      仅引擎
-  start.cmd dash        仅大屏（引擎需已在运行）
-
-先配置数据源（可选）
---------------------
-  默认 conf\ntripsources 只有脱敏示例（STATION001/002 启用，其余注释）。
-  把你的真实 NTRIP 基站按同格式填入：
-
-    站名,NTRIP地址,端口,用户名,密码,挂载点,纬度,经度,高程,类型#
-
-  保存后重启引擎（stop.cmd + start.cmd），或在该站未连接时用
-  大屏「基站管理」界面 / 控制台 addsource 命令动态添加（运行期生效）。
-
-重要说明
---------
-- 引擎必须拥有真实控制台窗口，不能作为无窗口后台进程运行。
-- 引擎监听地址为本机某一块网卡的 IP（非 127.0.0.1/0.0.0.0）；
-  采集层会自动探测，无需手工配置。
-- 大屏端口 8181、数据流 8080、控制台 9000，冲突时先停占用进程。
-- agentuser 内为示例账号（test1/password），供 NTRIP 用户接入校验，
-  部署时请自行修改。
-- 详细操作与排障见 doc\使用说明书.html。
-
-目录结构
---------
-  cors-engine.exe      解算引擎（含 libuv 等 4 个运行库 DLL）
-  runtime\node.exe     随包携带的 Node.js 运行时（大屏采集层用，免安装）
-  conf\                配置（ntripsources 为脱敏模板，请填入真实基站）
-  viz\collector\       大屏采集层（Node.js，零第三方依赖）
-  viz\web\             大屏前端（纯静态）
-  doc\使用说明书.html   完整手册（构建、配置、接口、FAQ）
-
-已知边界
---------
-- 本包为 Windows x64；Linux 构建见源码仓 BUILD.md。
-- 运行期新增的基站（「运行期」标记）重启后消失，永久生效需写入
-  conf\ntripsources。
-- 被删除基线的行会在大屏保留 30 秒（缓冲期）后淡出，属预期行为。
+Known limitations
+-----------------
+- This package is Windows x64 only; for Linux builds see BUILD.md in the
+  source repository.
+- Stations added at runtime (marked "runtime") disappear after a restart.
+  To make one permanent, write it into conf\ntripsources.
+- A removed baseline's row stays on the dashboard for 30 seconds (buffer
+  period) before fading out. This is expected behaviour.

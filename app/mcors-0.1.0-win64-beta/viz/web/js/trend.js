@@ -6,6 +6,8 @@
   'use strict';
 
   const U = global.MCORS.util;
+  /** 语言查表：与 esc/num 同源，缺失时回落中文原文 */
+  const t = U.t;
 
   class TrendChart {
     constructor(canvasId, selectId) {
@@ -25,7 +27,7 @@
         pdop:     { label: 'PDOP',     field: 'pdop',    color: '#7c3aed', dop: true,  decimals: 2 },
         hdopGsa:  { label: 'HDOP(GSA)', field: 'hdopGsa', color: '#0891b2', dop: true,  decimals: 2 },
         vdop:     { label: 'VDOP',     field: 'vdop',    color: '#db2777', dop: true,  decimals: 2 },
-        numSat:   { label: '参与解算星数', field: 'numSat', color: '#16a34a', dop: false, decimals: 0 }
+        numSat:   { label: t('参与解算星数'), field: 'numSat', color: '#16a34a', dop: false, decimals: 0 }
       };
       this.label = this.metrics[this.metric].label;
 
@@ -80,7 +82,7 @@
         ctx.fillStyle = '#8b97a6';
         ctx.font = '13px -apple-system, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('暂无趋势数据', this.w / 2, this.h / 2);
+        ctx.fillText(t('暂无趋势数据'), this.w / 2, this.h / 2);
         return;
       }
 
@@ -94,7 +96,7 @@
         ctx.fillStyle = '#8b97a6';
         ctx.font = '13px -apple-system, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('暂无有效数据', this.w / 2, this.h / 2);
+        ctx.fillText(t('暂无有效数据'), this.w / 2, this.h / 2);
         return;
       }
 
@@ -321,10 +323,10 @@
 
       /* 统计项：标签浅灰、数值深色，便于快速扫读数值 */
       const items = M.dop
-        ? [['当前', fmt(cur)], ['最小', fmt(dmin)], ['最大', fmt(dmax)],
-           ['平均', fmt(avg)], ['波动', fmt(dmax - dmin)]]
-        : [['当前', fmt(cur)], ['最小', fmt(dmin)], ['最大', fmt(dmax)],
-           ['平均', fmt(avg)]];
+        ? [[t('当前'), fmt(cur)], [t('最小'), fmt(dmin)], [t('最大'), fmt(dmax)],
+           [t('平均'), fmt(avg)], [t('波动'), fmt(dmax - dmin)]]
+        : [[t('当前'), fmt(cur)], [t('最小'), fmt(dmin)], [t('最大'), fmt(dmax)],
+           [t('平均'), fmt(avg)]];
 
       ctx.font = '10.5px -apple-system, sans-serif';
       for (const [k, v] of items) {

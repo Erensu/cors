@@ -38,7 +38,7 @@ function parseTrinet(text) {
   const vMap = new Map(); // srcid -> vertex
 
   if (typeof text !== 'string' || !text) {
-    return { vertices, edges, triangles, header, tail, warnings: ['输入为空'] };
+    return { vertices, edges, triangles, header, tail, warnings: ['input is empty'] };
   }
 
   for (const raw of text.split(/\r?\n/)) {
@@ -63,7 +63,7 @@ function parseTrinet(text) {
     if (tag === 'V') {
       const v = parseVertex(line);
       if (!v) {
-        warnings.push('无法解析顶点行: ' + line);
+        warnings.push('cannot parse vertex line: ' + line);
         continue;
       }
       vertices.push(v);
@@ -75,7 +75,7 @@ function parseTrinet(text) {
       const a = Number(f[1]);
       const b = Number(f[2]);
       if (!Number.isFinite(a) || !Number.isFinite(b)) {
-        warnings.push('无法解析边行: ' + line);
+        warnings.push('cannot parse edge line: ' + line);
         continue;
       }
       edges.push({ a, b });
@@ -87,37 +87,37 @@ function parseTrinet(text) {
       const b = Number(f[3]);
       const c = Number(f[4]);
       if (!Number.isFinite(a) || !Number.isFinite(b) || !Number.isFinite(c)) {
-        warnings.push('无法解析三角面行: ' + line);
+        warnings.push('cannot parse triangle line: ' + line);
         continue;
       }
       triangles.push({ id: f[1] || '', v: [a, b, c] });
       continue;
     }
     // 引擎可能返回 "unknown command" / 状态提示等
-    if (!/^\s*$/.test(line)) warnings.push('忽略未知行: ' + line);
+    if (!/^\s*$/.test(line)) warnings.push('ignoring unknown line: ' + line);
   }
 
   // 完整性校验：引擎自报的计数与实收条数是否一致
   if (tail) {
     if (tail.nv !== vertices.length) {
-      warnings.push(`顶点数不符: 引擎报 ${tail.nv}，实收 ${vertices.length}`);
+      warnings.push(`vertex count mismatch: engine reports ${tail.nv}, received ${vertices.length}`);
     }
     if (tail.nt !== triangles.length) {
-      warnings.push(`三角面数不符: 引擎报 ${tail.nt}，实收 ${triangles.length}`);
+      warnings.push(`triangle count mismatch: engine reports ${tail.nt}, received ${triangles.length}`);
     }
     // 边数不做强校验：引擎统计的是哈希表内边总数，
     // 其中可能包含参数不完整而被跳过的项（见 cmd_showtrinet 的 continue）
     if (tail.ne !== edges.length) {
-      warnings.push(`边数不一致: 引擎报 ${tail.ne}，实收 ${edges.length}（可能含参数不全被跳过的边）`);
+      warnings.push(`edge count mismatch: engine reports ${tail.ne}, received ${edges.length} (may include edges skipped for missing parameters)`);
     }
   } else {
-    warnings.push('缺少 END 尾行，输出可能被截断');
+    warnings.push('missing END trailer; output may be truncated');
   }
 
   // 悬挂边检查：边的端点必须都在顶点集中
   const dangling = edges.filter((e) => !vMap.has(e.a) || !vMap.has(e.b));
   if (dangling.length) {
-    warnings.push(`有 ${dangling.length} 条边的端点不在顶点集中`);
+    warnings.push(`${dangling.length} edges have endpoints outside the vertex set`);
   }
 
   return { vertices, edges, triangles, header, tail, warnings };
@@ -246,7 +246,7 @@ function toGraph(text, opts = {}) {
     edges.push({ a: e.a, b: e.b, aName: A.name, bName: B.name });
   }
   if (droppedEdges) {
-    warnings.push(`${droppedEdges} 条边因端点缺坐标被跳过`);
+    warnings.push(`${droppedEdges} edges skipped because endpoints lack coordinates`);
   }
 
   // 三角面同理，并且只保留顶点可查的
@@ -264,7 +264,7 @@ function toGraph(text, opts = {}) {
     });
   }
   if (droppedTris) {
-    warnings.push(`${droppedTris} 个三角面因顶点缺坐标被跳过`);
+    warnings.push(`${droppedTris} triangles skipped because vertices lack coordinates`);
   }
 
   return {

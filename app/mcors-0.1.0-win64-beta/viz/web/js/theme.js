@@ -22,6 +22,14 @@
     NONE: 'none'
   };
 
+  /**
+   * 解状态标签。
+   *
+   * ⚠ 这里存的是**中文 key** 而不是译文，labelOf() 在用时才查表。
+   * 若在此处直接 t() 求值，会踩两个坑：
+   *   1) 本文件先于 i18n 加载时 i18n 尚未就绪，查不到会回落中文；
+   *   2) 更要紧的是**语言切换后不会更新**——模块加载只求值一次。
+   */
   const LABELS = {
     fix: '固定解',
     fixdeg: '固定解(降级)',
@@ -74,7 +82,8 @@
 
   function labelOf(stat) {
     const lv = levelOf(stat);
-    return lv ? LABELS[lv] : '—';
+    /* 每次都过一遍语言包，切换语言后立即生效 */
+    return lv ? global.MCORS.i18n.t(LABELS[lv]) : '—';
   }
 
   /** 状态配色（用于图表与徽标） */
@@ -129,9 +138,11 @@
   function ago(ts) {
     if (!ts) return '—';
     const s = Math.floor((Date.now() - ts) / 1000);
-    if (s < 60) return `${s}秒前`;
-    if (s < 3600) return `${Math.floor(s / 60)}分钟前`;
-    return `${Math.floor(s / 3600)}小时前`;
+    const T = global.MCORS.i18n;
+    const tr = (k) => (T ? T.t(k) : k);
+    if (s < 60) return `${s}${tr('秒前')}`;
+    if (s < 3600) return `${Math.floor(s / 60)}${tr('分钟前')}`;
+    return `${Math.floor(s / 3600)}${tr('小时前')}`;
   }
 
   /** 时钟文本 */
@@ -213,6 +224,22 @@
   global.MCORS.util = {
     levelOf, labelOf, colorOf, hexToRgba, COLORS, LABELS,
     esc, num, ago, clock, toast, confirmDialog, mountCanvas,
-    haversineKm
+    haversineKm,
+    /**
+     * 查语言包。各面板顶部用 `const t = U.t;` 取用，
+     * 与 esc/num 同一套取用方式，避免到处写 global.MCORS.i18n.t。
+     */
+    t: function (k) {
+      return global.MCORS.i18n ? global.MCORS.i18n.t(k) : k;
+    },
+    /**
+     * 当前是否英文态。
+     * collector 下发的 bl.label 是中文，英文界面必须改用 labelOf()
+     * 由前端翻译，否则会出现中英混排。
+     */
+    i18nOn: function () {
+      const i = global.MCORS.i18n;
+      return !!(i && i.getLang() === 'en');
+    }
   };
 })(window);

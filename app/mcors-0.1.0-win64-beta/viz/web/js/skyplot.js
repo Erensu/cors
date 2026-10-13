@@ -8,6 +8,8 @@
   'use strict';
 
   const U = global.MCORS.util;
+  /** 语言查表：与 esc/num 同源，缺失时回落中文原文 */
+  const t = U.t;
 
   /** 星座配色 */
   const SYS_COLORS = {
@@ -23,7 +25,7 @@
 
   const SYS_NAMES = {
     GPS: 'GPS', GLO: 'GLONASS', GAL: 'Galileo',
-    BDS: '北斗', QZS: 'QZSS', IRN: 'IRNSS', SBS: 'SBAS'
+    BDS: t('北斗'), QZS: 'QZSS', IRN: 'IRNSS', SBS: 'SBAS'
   };
 
   class SkyPlot {
@@ -114,9 +116,10 @@
       const used = this.usedSet.has(sat.label);
       el.innerHTML =
         `<b>${sat.label}</b> · ${SYS_NAMES[sat.sys] || sat.sys}<br>` +
-        `仰角 ${U.num(sat.el, 1)}°　方位 ${U.num(sat.az, 1)}°<br>` +
+        `${t('仰角')} ${U.num(sat.el, 1)}°　${t('方位')} ${U.num(sat.az, 1)}°<br>` +
         `SNR ${U.num(sat.snr, 0)} dB-Hz<br>` +
-        (used ? '<span style="color:#86efac">参与解算</span>' : '<span style="color:#cbd5e1">未参与解算</span>');
+        (used ? `<span style="color:#86efac">${t('参与解算')}</span>`
+              : `<span style="color:#cbd5e1">${t('未参与解算')}</span>`);
       el.style.display = 'block';
       const rect = this.canvas.getBoundingClientRect();
       let x = rect.left + mx + 14;
@@ -167,7 +170,7 @@
     setOptions(stations, current) {
       if (!this.sel) return;
       const prev = current || this.sel.value;
-      this.sel.innerHTML = '<option value="">选择站点</option>';
+      this.sel.innerHTML = `<option value="">${t('选择站点')}</option>`;
       (stations || []).forEach((s) => {
         const o = document.createElement('option');
         o.value = s.name;
@@ -206,15 +209,15 @@
 
       if (!this.sats.length) {
         // 区分"上游没给观测值"与"有数据但当前无可见星"
-        let msg = '暂无卫星数据';
+        let msg = t('暂无卫星数据');
         if (this.caps && this.caps.code === 'EPH_ONLY') {
-          msg = '上游仅推星历，无观测值';
+          msg = t('上游仅推星历，无观测值');
         } else if (this.caps && this.caps.code === 'NO_MONITOR') {
-          msg = '未连接 monitor 服务';
+          msg = t('未连接 monitor 服务');
         } else if (this.caps && this.caps.code === 'NO_FRAMES') {
-          msg = '已连接但无数据帧';
+          msg = t('已连接但无数据帧');
         } else if (this.caps && this.caps.code === 'MOCK') {
-          msg = 'mock 模式 · 暂无卫星数据';
+          msg = t('mock 模式 · 暂无卫星数据');
         }
         ctx.fillStyle = '#8b97a6';
         ctx.font = '13px -apple-system, sans-serif';
@@ -361,8 +364,13 @@
       // 顶部信息条
       const parts = [];
       if (this.title) parts.push(this.title);
-      if (this.quality) parts.push(this.quality);
-      if (this.numSat !== null && this.numSat !== undefined) parts.push(`可见 ${this.numSat}`);
+      /* quality 来自后端的 qualityLabel（中文），这里过一遍 t()：
+         中文态原样返回，英文态查表得 Fixed / Float 等。
+         「可见」同上，硬拼模板串会绕过语言包。 */
+      if (this.quality) parts.push(t(this.quality));
+      if (this.numSat !== null && this.numSat !== undefined) {
+        parts.push(`${t('可见')} ${this.numSat}`);
+      }
       /* DOP 保留 2 位小数：1 位会把 0.9 / 1.4 这类差异抹平成同一个值。
        * 同时给出 PDOP（GSA 的三维精度），它比 HDOP 更能反映解算质量。 */
       /* 三个 DOP 一起展示：PDOP（三维综合）、HDOP（水平）、
@@ -451,7 +459,7 @@
       ctx.fillStyle = '#8b97a6';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
-      ctx.fillText('各系统星数（参与/可见）', x0, startY - 6);
+      ctx.fillText(t('各系统星数（参与/可见）'), x0, startY - 6);
 
       rows.forEach(([sys, o], i) => {
         const cy = startY + i * rowH + rowH / 2;

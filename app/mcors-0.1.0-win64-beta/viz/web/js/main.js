@@ -5,6 +5,8 @@
   'use strict';
 
   const U = global.MCORS.util;
+  /** 语言查表：与 esc/num 同源，缺失时回落中文原文 */
+  const t = U.t;
 
   class Dashboard {
     constructor() {
@@ -69,7 +71,7 @@
         this._loadSky(name);
       };
       this.stPanel.onChanged = () => {
-        U.toast('列表已更新', '等待引擎确认…', 'warn');
+        U.toast('列表已更新', t('等待引擎确认…'), 'warn');
         // 重新拉取字典
         global.MCORS.rest.post('/api/dict/reload').then(() => {
           this._pollBaselines();
@@ -205,8 +207,10 @@
         } else {
           const isMock = s.source === 'mock';
           srcTag.textContent = isMock
-            ? '模拟数据源（引擎未运行）'
-            : `实时数据源 · 已运行 ${Math.round(s.uptimeMs / 1000)}s`;
+            ? t('模拟数据源（引擎未运行）')
+            /* 整句走 t()：模板串硬拼会让英文态露出中文（截图上就是这个） */
+            : t('实时数据源 · 已运行 {0}s')
+                .replace('{0}', Math.round(s.uptimeMs / 1000));
           srcTag.style.color = isMock ? 'var(--warn)' : 'var(--text-3)';
           srcTag.title = '';
         }
@@ -324,23 +328,24 @@
       let cls;
       if (nm && nm.trinetSource === 'engine') {
         const n = (nm.trinetTris || []).length;
-        label = `引擎拓扑 ${n} 面`;
+        // 整段走 t()：模板串直接拼中文会绕过语言包（漏翻过一处）
+        label = t('引擎拓扑 {0} 面').replace('{0}', n);
         cls = 'ok';
       } else if (nm && nm.trinetSource === 'fallback') {
-        label = '引擎对齐失败·本地示意';
+        label = t('引擎对齐失败·本地示意');
         cls = 'warn';
       } else if (nm && nm.trinetSource === 'local') {
-        label = '本地剖分·示意';
+        label = t('本地剖分·示意');
         cls = 'warn';
       } else {
-        label = '无拓扑';
+        label = t('无拓扑');
         cls = 'off';
       }
-      if (err) label += '（链路错误）';
+      if (err) label += t('（链路错误）');
 
       if (txt) txt.textContent = label;
       el.title =
-        '三角网拓扑来源：' +
+        t('三角网拓扑来源：') +
         (nm && nm.trinetSource ? nm.trinetSource : 'none') +
         (err ? '｜错误: ' + err : '') +
         (nm && nm.trinetWarnings && nm.trinetWarnings.length
@@ -363,12 +368,12 @@
 
       if (s.source === 'mock') {
         dot.className = 'dot on';
-        el.textContent = '模拟模式';
+        el.textContent = t('模拟模式');
         return;
       }
       const ok = s.console && s.console.connected;
       dot.className = 'dot ' + (ok ? 'on' : 'off');
-      el.textContent = ok ? '引擎已连接' : '引擎未连接';
+      el.textContent = ok ? t('引擎已连接') : t('引擎未连接');
     }
 
     _renderConn(wsOk) {
@@ -376,7 +381,7 @@
         const dot = document.getElementById('wsDot');
         const txt = document.getElementById('wsText');
         if (dot) dot.className = 'dot off';
-        if (txt) txt.textContent = '采集层断开';
+        if (txt) txt.textContent = t('采集层断开');
       }
     }
 
@@ -403,9 +408,9 @@
         el.style.display = '';
         el.className = 'caps-banner mock';
         el.innerHTML =
-          '<span class="caps-tag">模拟</span>' +
-          '<span class="caps-msg">当前使用内置模拟数据源，未连接真实引擎。' +
-          '启动 cors-engine 后设置 <code>MCORS_SOURCE=live</code> 可切换到实时链路。</span>';
+          `<span class="caps-tag">${t('模拟')}</span>` +
+          `<span class="caps-msg">${t('当前使用内置模拟数据源，未连接真实引擎。' +
+          '启动 cors-engine 后设置 <code>MCORS_SOURCE=live</code> 可切换到实时链路。')}</span>`;
         return;
       }
 
@@ -414,11 +419,29 @@
       el.innerHTML =
         `<span class="caps-tag">${global.MCORS.util.esc(c.msg)}</span>` +
         `<span class="caps-msg">${global.MCORS.util.esc(c.hint || '')}</span>` +
-        `<span class="caps-meta">已收帧 ${c.frames} · 在线 ${c.online}/${c.total}</span>`;
+        `<span class="caps-meta">${t('已收帧')} ${c.frames} · ${t('在线')} ${c.online}/${c.total}</span>`;
     }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
+    // i18n 必须在Dashboard 之前就位：面板渲染时会调 t()，
+    // 语言没定下来会先画一帧中文再被替换，视觉上闪一下。
+    const i18n = global.MCORS.i18n;
+    if (i18n) {
+      i18n.applyDom();
+      // mountToggle 要放在 applyDom 之后：applyDom 会按 data-i18n 规则
+      // 重写 DOM 文本，若先挂载按钮，按钮文字会被刷回 HTML 里的初始值。
+      i18n.mountToggle(document.getElementById('lang-toggle'));
+    }
     global.MCORS.dashboard = new Dashboard();
+
+    // 面板内容多为 JS 字符串 + canvas 绘制，不受 applyDom 覆盖。
+    // 切换语言后拿最后一帧快照重画一次，否则会停在旧语言的界面上。
+    if (i18n) {
+      document.addEventListener('mcors:lang', () => {
+        const d = global.MCORS.dashboard;
+        if (d && d.snapshot) d.onSnapshot(d.snapshot);
+      });
+    }
   });
 })(window);

@@ -260,8 +260,8 @@ class StationDict {
     this.baseInfo = parseBaseStationsInfo(path.join(this.confDir, 'base-stations.info'));
     this.sourcetable = parseSourcetable(path.join(this.confDir, 'sourcetable'));
 
-    if (this.sources.size === 0) this.errors.push('ntripsources 解析为空或文件不存在');
-    if (this.baseInfo.size === 0) this.errors.push('base-stations.info 解析为空或文件不存在');
+    if (this.sources.size === 0) this.errors.push('ntripsources is empty or file not found');
+    if (this.baseInfo.size === 0) this.errors.push('base-stations.info is empty or file not found');
 
     this.loaded = this.sources.size > 0 || this.baseInfo.size > 0;
     return this.loaded;

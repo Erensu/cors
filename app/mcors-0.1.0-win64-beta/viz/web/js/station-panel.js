@@ -10,6 +10,8 @@
   'use strict';
 
   const U = global.MCORS.util;
+  /** 语言查表：与 esc/num 同源，缺失时回落中文原文 */
+  const t = U.t;
 
   class StationPanel {
     constructor() {
@@ -166,23 +168,23 @@
         const submit = form.querySelector('button[type="submit"]');
         this.busy = true;
         submit.disabled = true;
-        submit.textContent = '下发中…';
+        submit.textContent = t('下发中…');
 
         try {
           const r = await global.MCORS.rest.post('/api/station/add', payload);
           if (r.ok) {
-            U.toast('基站已创建', `${payload.name} 已下发至引擎`, 'ok');
+            U.toast(t('基站已创建'), `${payload.name} ${t('已下发至引擎')}`, 'ok');
             close();
             this.onChanged && this.onChanged();
           } else {
-            U.toast('创建失败', r.error || r.output || '未知错误', 'err');
+            U.toast('创建失败', r.error || r.output || t('未知错误'), 'err');
           }
         } catch (err) {
           U.toast('请求异常', err.message, 'err');
         } finally {
           this.busy = false;
           submit.disabled = false;
-          submit.textContent = '确认新增';
+          submit.textContent = t('确认新增');
         }
       };
     }
@@ -217,8 +219,8 @@
         .map((s) => {
           const online = s.online === true;
           const statCell = online
-            ? '<span class="badge fix">已连接</span>'
-            : '<span class="badge none">未连接</span>';
+            ? `<span class="badge fix">${t('已连接')}</span>`
+            : `<span class="badge none">${t('未连接')}</span>`;
 
           /* runtimeOnly = 运行期 addsource 加的，不在 conf/ntripsources 里。
            * VRS 虚拟站 = 引擎自己生成的参考点（srcId 为 -1），不是真实基站。
@@ -228,12 +230,12 @@
               ? `<span class="sub2">${U.esc(s.cnName)}</span>`
               : ''
           }${s.isVirtual
-              ? '<span class="rt-tag" title="引擎生成的 VRS 虚拟参考点，不是真实基站（$SRCINFO 中 srcId 为 -1）">虚拟</span>'
+              ? `<span class="rt-tag" title="${t('引擎生成的 VRS 虚拟参考点，不是真实基站（$SRCINFO 中 srcId 为 -1）')}">${t('虚拟')}</span>`
               : ''}${
             s.fromEngine === false
-              ? '<span class="rt-tag" title="台账中登记，但引擎本轮 $SRCINFO 未上报（多为上游未连上）">未上报</span>'
+              ? `<span class="rt-tag" title="${t('台账中登记，但引擎本轮 $SRCINFO 未上报（多为上游未连上）')}">${t('未上报')}</span>`
               : (!s.isVirtual && s.runtimeOnly
-                  ? '<span class="rt-tag" title="运行期新增，不在 conf/ntripsources 中；引擎重启后需重新 addsource">运行期</span>'
+                  ? `<span class="rt-tag" title="${t('运行期新增，不在 conf/ntripsources 中；引擎重启后需重新 addsource')}">${t('运行期')}</span>`
                   : '')
           }`;
 
@@ -275,7 +277,7 @@
               </td>
               <td>
                 <button class="row-del" data-act="del" title="删除该基站"
-                        ${this.busy ? 'disabled' : ''}>删除</button>
+                        ${this.busy ? 'disabled' : ''}>${t('删除')}</button>
               </td>
             </tr>`;
         })
@@ -292,8 +294,9 @@
           const name = tr.dataset.name;
 
           const ok = await U.confirmDialog(
-            '删除基站',
-            `确认删除基站 ${name} ？引擎将停止该基站的数据接入，相关基线解算也会终止。此操作不可撤销。`
+            t('删除基站'),
+            t('确认删除基站 {0} ？引擎将停止该基站的数据接入，相关基线解算也会终止。此操作不可撤销。')
+              .replace('{0}', name)
           );
           if (!ok) return;
 
@@ -303,7 +306,7 @@
             U.toast('基站已删除', name, 'ok');
             this.onChanged && this.onChanged();
           } else {
-            U.toast('删除失败', r.error || r.output || '未知错误', 'err');
+            U.toast('删除失败', r.error || r.output || t('未知错误'), 'err');
             btn.disabled = false;
           }
         };
@@ -354,7 +357,7 @@
                value === '—';
     return `<div class="st-kv"><dt>${U.esc(label)}</dt>` +
            `<dd class="${na ? 'na' : (mono ? 'mono' : '')}">` +
-           `${na ? '未配置' : U.esc(value)}</dd></div>`;
+           `${na ? t('未配置') : U.esc(value)}</dd></div>`;
   };
 
   StationPanel.prototype._group = function (title) {
@@ -375,21 +378,21 @@
     const sub = [];
     if (s.cnName && s.cnName !== s.name) sub.push(s.cnName);
     if (s.typeLabel) sub.push(s.typeLabel);
-    if (s.connState) sub.push(s.connState === 'connected' ? '上游已连接' : '上游未连接');
+    if (s.connState) sub.push(s.connState === 'connected' ? t('上游已连接') : t('上游未连接'));
     this.drawerSub.textContent = sub.join(' · ') || '—';
 
     const ecef = s.ecef;   // 引擎 $SRCINFO 回填的 ECEF，形如 {x,y,z}；也可能是旧格式字符串
     let h = '';
 
-    h += this._group('标识');
-    h += this._kv('基站名', s.name, true);
-    h += this._kv('来源', s.isVirtual
-      ? '引擎生成的 VRS 虚拟参考点（不是真实基站，$SRCINFO 中 srcId 为 -1）'
+    h += this._group(t('标识'));
+    h += this._kv(t('基站名'), s.name, true);
+    h += this._kv(t('来源'), s.isVirtual
+      ? t('引擎生成的 VRS 虚拟参考点（不是真实基站，$SRCINFO 中 srcId 为 -1）')
       : s.fromEngine === false
-        ? '台账中登记，但引擎本轮 $SRCINFO 未上报'
+        ? t('台账中登记，但引擎本轮 $SRCINFO 未上报')
         : s.runtimeOnly
-          ? '运行期新增（不在 conf/ntripsources，引擎重启后需重新 addsource）'
-          : 'conf/ntripsources 配置文件');
+          ? t('运行期新增（不在 conf/ntripsources，引擎重启后需重新 addsource）')
+          : t('conf/ntripsources 配置文件'));
     /* ── 以下严格按 solution.c solution_srcinfos() 的输出字段与顺序 ──
      *
      * 引擎注释写明的 17 个字段：
@@ -404,14 +407,14 @@
      *
      * 引擎报了两个 srcId：ntrip 源 ID（--8s %4d 的 %4d）与
      * 测站 srcId（sta.srcid，%3d），二者不同，故分列两行。 */
-    h += this._kv('NTRIP 源ID（站ID）', fmt(s.srcId));
-    h += this._kv('NTRIP 标识', s.type);
-    h += this._kv('测站 srcId（站ID）', fmt(s.staSrcId));
+    h += this._kv(t('NTRIP 源ID（站ID）'), fmt(s.srcId));
+    h += this._kv(t('NTRIP 标识'), s.type);
+    h += this._kv(t('测站 srcId（站ID）'), fmt(s.staSrcId));
 
-    h += this._group('坐标');
-    h += this._kv('纬度', fmt(s.lat, 6));
-    h += this._kv('经度', fmt(s.lon, 6));
-    h += this._kv('高程', s.height === null || s.height === undefined ? null
+    h += this._group(t('坐标'));
+    h += this._kv(t('纬度'), fmt(s.lat, 6));
+    h += this._kv(t('经度'), fmt(s.lon, 6));
+    h += this._kv(t('高程'), s.height === null || s.height === undefined ? null
                     : fmt(s.height, 3) + ' m');
     /* ECEF 的形态随来源而异：$SRCINFO 给的是 {x,y,z} 对象，
      * 早期代码把引擎的 "x,y,z" 字符串原样透传。两种都要能显示 ——
@@ -427,36 +430,36 @@
       h += this._kv('ECEF-Y', p[1], true);
       h += this._kv('ECEF-Z', p[2], true);
     } else {
-      h += this._kv('ECEF 坐标', null);
+      h += this._kv(t('ECEF 坐标'), null);
     }
 
-    h += this._group('上游连接（NTRIP）');
-    h += this._kv('NTRIP IP地址', s.addr, true);
-    h += this._kv('端口', fmt(s.port));
+    h += this._group(t('上游连接（NTRIP）'));
+    h += this._kv(t('NTRIP IP地址'), s.addr, true);
+    h += this._kv(t('端口'), fmt(s.port));
     /* NTRIP 用户名引擎会输出；**密码刻意不显示** —— 没有排障价值，
      * 却会随 WebSocket 快照进入浏览器内存、开发者工具与截图。
      * 需排障时看引擎输出或 conf/ntripsources。 */
-    h += this._kv('NTRIP 用户', s.user);
-    h += this._kv('NTRIP 密码', '（不显示）');
-    h += this._kv('NTRIP 挂载点', s.mountpoint, true);
+    h += this._kv(t('NTRIP 用户'), s.user);
+    h += this._kv(t('NTRIP 密码'), t('（不显示）'));
+    h += this._kv(t('NTRIP 挂载点'), s.mountpoint, true);
     /* 连接状态：$SRCINFO 的 state 字段（connected / disconnected）。
      * 引擎未定位时 pos 为 "---"，但 state 仍会给出，故以 state 为准。 */
-    h += this._kv('连接状态', s.state === 'connected' ? '已连接'
-                      : s.state === 'disconnected' ? '未连接'
-                      : (s.connState === 'connected' ? '已连接'
-                         : s.connState === 'disconnected' ? '未连接' : null));
+    h += this._kv(t('连接状态'), s.state === 'connected' ? t('已连接')
+                      : s.state === 'disconnected' ? t('未连接')
+                      : (s.connState === 'connected' ? t('已连接')
+                         : s.connState === 'disconnected' ? t('未连接') : null));
 
     /* 天线与接收机分两组 —— 现场排障时「换天线」和「换接收机」
      * 是两件独立的事，混在一起会看错。 */
-    h += this._group('天线');
-    h += this._kv('天线类型', s.antDes);
-    h += this._kv('天线序号', s.antSno, true);
-    h += this._kv('Mark 名', s.marker);
+    h += this._group(t('天线'));
+    h += this._kv(t('天线类型'), s.antDes);
+    h += this._kv(t('天线序号'), s.antSno, true);
+    h += this._kv(t('Mark 名'), s.marker);
 
-    h += this._group('接收机');
-    h += this._kv('接收机类型', s.recType);
-    h += this._kv('接收机序号', s.recSno, true);
-    h += this._kv('接收机版本号', s.recVer);
+    h += this._group(t('接收机'));
+    h += this._kv(t('接收机类型'), s.recType);
+    h += this._kv(t('接收机序号'), s.recSno, true);
+    h += this._kv(t('接收机版本号'), s.recVer);
 
     this.drawerBody.innerHTML = h;
     this.drawer.hidden = false;

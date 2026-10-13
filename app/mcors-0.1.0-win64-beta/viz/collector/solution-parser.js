@@ -192,7 +192,7 @@ function parseSrcInfo(payload) {
      * 站名与地址是否溢出、可选字段缺几个，都不影响这三对锚点。 */
     const t = head.trim().split(/\s+/).filter(Boolean);
     if (t.length < 6) {
-      warnings.push(`$SRCINFO 行字段过少(${t.length})，已跳过: ${raw.trim().slice(0, 80)}`);
+      warnings.push(`$SRCINFO line has too few fields (${t.length}); skipped: ${raw.trim().slice(0, 80)}`);
       continue;
     }
     if (t[2] !== 'NTRIP') {
@@ -357,14 +357,14 @@ function parseBlsols(payload, opts = {}) {
       continue;
     }
 
-    warnings.push(`$BLSOLS 无法识别的行: ${raw.trim().slice(0, 90)}`);
+    warnings.push(`Unrecognised $BLSOLS line: ${raw.trim().slice(0, 90)}`);
   }
 
   /* 只有头行、没等到汇总行的残缺记录：丢弃并告警，
    * 避免前端拿到一堆 null 字段误判为「有解算但数值为空」。 */
   const complete = baselines.filter((b) => b.stat !== null);
   if (complete.length !== baselines.length) {
-    warnings.push(`${baselines.length - complete.length} 条基线缺少汇总行，已丢弃`);
+    warnings.push(`${baselines.length - complete.length} baselines had no summary row and were dropped`);
   }
 
   return { baselines: complete, warnings };

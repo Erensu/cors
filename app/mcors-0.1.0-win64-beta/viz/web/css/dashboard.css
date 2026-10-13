@@ -416,6 +416,13 @@ body {
 .btn:hover { background: var(--panel-2); border-color: var(--text-3); }
 
 .btn.sm { padding: 4px 9px; font-size: 12px; }
+/* 语言切换按钮：中英文长度差异大，固定最小宽度避免切换时顶栏抖动 */
+.btn.lang-toggle {
+  min-width: 52px;
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: .3px;
+}
 
 .btn.primary {
   background: var(--accent);
@@ -663,13 +670,17 @@ body {
  *   定位误差       12%  形如 -0.123 的 3 位小数（表头 5 字）
  *   双差大气延迟   15%  表头「双差大气延迟(m)」8 字，本表最宽
  */
-#blTable th:nth-child(1), #blTable td:nth-child(1) { width: 32%; }
+/* 第 5~7 列表头在英文态是 "Satellites used" / "Position error (m)" /
+ * "DD atmospheric delay (m)"，均比中文长；table-layout:fixed 下
+ * 列宽不足会直接被裁切（表头 ellipsis，值仍可见）。故从首列匀出宽度，
+ * 首列 26%仍够放下「SPWD00AUS0 → WSIA00AUS0」（21 字符，等宽约 150px）。 */
+#blTable th:nth-child(1), #blTable td:nth-child(1) { width: 26%; }
 #blTable th:nth-child(2), #blTable td:nth-child(2) { width: 11%; }
-#blTable th:nth-child(3), #blTable td:nth-child(3) { width: 8%; }
+#blTable th:nth-child(3), #blTable td:nth-child(3) { width: 9%; }
 #blTable th:nth-child(4), #blTable td:nth-child(4) { width: 7%; }
-#blTable th:nth-child(5), #blTable td:nth-child(5) { width: 15%; }
-#blTable th:nth-child(6), #blTable td:nth-child(6) { width: 12%; }
-#blTable th:nth-child(7), #blTable td:nth-child(7) { width: 15%; }
+#blTable th:nth-child(5), #blTable td:nth-child(5) { width: 16%; }
+#blTable th:nth-child(6), #blTable td:nth-child(6) { width: 14%; }
+#blTable th:nth-child(7), #blTable td:nth-child(7) { width: 17%; }
 
 /* ---------------------------------------------------------------- 基线表
  * 行级动效：进场 / 离场 / 移动
@@ -809,14 +820,18 @@ body {
  *   挂载点  15%  常见 10 字符
  *   上游    20%  形如 ntrip.data.gnss.ga.gov.au:2101（过长则 ellipsis，
  *                完整地址在抽屉里；title 属性保留悬停可读）
- *   设备    11%  天线/接收机型号两行小字
- * 状态列必须放得下「已连接」徽标（约 50px），否则徽标换行、行高翻倍。 */
-#stTable th:nth-child(1), #stTable td:nth-child(1) { width: 19%; }
-#stTable th:nth-child(2), #stTable td:nth-child(2) { width: 21%; }
-#stTable th:nth-child(3), #stTable td:nth-child(3) { width: 15%; }
-#stTable th:nth-child(4), #stTable td:nth-child(4) { width: 20%; }
-#stTable th:nth-child(5), #stTable td:nth-child(5) { width: 11%; }
-#stTable th:nth-child(6), #stTable td:nth-child(6) { width: 8%; }
+ *   设备    10%  天线/接收机型号两行小字
+ *
+ * 状态列宽度要同时容得下中英两种徽标：中文「已连接」约 50px，
+ * 英文 "Not connected" 约 88px。若按中文宽度给 8%，英文态下徽标会
+ * 压到操作列上（table-layout:fixed 下溢出会直接重叠，不会自动换行）。
+ * 故此处取英文所需，操作列相应缩窄——按钮是图标文字，仍够放。 */
+#stTable th:nth-child(1), #stTable td:nth-child(1) { width: 18%; }
+#stTable th:nth-child(2), #stTable td:nth-child(2) { width: 20%; }
+#stTable th:nth-child(3), #stTable td:nth-child(3) { width: 14%; }
+#stTable th:nth-child(4), #stTable td:nth-child(4) { width: 19%; }
+#stTable th:nth-child(5), #stTable td:nth-child(5) { width: 10%; }
+#stTable th:nth-child(6), #stTable td:nth-child(6) { width: 13%; }
 /* 操作列只放一个「删除」按钮，6% 足够 */
 #stTable th:nth-child(7), #stTable td:nth-child(7) { width: 6%; }
 

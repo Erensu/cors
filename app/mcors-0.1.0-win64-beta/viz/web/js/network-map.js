@@ -19,6 +19,8 @@
   'use strict';
 
   const U = global.MCORS.util;
+  /** 语言查表：与 esc/num 同源，缺失时回落中文原文 */
+  const t = U.t;
   const D = global.MCORS.delaunay;
 
   /* 虚拟站（VRS 虚拟参考点）的专用色。
@@ -205,7 +207,10 @@
         (b) => vNames.has(b.baseName) || vNames.has(b.roverName)
       ).length;
       box.title = box.getAttribute('title') +
-        (blVirtual ? `\n当前有 ${blVirtual} 条基线以虚拟站为端点（图中标 V·）。` : '');
+        (blVirtual
+          ? '\n' + t('当前有 {0} 条基线以虚拟站为端点（图中标 V·）。')
+              .replace('{0}', blVirtual)
+          : '');
     }
 
     /** 当前站点集合的几何签名（站名与经纬度，与顺序无关）。
@@ -238,7 +243,7 @@
       if (!box) return;
       const states = NetworkMap.presentStates(this.baselines);
       if (!states.length) {
-        box.textContent = '（暂无基线）';
+        box.textContent = t('（暂无基线）');
         return;
       }
       /* 固定解排最前（最常见也最重要），其余按条数降序 */
@@ -251,8 +256,13 @@
         .map((st) => {
           const style = NetworkMap.baselineStyle(st.level);
           const cls = style.dash.length ? ' class="dashed"' : '';
-          const tip = st.label + '：' + st.count + ' 条基线，线宽 ' + style.width + 'px' +
-            (style.dash.length ? '，虚线表示解不可信' : '');
+          /* 整句走 t()：'：' / ' 条基线，线宽 ' 这类碎片拼接会绕过语言包，
+             而 tooltip 写在 title 属性里，DOM 文本扫描查不到，容易漏。 */
+          const tip = t('{0}：{1} 条基线，线宽 {2}px')
+            .replace('{0}', st.label)
+            .replace('{1}', st.count)
+            .replace('{2}', style.width) +
+            (style.dash.length ? t('，虚线表示解不可信') : '');
           return '<span class="bl-lg" title="' + U.esc(tip) + '">' +
             '<i' + cls + ' style="--c:' + style.color + ';--w:' + style.width +
             'px;--a:' + style.alpha + '"></i>' +
@@ -480,7 +490,7 @@
         ctx.fillStyle = '#8b97a6';
         ctx.font = '13px -apple-system, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('暂无带经纬度的基站数据', this.w / 2, this.h / 2);
+        ctx.fillText(t('暂无带经纬度的基站数据'), this.w / 2, this.h / 2);
         this.hitPoints = [];
         return;
       }

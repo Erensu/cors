@@ -46,7 +46,7 @@ class MonitorClient {
   _tryHosts(hosts, idx, port) {
     if (this.stopped) return;
     if (idx >= hosts.length) {
-      console.error(`[monitor] 全部候选地址均不可用: ${hosts.join(', ')}:${port}`);
+      console.error(`[monitor] no candidate address reachable: ${hosts.join(', ')}:${port}`);
       this.connected = false;
       this.scheduleReconnect();
       return;
@@ -75,7 +75,7 @@ class MonitorClient {
       clearTimeout(timer);
       this.connected = true;
       this.host = host;
-      console.log(`[monitor] 已连接 ${host}:${port}`);
+      console.log(`[monitor] connected ${host}:${port}`);
       this.subscribeAll();
     });
 
@@ -88,7 +88,7 @@ class MonitorClient {
           try {
             this.onFrame(f);
           } catch (e) {
-            console.error('[monitor] 帧处理异常:', e.message);
+            console.error('[monitor] frame handling error:', e.message);
           }
         });
       }
@@ -99,7 +99,7 @@ class MonitorClient {
       settled = true;
       clearTimeout(timer);
       this.connected = false;
-      console.error(`[monitor] ${host}:${port} 连接失败: ${e.message}`);
+      console.error(`[monitor] ${host}:${port} connection failed: ${e.message}`);
       this._tryHosts(hosts, idx + 1, port);
     });
 
@@ -123,7 +123,7 @@ class MonitorClient {
     const cmd = `MONITOR-SOURCE ${this.cfg.password} ${mntpnt}`;
     this.socket.write(cmd + '\r\n');
     if (!this.subscribed.includes(mntpnt)) this.subscribed.push(mntpnt);
-    console.log(`[monitor] 已订阅挂载点: ${mntpnt}`);
+    console.log(`[monitor] subscribed to mount point: ${mntpnt}`);
     return true;
   }
 

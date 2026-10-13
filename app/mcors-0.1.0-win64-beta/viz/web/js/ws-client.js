@@ -5,6 +5,11 @@
 (function (global) {
   'use strict';
 
+  /** 语言查表；i18n 尚未加载时回落中文原文 */
+  const t = function (k) {
+    return global.MCORS.i18n ? global.MCORS.i18n.t(k) : k;
+  };
+
   class Api {
     constructor() {
       this.ws = null;
@@ -41,7 +46,7 @@
           try {
             fn(data);
           } catch (e) {
-            console.error('[ws] 监听器异常', e);
+            console.error(t('[ws] 监听器异常'), e);
           }
         });
       };

@@ -112,11 +112,11 @@ function createMockEngine(store) {
    */
   const ephOnly = process.env.MCORS_MOCK_EPH_ONLY === '1';
   if (ephOnly) {
-    console.log('[mock] 仅星历模式：模拟上游只推星历、无观测值的情形');
+    console.log('[mock] ephemeris-only mode: simulates an upstream that publishes ephemeris but no observations');
   }
 
   if (names.length < 2) {
-    console.warn('[mock] conf 中站点不足 2 个，模拟数据有限');
+    console.warn('[mock] fewer than 2 stations in conf; simulated data will be limited');
   }
 
   // 为每个站点分配 srcid（与 live 下一致，前端无需区分）
@@ -159,7 +159,7 @@ function createMockEngine(store) {
       antDes: null, antSno: null, marker: null,
       recType: null, recSno: null, recVer: null
     }]);
-    console.log('[mock] 已注入虚拟参考点 VRS001（虚拟站着重显示功能的验证需要）');
+    console.log('[mock] injected virtual reference point VRS001 (needed to exercise the VRS highlight)');
   }
 
   const parser = new FrameParser();
