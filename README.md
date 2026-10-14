@@ -44,22 +44,22 @@ Typical deployments include regional and nationwide CORS networks, surveying-gra
 
 ## Technical specifications
 
-| Item | Specification |
-| --- | --- |
-| Constellations | BeiDou, GPS, GLONASS, Galileo, QZSS — multiple frequencies |
-| Station input | NTRIP client; RTCM 2.x / 3.x messages |
-| Correction output | RTCM 3.x MSM over NTRIP — MSM4 / MSM6: GPS 1074/1076, GLONASS 1084/1086, Galileo 1094/1096, QZSS 1114/1116, BeiDou 1124/1126 |
-| Network RTK baselines | Up to 300 km |
-| Ambiguity resolution | ≈97% fix rate within 300 km; ≈99% within 200 km |
-| Networking | Delaunay triangulation with subnetwork-based computation |
+| Item                  | Specification                                                                                                                |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Constellations        | BeiDou, GPS, GLONASS, Galileo, QZSS — multiple frequencies                                                                   |
+| Station input         | NTRIP client; RTCM 2.x / 3.x messages                                                                                        |
+| Correction output     | RTCM 3.x MSM over NTRIP — MSM4 / MSM6: GPS 1074/1076, GLONASS 1084/1086, Galileo 1094/1096, QZSS 1114/1116, BeiDou 1124/1126 |
+| Network RTK baselines | Up to 300 km                                                                                                                 |
+| Ambiguity resolution  | ≈97% fix rate within 300 km; ≈99% within 200 km                                                                              |
+| Networking            | Delaunay triangulation with subnetwork-based computation                                                                     |
 | Atmospheric modelling | Joint least-squares estimation of ionospheric and tropospheric differential corrections from multiple frequency combinations |
-| Positioning | Network RTK at centimeter level; precise orbit determination at centimeter level |
-| Synchronization | Time synchronization of station observations; multi-GNSS time system conversion (BDT / GPS / Galileo / GLONASS) |
-| Monitoring | Physical and virtual station integrity, coordinate stability, correction quality, regional model and RTK accuracy |
-| Architecture | Event-driven asynchronous I/O; multi-process / multi-thread; lock-free queues; shared memory; high-performance hash tables |
-| Capacity | No fixed station / rover limits; scales with server resources |
-| Platforms | Linux (server deployments) and Windows |
-| Protocols | NTRIP, RTCM, NMEA, RINEX |
+| Positioning           | Network RTK at centimeter level; precise orbit determination at centimeter level                                             |
+| Synchronization       | Time synchronization of station observations; multi-GNSS time system conversion (BDT / GPS / Galileo / GLONASS)              |
+| Monitoring            | Physical and virtual station integrity, coordinate stability, correction quality, regional model and RTK accuracy            |
+| Architecture          | Event-driven asynchronous I/O; multi-process / multi-thread; lock-free queues; shared memory; high-performance hash tables   |
+| Capacity              | No fixed station / rover limits; scales with server resources                                                                |
+| Platforms             | Linux (server deployments) and Windows                                                                                       |
+| Protocols             | NTRIP, RTCM, NMEA, RINEX                                                                                                     |
 
 ## Features
 
@@ -113,13 +113,13 @@ Alongside the solution chain, the monitoring components continuously check stati
 
 ### Service interfaces
 
-| Port | Service | Purpose |
-| --- | --- | --- |
-| 9000 | Engine console (TCP) | Interactive command console; default, change with `-p` |
-| 8002 | NTRIP service | VRS corrections to rovers, with user authentication from `agentuser` |
-| 7999 | Monitoring service | Station monitoring data (`monitor-port` in `cors.conf`) |
-| 8080 | Solution data stream | Continuous solution output for the dashboard / external consumers |
-| 8181 | Web dashboard | Browser UI over HTTP / WebSocket, with a REST API |
+| Port | Service              | Purpose                                                              |
+| ---- | -------------------- | -------------------------------------------------------------------- |
+| 9000 | Engine console (TCP) | Interactive command console; default, change with `-p`               |
+| 8002 | NTRIP service        | VRS corrections to rovers, with user authentication from `agentuser` |
+| 7999 | Monitoring service   | Station monitoring data (`monitor-port` in `cors.conf`)              |
+| 8080 | Solution data stream | Continuous solution output for the dashboard / external consumers    |
+| 8181 | Web dashboard        | Browser UI over HTTP / WebSocket, with a REST API                    |
 
 Every service port speaks its standard protocol — the console accepts plain text commands, the NTRIP service speaks NTRIP, and automation can use the dashboard's HTTP API (see [Monitoring dashboard](#monitoring-dashboard)).
 
@@ -127,34 +127,35 @@ Every service port speaks its standard protocol — the console accepts plain te
 
 Top-level directories:
 
-| Path | Description |
-| --- | --- |
-| `src/` | Engine and library source code (see module table below) |
-| `include/` | Public headers: `cors.h`, `rtklib.h`, `options.h`, `vt.h`, `uve.h`, `log.h` |
-| `lib/` | Bundled third-party libraries (see [Third-party components](#third-party-components)) |
-| `conf/` | Sample configuration files |
-| `bin/` | Prebuilt binaries: `linux/`, `win/`, `postprc/` |
-| `doc/` | Documentation (see [Documentation](#documentation)) |
-| `app/` | Ready-to-run trial package for Windows x64 |
-| `test/` | Test programs, built with CMake |
+| Path       | Description                                                                           |
+| ---------- | ------------------------------------------------------------------------------------- |
+| `src/`     | Engine and library source code (see module table below)                               |
+| `include/` | Public headers: `cors.h`, `rtklib.h`, `options.h`, `vt.h`, `uve.h`, `log.h`           |
+| `lib/`     | Bundled third-party libraries (see [Third-party components](#third-party-components)) |
+| `conf/`    | Sample configuration files                                                            |
+| `bin/`     | Prebuilt binaries: `linux/`, `win/`, `postprc/`                                       |
+| `doc/`     | Documentation (see [Documentation](#documentation))                                   |
+| `app/`     | Ready-to-run trial package for Windows x64                                            |
+| `test/`    | Test programs, built with CMake                                                       |
 
 Source modules (`src/`):
 
-| Module | Purpose | Key files |
-| --- | --- | --- |
-| `engine` | Engine entry point and interactive console | `engine.c`, `mengine.c` |
-| `cors` | Solution core and service control | `cors.c`, `ci.c` |
-| `ntrip` | NTRIP client (source ingestion), caster and agent (rover service) | `ntripclient.c`, `ntripcaster.c`, `ntripagent.c`, `ntrip.c` |
-| `rtcm` | RTCM 2.x / 3.x message encoding and decoding | `rtcm3.c`, `rtcm3e.c`, `encoder.c`, `decoder.c` |
-| `nrtk` | Network RTK and baseline RTK processing | `nrtk.c`, `srtk.c` |
-| `vrs` | Virtual reference station observation generation | `vrs.c` |
-| `dtrignet` | Delaunay triangulation networking | `dtrignet.c` |
-| `gpos` | GNSS positioning library: RTK/PPP engines, ambiguity resolution, LAMBDA, ephemeris, SBAS, IONEX, geoid, tides | `rtkpos.c`, `pntpos.c`, `ppp.c`, `ar.c`, `lambda.c`, `ephemeris.c`, ... |
-| `pnt` | Point positioning | `pnt.c` |
-| `ppp` | Precise point positioning | `mppp.c` |
-| `monitor` | Real-time monitoring of stations, corrections and service quality | `monitor*.c` |
-| `rinex` | RINEX observation handling | `rinex.c` |
-| `common` | Shared utilities: options, logging, NMEA, solutions, virtual terminal | `options.c`, `log.c`, `nmea.c`, `solution.c`, `vt.c`, `rtkcmn.c`, `province/` |
+| Module     | Purpose                                                                                                       | Key files                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `engine`   | Engine entry point and interactive console                                                                    | `engine.c`, `mengine.c`                                                       |
+| `cors`     | Solution core and service control                                                                             | `cors.c`, `ci.c`                                                              |
+| `ntrip`    | NTRIP client (source ingestion), caster and agent (rover service)                                             | `ntripclient.c`, `ntripcaster.c`, `ntripagent.c`, `ntrip.c`                   |
+| `rtcm`     | RTCM 2.x / 3.x message encoding and decoding                                                                  | `rtcm3.c`, `rtcm3e.c`, `encoder.c`, `decoder.c`                               |
+| `nrtk`     | Network RTK and baseline RTK processing                                                                       | `nrtk.c`, `srtk.c`                                                            |
+| `vrs`      | Virtual reference station observation generation                                                              | `vrs.c`                                                                       |
+| `dtrignet` | Delaunay triangulation networking                                                                             | `dtrignet.c`                                                                  |
+| `gpos`     | GNSS positioning library: RTK/PPP engines, ambiguity resolution, LAMBDA, ephemeris, SBAS, IONEX, geoid, tides | `rtkpos.c`, `pntpos.c`, `ppp.c`, `ar.c`, `lambda.c`, `ephemeris.c`, ...       |
+| `pnt`      | Point positioning                                                                                             | `pnt.c`                                                                       |
+| `ppp`      | Precise point positioning                                                                                     | `mppp.c`                                                                      |
+| `monitor`  | Real-time monitoring of stations, corrections and service quality                                             | `monitor*.c`                                                                  |
+| `rinex`    | RINEX observation handling                                                                                    | `rinex.c`                                                                     |
+| `common`   | Shared utilities: options, logging, NMEA, solutions, virtual terminal                                         | `options.c`, `log.c`, `nmea.c`, `solution.c`, `vt.c`, `rtkcmn.c`, `province/` |
+
 
 Prebuilt executables (`bin/linux/` and `bin/win/`; the replay tool ships separately in `bin/postprc/`):
 
@@ -378,6 +379,7 @@ Main configuration files in `conf/`:
 | `pnt.conf` | Positioning options for the point-positioning component | RTKLIB-style options |
 | `sourcetable` | NTRIP source table (STR records) served to clients — shipped in the trial package's `conf/` | standard NTRIP STR records |
 
+
 Records in the comma-separated files are terminated with a trailing `#`; lines starting with `#` are comments.
 
 A sample `cors.conf`:
@@ -480,6 +482,7 @@ If the service shows no data, check the layers in order:
 ## Documentation
 
 - `doc/CORS软件使用简介.pdf` — user guide (Chinese): system introduction, modules, configuration, console operation
+- `doc/CORS-Software-Introduction-en.pdf` — English edition of the above guide (26 pages; source: `doc/CORS-Software-Introduction-en.html`, figures in `doc/images/intro-en/`)
 - `doc/cors.pdf` — system manual (Chinese)
 - `doc/vrs.pdf` — derivation of the VRS observation generation algorithm (Chinese)
 - `app/mcors-0.1.0-win64-beta/doc/manual.html` — engine and dashboard manual (English); Chinese edition: `manual.zh.html`
