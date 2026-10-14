@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CORS User Manual (English)</title>
+<style>
+  :root{
+    --ink:#1c2b39;
+    --muted:#5b6b7b;
+    --blue:#2f6fb4;
+    --blue-dk:#1e5a97;
+    --line:#d7dfe7;
+    --soft:#f4f7fa;
+    --code-bg:#f3f5f7;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Segoe UI","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ink);
+    background:#e9edf2;
+    font-size:14.5px;
+    line-height:1.65;
+  }
+  .sheet{
+    max-width:820px;
+    margin:28px auto;
+    background:#fff;
+    padding:52px 58px 64px;
+    box-shadow:0 2px 14px rgba(30,50,70,.14);
+  }
+  h1,h2,h3,h4{color:#15304a;line-height:1.35;margin:1.6em 0 .55em;}
+  h2.chapter{font-size:23px;border-bottom:2px solid var(--blue);padding-bottom:.25em;margin-top:2.2em;}
+  h3{font-size:18px;margin-top:1.5em;}
+  h4{font-size:15.5px;margin-top:1.35em;}
+  p{margin:.6em 0;}
+  ul{margin:.5em 0 .8em;padding-left:1.5em;}
+  li{margin:.25em 0;}
+  code{
+    font-family:Consolas,"SF Mono",Menlo,monospace;
+    font-size:.9em;background:var(--code-bg);
+    padding:1px 5px;border-radius:4px;
+  }
+  pre{
+    font-family:Consolas,"SF Mono",Menlo,monospace;
+    font-size:12.5px;line-height:1.55;
+    background:var(--code-bg);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:12px 16px;margin:.7em 0;
+    overflow-x:auto;white-space:pre;
+  }
+  pre code{background:none;padding:0;}
+  table{border-collapse:collapse;width:100%;margin:.8em 0 1.1em;font-size:13.5px;}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;}
+  th{background:var(--soft);color:#15304a;font-weight:600;}
+  td.k,th.k{white-space:nowrap;}
+  figure{margin:1.15em 0 1.35em;text-align:center;break-inside:avoid;page-break-inside:avoid;}
+  figure svg{max-width:100%;height:auto;}
+  img.shot{
+    display:block;margin:0 auto;max-width:100%;max-height:205mm;height:auto;
+    border:1px solid #c7d0d9;border-radius:4px;
+  }
+  figcaption{font-size:13px;color:var(--muted);margin-top:.5em;}
+  .fig-num{font-weight:600;color:#3d5166;}
+  /* ---- cover ---- */
+  .cover{min-height:80vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:40px 0;}
+  .cover .rule{width:120px;height:4px;background:var(--blue);margin:26px 0;border-radius:2px;}
+  .cover h1{font-size:30px;margin:0;max-width:640px;}
+  .cover .sub{font-size:19px;color:var(--blue-dk);margin-top:14px;letter-spacing:2px;}
+  .cover .date{margin-top:54px;font-size:15px;color:var(--muted);}
+  .cover .edition{margin-top:10px;font-size:12.5px;color:#8a97a4;}
+  /* ---- toc ---- */
+  .toc{list-style:none;padding-left:0;font-size:14.5px;}
+  .toc li{margin:.32em 0;}
+  .toc .l1{font-weight:600;margin-top:.6em;}
+  .toc .l2{padding-left:1.6em;}
+  .toc .l3{padding-left:3.2em;color:#44586c;}
+  /* ---- misc ---- */
+  .note{font-size:13px;color:var(--muted);}
+  .steps{margin:.4em 0 .6em;padding-left:1.4em;}
+  .steps li{margin:.3em 0;}
+  h3.pre-break,h2.pre-break{break-before:page;page-break-before:always;}
+  @page{size:A4;margin:15mm 14mm 16mm;}
+  @media print{
+    body{background:#fff;font-size:12.6px;}
+    .sheet{max-width:none;margin:0;padding:0;box-shadow:none;}
+    .cover{min-height:245mm;}
+    pre{font-size:10.6px;}
+    table{font-size:11.6px;}
+    figcaption{font-size:11px;}
+  }
+</style>
+</head>
+<body>
+<!-- shared SVG defs (arrow markers, symbols) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7fa8d0"/>
+    </marker>
+    <marker id="arrDark" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5c6b7a"/>
+    </marker>
+    <symbol id="antenna" viewBox="0 0 40 62">
+      <path d="M20 26 L7 56 L33 56 Z" fill="none" stroke="#2b3440" stroke-width="2"/>
+      <line x1="12" y1="42" x2="28" y2="42" stroke="#2b3440" stroke-width="1.4"/>
+      <line x1="15" y1="34" x2="25" y2="50" stroke="#2b3440" stroke-width="1"/>
+      <line x1="25" y1="34" x2="15" y2="50" stroke="#2b3440" stroke-width="1"/>
+      <line x1="20" y1="26" x2="20" y2="8" stroke="#2b3440" stroke-width="2"/>
+      <line x1="6" y1="56" x2="34" y2="56" stroke="#2b3440" stroke-width="2"/>
+      <path d="M14 14 a9 9 0 0 1 12 0" fill="none" stroke="#2b3440" stroke-width="1.4"/>
+      <path d="M10 8 a15 15 0 0 1 20 0" fill="none" stroke="#2b3440" stroke-width="1.4"/>
+      <circle cx="20" cy="5" r="1.8" fill="#2b3440"/>
+    </symbol>
+    <symbol id="antennaBlue" viewBox="0 0 40 62">
+      <path d="M20 26 L7 56 L33 56 Z" fill="none" stroke="#2f6fb4" stroke-width="2"/>
+      <line x1="12" y1="42" x2="28" y2="42" stroke="#2f6fb4" stroke-width="1.4"/>
+      <line x1="15" y1="34" x2="25" y2="50" stroke="#2f6fb4" stroke-width="1"/>
+      <line x1="25" y1="34" x2="15" y2="50" stroke="#2f6fb4" stroke-width="1"/>
+      <line x1="20" y1="26" x2="20" y2="8" stroke="#2f6fb4" stroke-width="2"/>
+      <line x1="6" y1="56" x2="34" y2="56" stroke="#2f6fb4" stroke-width="2"/>
+      <path d="M14 14 a9 9 0 0 1 12 0" fill="none" stroke="#2f6fb4" stroke-width="1.4"/>
+      <path d="M10 8 a15 15 0 0 1 20 0" fill="none" stroke="#2f6fb4" stroke-width="1.4"/>
+      <circle cx="20" cy="5" r="1.8" fill="#2f6fb4"/>
+    </symbol>
+    <symbol id="satellite" viewBox="0 0 64 64">
+      <rect x="24" y="22" width="16" height="20" rx="3" fill="#dfe7ee" stroke="#39485a" stroke-width="1.6"/>
+      <rect x="2" y="24" width="18" height="16" rx="2" fill="#f2f6f9" stroke="#39485a" stroke-width="1.6"/>
+      <rect x="44" y="24" width="18" height="16" rx="2" fill="#f2f6f9" stroke="#39485a" stroke-width="1.6"/>
+      <line x1="20" y1="32" x2="24" y2="32" stroke="#39485a" stroke-width="1.6"/>
+      <line x1="40" y1="32" x2="44" y2="32" stroke="#39485a" stroke-width="1.6"/>
+      <line x1="32" y1="22" x2="32" y2="12" stroke="#39485a" stroke-width="1.6"/>
+      <line x1="32" y1="42" x2="32" y2="52" stroke="#39485a" stroke-width="1.6"/>
+      <path d="M26 12 h12 a4 4 0 0 1 4 4" fill="none" stroke="#39485a" stroke-width="1.6"/>
+    </symbol>
+    <symbol id="tableIcon" viewBox="0 0 60 50">
+      <rect x="2" y="2" width="56" height="46" rx="3" fill="#ffffff" stroke="#5c6b7a" stroke-width="1.6"/>
+      <line x1="12" y1="14" x2="44" y2="14" stroke="#5c6b7a" stroke-width="1.6"/>
+      <line x1="10" y1="24" x2="46" y2="24" stroke="#8494a4" stroke-width="1.3"/>
+      <line x1="10" y1="32" x2="46" y2="32" stroke="#8494a4" stroke-width="1.3"/>
+      <line x1="10" y1="40" x2="38" y2="40" stroke="#8494a4" stroke-width="1.3"/>
+      <path d="M46 2 l10 10 h-10 z" fill="#c9d3dc" stroke="#5c6b7a" stroke-width="1.2"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="sheet">
+
+<!-- ================= COVER ================= -->
+<section class="cover">
+  <h1>Continuously Operating Reference Station and High-Precision Satellite Positioning and Navigation Service System</h1>
+  <div class="rule"></div>
+  <div class="sub">(CORS)&nbsp;&nbsp;User Manual</div>
+  <div class="date">October 1, 2022</div>
+  <div class="edition">English edition</div>
+</section>
+
+<!-- ================= VERSION RECORD ================= -->
+<h2 class="chapter pre-break">Version record</h2>
+<table>
+  <tr><th style="width:16%">Version</th><th style="width:22%">Date</th><th>Revision</th><th style="width:20%">Editor</th></tr>
+  <tr><td>V1.0.0</td><td>2022/10/01</td><td>Manual created</td><td>Su Jinglan</td></tr>
+  <tr><td>V1.0.1</td><td>2023/08/05</td><td>Revision</td><td>Su Jinglan</td></tr>
+</table>
+
+<!-- ================= TOC ================= -->
+<h2 class="chapter pre-break">Contents</h2>
+<ul class="toc">
+  <li class="l1">1&nbsp;&nbsp;System introduction</li>
+  <li class="l2">1.1&nbsp;&nbsp;System functions</li>
+  <li class="l2">1.2&nbsp;&nbsp;System composition</li>
+  <li class="l3">1.2.1&nbsp;&nbsp;Modules included</li>
+  <li class="l3">1.2.2&nbsp;&nbsp;Module descriptions</li>
+  <li class="l1">2&nbsp;&nbsp;Operating instructions</li>
+  <li class="l2">2.1&nbsp;&nbsp;Configuration files</li>
+  <li class="l3">1. System configuration</li>
+  <li class="l3">2. Reference station input configuration</li>
+  <li class="l3">3. Virtual reference station configuration</li>
+  <li class="l3">4. Baseline RTK solving configuration</li>
+  <li class="l3">5. User configuration</li>
+  <li class="l3">6. Reference station information configuration</li>
+  <li class="l2">2.2&nbsp;&nbsp;Running the system</li>
+  <li class="l2">2.3&nbsp;&nbsp;Virtual console</li>
+  <li class="l3">1. Starting the system</li>
+  <li class="l3">2. Adding a reference station</li>
+  <li class="l3">3. Deleting a reference station</li>
+  <li class="l3">4. Loading the system configuration</li>
+  <li class="l3">5. Displaying ephemeris information</li>
+  <li class="l3">6. Displaying satellite observation information</li>
+  <li class="l3">7. Displaying satellite status information</li>
+  <li class="l3">8. Displaying reference station status information</li>
+  <li class="l3">9. Adding a virtual reference station</li>
+  <li class="l3">10. Deleting a virtual reference station</li>
+  <li class="l3">11. Displaying the reference station triangular network</li>
+  <li class="l3">12. Displaying baseline RTK solution information</li>
+  <li class="l3">13. Displaying subnetworks</li>
+  <li class="l3">14. Virtual reference station list</li>
+  <li class="l3">15. Adding a user</li>
+  <li class="l3">16. Deleting a user</li>
+  <li class="l3">17. User list</li>
+  <li class="l3">18. Displaying monitoring users</li>
+  <li class="l3">19. NTRIPAGENT access user list</li>
+  <li class="l3">20. Drawing the Delaunay reference station network</li>
+  <li class="l3">21. Drawing the position relationship between virtual and reference stations</li>
+  <li class="l3">22. Stopping the system</li>
+  <li class="l3">23. Runtime views</li>
+</ul>
+
+<!-- ================= CHAPTER 1 ================= -->
+<h2 class="chapter pre-break">1&nbsp;&nbsp;System introduction</h2>
+
+<h3>1.1&nbsp;&nbsp;System functions</h3>
+<p>The continuously operating reference station and high-precision satellite positioning and navigation service system (CORS) is a large-scale integrated positioning and navigation service network built on modern GNSS technology, computer network technology, networked real-time positioning service technology and modern mobile communication technology. The defining feature of CORS is that it brings the concept of networking into geodesy and surveying applications — it not only transforms the surveying and mapping industry, but also introduces a new service model for position and time information in modern society. The system meets a wide range of societal needs in modern information-based management: urban planning, land surveying and mapping, cadastral management, urban and rural construction, environmental monitoring, disaster prevention and mitigation, vessel and vehicle navigation, traffic monitoring, and more. Its main functions are:</p>
+<ul>
+  <li>Multi-frequency, multi-constellation network RTK processing: baseline solving, ambiguity closure checks, and more</li>
+  <li>Virtual reference station (VRS) technology</li>
+  <li>Time synchronization of reference station observation data</li>
+  <li>Support for connecting large-scale reference station networks</li>
+  <li>Delaunay-triangulation-based reference station networking</li>
+  <li>Reference station atmospheric delay error computation</li>
+  <li>Integrity monitoring of reference and virtual stations</li>
+  <li>Virtual reference station data broadcasting and network RTK differential positioning service</li>
+</ul>
+
+<h3>1.2&nbsp;&nbsp;System composition</h3>
+<h4>1.2.1&nbsp;&nbsp;Modules included</h4>
+<p>The system comprises the following modules:</p>
+<ul>
+  <li>Reference station data acquisition and decoding module;</li>
+  <li>Multi-constellation satellite orbit and clock error computation module;</li>
+  <li>Multi-system reference time system conversion module;</li>
+  <li>Reference station networking module;</li>
+  <li>Reference station baseline solving module;</li>
+  <li>Network RTK solving module;</li>
+  <li>Virtual reference station pseudorange and carrier phase observation generation module;</li>
+  <li>Virtual reference station pseudorange and carrier phase observation broadcasting module;</li>
+  <li>Virtual console module.</li>
+</ul>
+
+<figure>
+<svg viewBox="0 0 960 384" role="img" aria-label="System composition">
+  <g font-size="13">
+    <rect x="20" y="163.0" width="160" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="100" y="195.5" text-anchor="middle">System composition</text>
+    <rect x="200" y="20" width="270" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="335.0" y="52.0" text-anchor="middle">Real-time integrity</text>
+    <text x="335.0" y="69.0" text-anchor="middle">monitoring module</text>
+    <rect x="500" y="20" width="270" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="635.0" y="52.0" text-anchor="middle">Reference station data acquisition</text>
+    <text x="635.0" y="69.0" text-anchor="middle">and decoding module</text>
+    <rect x="200" y="110" width="270" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="335.0" y="142.0" text-anchor="middle">Multi-system reference</text>
+    <text x="335.0" y="159.0" text-anchor="middle">time conversion</text>
+    <rect x="500" y="110" width="270" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="635.0" y="133.5" text-anchor="middle">Multi-constellation satellite orbit</text>
+    <text x="635.0" y="150.5" text-anchor="middle">and clock error computation</text>
+    <text x="635.0" y="167.5" text-anchor="middle">module</text>
+    <rect x="800" y="110" width="140" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="870.0" y="142.0" text-anchor="middle">Virtual console</text>
+    <text x="870.0" y="159.0" text-anchor="middle">module</text>
+    <rect x="200" y="200" width="270" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="335.0" y="232.0" text-anchor="middle">Reference station</text>
+    <text x="335.0" y="249.0" text-anchor="middle">networking module</text>
+    <rect x="500" y="200" width="270" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="635.0" y="232.0" text-anchor="middle">Reference station baseline</text>
+    <text x="635.0" y="249.0" text-anchor="middle">solving module</text>
+    <rect x="800" y="200" width="140" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="870.0" y="232.0" text-anchor="middle">Network RTK</text>
+    <text x="870.0" y="249.0" text-anchor="middle">solving module</text>
+    <rect x="200" y="290" width="270" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="335.0" y="313.5" text-anchor="middle">VRS pseudorange and carrier</text>
+    <text x="335.0" y="330.5" text-anchor="middle">phase observation generation</text>
+    <text x="335.0" y="347.5" text-anchor="middle">module</text>
+    <rect x="500" y="290" width="270" height="72" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="635.0" y="313.5" text-anchor="middle">VRS pseudorange and carrier</text>
+    <text x="635.0" y="330.5" text-anchor="middle">phase observation broadcasting</text>
+    <text x="635.0" y="347.5" text-anchor="middle">module</text>
+    <path d="M180,191.0 H190 V56.0 H196" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M180,191.0 H190 V146.0 H196" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M180,191.0 H190 V236.0 H196" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M180,191.0 H190 V326.0 H196" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M470,56.0 H496" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M470,146.0 H496" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M470,236.0 H496" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M470,326.0 H496" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M770,146.0 H796" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M770,236.0 H796" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+  </g>
+</svg>
+<figcaption><span class="fig-num">Figure 1.1</span>&nbsp;&nbsp;System composition</figcaption>
+</figure>
+
+<h4>1.2.2&nbsp;&nbsp;Module descriptions</h4>
+
+<p><strong>1. Reference station data acquisition and decoding module</strong></p>
+<p>Based on an event-driven asynchronous I/O model, the module connects to physical or virtual stations with higher data processing efficiency and stability, and supports data connection and processing for large-scale physical or virtual stations. It uses the NTRIP and RTCM protocols to connect to continuously operating satellite reference stations and to acquire raw observation data of the BeiDou, GPS, GLONASS, Galileo and QZSS satellite systems, as well as precise coordinates and other information of the reference stations.</p>
+<p>The module supports the NTRIP and RTCM protocols. RTCM data is decoded through a queue, so as to obtain the satellite pseudorange and carrier phase observations, Doppler observations, carrier-to-noise ratios and ephemeris data broadcast by the reference stations, as shown in Figure 1.2.</p>
+
+<figure>
+<svg viewBox="0 0 940 545" role="img" aria-label="Reference station data acquisition and decoding module">
+  <g font-size="13">
+    <use href="#antenna" x="62" y="30" width="40" height="62"/>
+    <text x="82" y="112" text-anchor="middle" font-size="11.5">physics-station1</text>
+    <use href="#antenna" x="62" y="140" width="40" height="62"/>
+    <text x="82" y="222" text-anchor="middle" font-size="11.5">physics-station2</text>
+    <use href="#antenna" x="62" y="250" width="40" height="62"/>
+    <text x="82" y="332" text-anchor="middle" font-size="11.5">virtual-station1</text>
+    <use href="#antenna" x="62" y="360" width="40" height="62"/>
+    <text x="82" y="442" text-anchor="middle" font-size="11.5">physics-station3</text>
+
+    <line x1="104" y1="61" x2="172" y2="61" stroke="#7fa8d0" stroke-width="1.4"/>
+    <line x1="104" y1="171" x2="172" y2="171" stroke="#7fa8d0" stroke-width="1.4"/>
+    <line x1="104" y1="281" x2="172" y2="281" stroke="#7fa8d0" stroke-width="1.4"/>
+    <line x1="104" y1="391" x2="172" y2="391" stroke="#7fa8d0" stroke-width="1.4"/>
+
+    <rect x="172" y="42" width="112" height="38" rx="19" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.2"/>
+    <text x="228" y="66" text-anchor="middle" fill="#ffffff">NtripClient</text>
+    <rect x="172" y="152" width="112" height="38" rx="19" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.2"/>
+    <text x="228" y="176" text-anchor="middle" fill="#ffffff">NtripClient</text>
+    <rect x="172" y="262" width="112" height="38" rx="19" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.2"/>
+    <text x="228" y="286" text-anchor="middle" fill="#ffffff">NtripClient</text>
+    <rect x="172" y="372" width="112" height="38" rx="19" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.2"/>
+    <text x="228" y="396" text-anchor="middle" fill="#ffffff">NtripClient</text>
+
+    <line x1="284" y1="61" x2="425" y2="150" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <line x1="284" y1="171" x2="425" y2="168" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <line x1="284" y1="281" x2="425" y2="188" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <line x1="284" y1="391" x2="425" y2="206" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+
+    <rect x="430" y="136" width="260" height="72" rx="8" fill="#e9f2e2" stroke="#94b97d" stroke-width="1.4"/>
+    <text x="560" y="166" text-anchor="middle" font-size="12.5">Poll each station to check whether</text>
+    <text x="560" y="184" text-anchor="middle" font-size="12.5">a data-arrival event has occurred</text>
+
+    <path d="M560,208 V296" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <text x="570" y="248" font-size="11.5" fill="#5b6b7b">Data-arrival</text>
+    <text x="570" y="264" font-size="11.5" fill="#5b6b7b">event detected</text>
+
+    <rect x="430" y="300" width="260" height="150" rx="8" fill="#e9f2e2" stroke="#94b97d" stroke-width="1.4"/>
+    <text x="446" y="326" font-size="12">1. Decode data from physics-station1</text>
+    <text x="446" y="348" font-size="12">2. Decode data from physics-station2</text>
+    <text x="446" y="370" font-size="12">3. Decode data from physics-station3</text>
+    <text x="446" y="392" font-size="12">4. Decode data from virtual-station1</text>
+    <text x="446" y="414" font-size="12">5. ......</text>
+
+    <path d="M690,375 H790 V172 H696" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <text x="800" y="252" font-size="11.5" fill="#5b6b7b">Events processed in</text>
+    <text x="800" y="268" font-size="11.5" fill="#5b6b7b">order; polling</text>
+    <text x="800" y="284" font-size="11.5" fill="#5b6b7b">continues</text>
+  </g>
+</svg>
+<figcaption><span class="fig-num">Figure 1.2</span>&nbsp;&nbsp;Reference station data acquisition and decoding module</figcaption>
+</figure>
+
+<p><strong>2. Multi-constellation satellite orbit and clock error computation module</strong></p>
+<p>Using the ephemeris data of each reference station, the system updates the satellite ephemeris database. It computes the orbits and clock errors of BeiDou, GPS, Galileo and GLONASS satellites from the real-time broadcast navigation ephemeris, and detects and excludes anomalous satellites based on the RAIM integrity monitoring algorithm, as shown in Figure 1.4.</p>
+
+<figure>
+<svg viewBox="0 0 900 376" role="img" aria-label="Real-time integrity monitoring module composition">
+  <g font-size="13">
+    <rect x="20" y="160.0" width="160" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="100" y="184.0" text-anchor="middle">Real-time integrity</text>
+    <text x="100" y="201.0" text-anchor="middle">monitoring</text>
+    <rect x="220" y="20" width="280" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="360.0" y="52.5" text-anchor="middle">Single-station data quality analysis</text>
+    <rect x="540" y="20" width="330" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="705.0" y="52.5" text-anchor="middle">Reference station stability monitoring</text>
+    <rect x="220" y="90" width="280" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="360.0" y="114.0" text-anchor="middle">Observation data quality monitoring</text>
+    <text x="360.0" y="131.0" text-anchor="middle">of virtual and reference stations</text>
+    <rect x="540" y="90" width="330" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="705.0" y="114.0" text-anchor="middle">Basic information of physical</text>
+    <text x="705.0" y="131.0" text-anchor="middle">and virtual stations</text>
+    <rect x="220" y="160" width="280" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="360.0" y="184.0" text-anchor="middle">Monitoring of satellite navigation</text>
+    <text x="360.0" y="201.0" text-anchor="middle">ephemeris availability</text>
+    <rect x="540" y="160" width="330" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="705.0" y="184.0" text-anchor="middle">Coordinate stability monitoring</text>
+    <text x="705.0" y="201.0" text-anchor="middle">of physical and virtual stations</text>
+    <rect x="220" y="230" width="280" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="360.0" y="254.0" text-anchor="middle">Monitoring of regional ionospheric</text>
+    <text x="360.0" y="271.0" text-anchor="middle">and tropospheric delay</text>
+    <rect x="540" y="230" width="330" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="705.0" y="262.5" text-anchor="middle">Regional error model accuracy</text>
+    <rect x="220" y="300" width="280" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="360.0" y="324.0" text-anchor="middle">Monitoring of network RTK</text>
+    <text x="360.0" y="341.0" text-anchor="middle">differential corrections</text>
+    <rect x="540" y="300" width="330" height="56" rx="6" fill="#e8f1fb" stroke="#7fa8d0" stroke-width="1.4"/>
+    <text x="705.0" y="332.5" text-anchor="middle">RTK accuracy monitoring</text>
+    <path d="M180,188.0 H196 V48.0 H216" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M180,188.0 H196 V118.0 H216" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M180,188.0 H196 V188.0 H216" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M180,188.0 H196 V258.0 H216" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M180,188.0 H196 V328.0 H216" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M500,48.0 H536" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M500,118.0 H536" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M500,188.0 H536" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M500,258.0 H536" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+    <path d="M500,328.0 H536" fill="none" stroke="#7fa8d0" stroke-width="1.4" marker-end="url(#arr)"/>
+  </g>
+</svg>
+<figcaption><span class="fig-num">Figure 1.3</span>&nbsp;&nbsp;Composition of the real-time integrity monitoring module</figcaption>
+</figure>
+
+<figure>
+<svg viewBox="0 0 760 555" role="img" aria-label="Multi-constellation satellite orbit and clock error computation module">
+  <g font-size="13">
+    <rect x="210" y="20" width="340" height="118" rx="10" fill="#eef1f5" stroke="#c9d0d8" stroke-width="1.2"/>
+    <use href="#satellite" x="228" y="32" width="58" height="58"/>
+    <use href="#satellite" x="308" y="32" width="58" height="58"/>
+    <use href="#satellite" x="388" y="32" width="58" height="58"/>
+    <use href="#satellite" x="468" y="32" width="58" height="58"/>
+    <text x="257" y="112" text-anchor="middle" font-size="12">GPS</text>
+    <text x="337" y="112" text-anchor="middle" font-size="12">BeiDou</text>
+    <text x="417" y="112" text-anchor="middle" font-size="12">GLONASS</text>
+    <text x="497" y="112" text-anchor="middle" font-size="12">Galileo</text>
+
+    <path d="M380,138 V192" fill="none" stroke="#7fa8d0" stroke-width="1.6" marker-end="url(#arr)"/>
+    <text x="390" y="168" font-size="12.5">PRN</text>
+
+    <circle cx="380" cy="262" r="68" fill="#ffffff" stroke="#39485a" stroke-width="2.4"/>
+    <text x="380" y="238" text-anchor="middle" font-size="12" fill="#39485a">12</text>
+    <text x="408" y="248" text-anchor="middle" font-size="12" fill="#39485a">1</text>
+    <text x="424" y="266" text-anchor="middle" font-size="12" fill="#39485a">3</text>
+    <text x="408" y="288" text-anchor="middle" font-size="12" fill="#39485a">4</text>
+    <text x="380" y="296" text-anchor="middle" font-size="12" fill="#39485a">6</text>
+    <text x="352" y="288" text-anchor="middle" font-size="12" fill="#39485a">7</text>
+    <text x="338" y="266" text-anchor="middle" font-size="12" fill="#39485a">9</text>
+    <text x="350" y="248" text-anchor="middle" font-size="12" fill="#39485a">10</text>
+    <line x1="380" y1="262" x2="380" y2="216" stroke="#39485a" stroke-width="2"/>
+    <line x1="380" y1="262" x2="410" y2="252" stroke="#39485a" stroke-width="2"/>
+    <circle cx="380" cy="262" r="3" fill="#39485a"/>
+    <text x="380" y="352" text-anchor="middle">Current time</text>
+
+    <path d="M448,262 H496" fill="none" stroke="#7fa8d0" stroke-width="1.6" marker-end="url(#arr)"/>
+
+    <rect x="500" y="140" width="240" height="260" rx="10" fill="#eef1f5" stroke="#c9d0d8" stroke-width="1.2"/>
+    <use href="#tableIcon" x="512" y="152" width="58" height="48"/>
+    <text x="541" y="212" text-anchor="middle" font-size="11.5">BeiDou ephemeris</text>
+    <text x="541" y="228" text-anchor="middle" font-size="11.5">parameter table</text>
+    <use href="#tableIcon" x="668" y="152" width="58" height="48"/>
+    <text x="697" y="212" text-anchor="middle" font-size="11.5">GPS ephemeris</text>
+    <text x="697" y="228" text-anchor="middle" font-size="11.5">parameter table</text>
+    <use href="#tableIcon" x="512" y="272" width="58" height="48"/>
+    <text x="541" y="332" text-anchor="middle" font-size="11.5">GLONASS ephemeris</text>
+    <text x="541" y="348" text-anchor="middle" font-size="11.5">parameter table</text>
+    <use href="#tableIcon" x="668" y="272" width="58" height="48"/>
+    <text x="697" y="332" text-anchor="middle" font-size="11.5">Galileo ephemeris</text>
+    <text x="697" y="348" text-anchor="middle" font-size="11.5">parameter table</text>
+
+    <path d="M620,400 V448" fill="none" stroke="#7fa8d0" stroke-width="1.6" marker-end="url(#arr)"/>
+
+    <rect x="180" y="454" width="460" height="62" rx="8" fill="#eef1f5" stroke="#c9d0d8" stroke-width="1.2"/>
+    <text x="410" y="480" text-anchor="middle" font-size="12.5">Compute satellite positions and clock errors using the</text>
+    <text x="410" y="500" text-anchor="middle" font-size="12.5">ephemeris parameter tables and the system time</text>
+  </g>
+</svg>
+<figcaption><span class="fig-num">Figure 1.4</span>&nbsp;&nbsp;Multi-constellation satellite orbit and clock error computation module</figcaption>
+</figure>
+
+<p><strong>3. Multi-system reference time system conversion module</strong></p>
+<p>Multi-system reference time system conversion covers the conversion between the BeiDou, GPS, Galileo and GLONASS reference time systems.</p>
+
+<p><strong>4. Reference station networking module</strong></p>
+<p>The reference station triangular network is built based on Delaunay triangulation, as shown in Figure 1.5.</p>
+
+<figure>
+<svg viewBox="0 0 900 300" role="img" aria-label="Construction of the reference station triangular network">
+  <g font-size="13">
+    <rect x="60" y="40" width="320" height="220" fill="#ffffff" stroke="#39485a" stroke-width="1.6"/>
+    <rect x="520" y="40" width="320" height="220" fill="#ffffff" stroke="#39485a" stroke-width="1.6"/>
+    <path d="M392,150 H498" fill="none" stroke="#5c6b7a" stroke-width="2" marker-end="url(#arrDark)"/>
+    <path d="M105.0,59.0 L112.8,72.5 L97.2,72.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M200.0,47.0 L207.8,60.5 L192.2,60.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M295.0,63.0 L302.8,76.5 L287.2,76.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M85.0,111.0 L92.8,124.5 L77.2,124.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M163.0,103.0 L170.8,116.5 L155.2,116.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M248.0,115.0 L255.8,128.5 L240.2,128.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M338.0,107.0 L345.8,120.5 L330.2,120.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M120.0,163.0 L127.8,176.5 L112.2,176.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M212.0,169.0 L219.8,182.5 L204.2,182.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M308.0,161.0 L315.8,174.5 L300.2,174.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M100.0,215.0 L107.8,228.5 L92.2,228.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M200.0,221.0 L207.8,234.5 L192.2,234.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <g stroke="#8a99a8" stroke-width="1.3">
+      <line x1="565.0" y1="68.0" x2="660.0" y2="56.0"/>
+      <line x1="565.0" y1="68.0" x2="545.0" y2="120.0"/>
+      <line x1="565.0" y1="68.0" x2="623.0" y2="112.0"/>
+      <line x1="660.0" y1="56.0" x2="755.0" y2="72.0"/>
+      <line x1="660.0" y1="56.0" x2="623.0" y2="112.0"/>
+      <line x1="660.0" y1="56.0" x2="708.0" y2="124.0"/>
+      <line x1="755.0" y1="72.0" x2="708.0" y2="124.0"/>
+      <line x1="755.0" y1="72.0" x2="798.0" y2="116.0"/>
+      <line x1="545.0" y1="120.0" x2="623.0" y2="112.0"/>
+      <line x1="545.0" y1="120.0" x2="580.0" y2="172.0"/>
+      <line x1="545.0" y1="120.0" x2="560.0" y2="224.0"/>
+      <line x1="623.0" y1="112.0" x2="708.0" y2="124.0"/>
+      <line x1="623.0" y1="112.0" x2="580.0" y2="172.0"/>
+      <line x1="623.0" y1="112.0" x2="672.0" y2="178.0"/>
+      <line x1="708.0" y1="124.0" x2="798.0" y2="116.0"/>
+      <line x1="708.0" y1="124.0" x2="672.0" y2="178.0"/>
+      <line x1="708.0" y1="124.0" x2="768.0" y2="170.0"/>
+      <line x1="798.0" y1="116.0" x2="768.0" y2="170.0"/>
+      <line x1="580.0" y1="172.0" x2="672.0" y2="178.0"/>
+      <line x1="580.0" y1="172.0" x2="560.0" y2="224.0"/>
+      <line x1="580.0" y1="172.0" x2="660.0" y2="230.0"/>
+      <line x1="672.0" y1="178.0" x2="768.0" y2="170.0"/>
+      <line x1="672.0" y1="178.0" x2="660.0" y2="230.0"/>
+      <line x1="768.0" y1="170.0" x2="660.0" y2="230.0"/>
+      <line x1="560.0" y1="224.0" x2="660.0" y2="230.0"/>
+    </g>
+    <path d="M565.0,59.0 L572.8,72.5 L557.2,72.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M660.0,47.0 L667.8,60.5 L652.2,60.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M755.0,63.0 L762.8,76.5 L747.2,76.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M545.0,111.0 L552.8,124.5 L537.2,124.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M623.0,103.0 L630.8,116.5 L615.2,116.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M708.0,115.0 L715.8,128.5 L700.2,128.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M798.0,107.0 L805.8,120.5 L790.2,120.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M580.0,163.0 L587.8,176.5 L572.2,176.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M672.0,169.0 L679.8,182.5 L664.2,182.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M768.0,161.0 L775.8,174.5 L760.2,174.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M560.0,215.0 L567.8,228.5 L552.2,228.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <path d="M660.0,221.0 L667.8,234.5 L652.2,234.5 Z" fill="#ffffff" stroke="#2b3440" stroke-width="1.5"/>
+    <g fill="#2b3440">
+      <circle cx="565.0" cy="68.0" r="2.6"/>
+      <circle cx="660.0" cy="56.0" r="2.6"/>
+      <circle cx="755.0" cy="72.0" r="2.6"/>
+      <circle cx="545.0" cy="120.0" r="2.6"/>
+      <circle cx="623.0" cy="112.0" r="2.6"/>
+      <circle cx="708.0" cy="124.0" r="2.6"/>
+      <circle cx="798.0" cy="116.0" r="2.6"/>
+      <circle cx="580.0" cy="172.0" r="2.6"/>
+      <circle cx="672.0" cy="178.0" r="2.6"/>
+      <circle cx="768.0" cy="170.0" r="2.6"/>
+      <circle cx="560.0" cy="224.0" r="2.6"/>
+      <circle cx="660.0" cy="230.0" r="2.6"/>
+    </g>
+  </g>
+</svg>
+<figcaption><span class="fig-num">Figure 1.5</span>&nbsp;&nbsp;Construction of the reference station triangular network</figcaption>
+</figure>
+
+<p><strong>5. Reference station baseline solving module</strong></p>
+<p>The module performs RTK solving with the satellite pseudorange and carrier phase observations of the reference stations (supporting BeiDou, GPS, Galileo, GLONASS, QZSS and more), and obtains the inter-station ambiguities and errors (ionospheric, tropospheric and other unmodelled residual errors).</p>
+
+<p><strong>6. Network RTK solving module</strong></p>
+<p>A master reference station is selected, and subnetworks are constructed over the reference station triangular network for network RTK solving, as shown in Figure 1.6.</p>
+
+<figure>
+<svg viewBox="0 0 700 430" role="img" aria-label="Subnetwork construction">
+  <g font-size="13">
+    <g stroke="#9aa7b4" stroke-width="1.3" stroke-dasharray="5 4">
+      <line x1="350" y1="96" x2="350" y2="180"/>
+      <line x1="185" y1="205" x2="330" y2="198"/>
+      <line x1="358" y1="200" x2="520" y2="176"/>
+      <line x1="345" y1="216" x2="345" y2="330"/>
+      <line x1="370" y1="204" x2="495" y2="300"/>
+      <line x1="352" y1="66" x2="542" y2="140"/>
+      <line x1="192" y1="176" x2="334" y2="72"/>
+      <line x1="196" y1="216" x2="330" y2="352"/>
+      <line x1="352" y1="360" x2="492" y2="322"/>
+      <line x1="532" y1="196" x2="502" y2="300"/>
+    </g>
+    <use href="#antenna" x="330" y="26" width="40" height="62"/>
+    <text x="350" y="108" text-anchor="middle" font-size="11.5" fill="#b03a2e">Reference station B1</text>
+    <use href="#antenna" x="522" y="118" width="40" height="62"/>
+    <text x="542" y="200" text-anchor="middle" font-size="11.5" fill="#b03a2e">Reference station Bn</text>
+    <use href="#antenna" x="152" y="156" width="40" height="62"/>
+    <rect x="104" y="224" width="136" height="19" fill="#ffffff"/>
+    <text x="172" y="238" text-anchor="middle" font-size="11.5" fill="#b03a2e">Reference station B2</text>
+    <use href="#antenna" x="325" y="342" width="40" height="62"/>
+    <text x="345" y="424" text-anchor="middle" font-size="11.5" fill="#b03a2e">Reference station B3</text>
+    <use href="#antenna" x="472" y="290" width="40" height="62"/>
+    <text x="492" y="372" text-anchor="middle" font-size="11.5" fill="#b03a2e">Reference station B4</text>
+    <use href="#antennaBlue" x="330" y="170" width="40" height="62"/>
+    <rect x="252" y="237" width="196" height="20" fill="#ffffff"/>
+    <text x="350" y="252" text-anchor="middle" fill="#2f6fb4">Master reference station A</text>
+  </g>
+</svg>
+<figcaption><span class="fig-num">Figure 1.6</span>&nbsp;&nbsp;Subnetwork construction</figcaption>
+</figure>
+
+<p><strong>7. Virtual reference station pseudorange and carrier phase observation generation module</strong></p>
+<p>Pseudorange and carrier phase observations are generated according to the position of the virtual reference station.</p>
+
+<p><strong>8. Virtual reference station pseudorange and carrier phase observation broadcasting module</strong></p>
+<p>Terminal users connect to the continuously operating reference station and satellite positioning and navigation system through the NTRIP protocol. After successful authentication, the system broadcasts the virtual reference station pseudorange and carrier phase observations to the users via the NTRIP and RTCM protocols, as shown in Figure 1.7.</p>
+
+<figure>
+  <img class="shot" src="images/intro-en/fig1.7a.png" alt="NTRIP system architecture" style="max-width:76%">
+  <figcaption>(a) NTRIP system architecture</figcaption>
+</figure>
+<figure>
+  <img class="shot" src="images/intro-en/fig1.7b.png" alt="NTRIP data flow" style="max-width:72%">
+  <figcaption>(b) NTRIP data flow</figcaption>
+</figure>
+<p class="note" style="text-align:center;margin-top:-0.5em"><span class="fig-num">Figure 1.7</span>&nbsp;&nbsp;NTRIP protocol</p>
+
+<p><strong>9. Virtual console module</strong></p>
+<p>The module connects to the continuously operating reference station and satellite positioning and navigation system in remote or local mode; commands can be issued to the running system, and the current operating status of the system can be queried through the virtual console, as shown in Figure 1.8.</p>
+
+<figure>
+<svg viewBox="0 0 900 590" role="img" aria-label="Virtual console module">
+  <g font-size="13">
+    <rect x="50" y="30" width="800" height="316" rx="10" fill="#eef1f5" stroke="#c9d0d8" stroke-width="1.2"/>
+    <!-- pills col1 -->
+    <g>
+      <rect x="70" y="56" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="160" y="79" text-anchor="middle" font-size="10.8" fill="#ffffff">Start</text>
+      <rect x="70" y="110" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="160" y="133" text-anchor="middle" font-size="10.8" fill="#ffffff">Stop</text>
+      <rect x="70" y="164" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="160" y="187" text-anchor="middle" font-size="10.8" fill="#ffffff">Add reference station</text>
+      <rect x="70" y="218" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="160" y="241" text-anchor="middle" font-size="10.8" fill="#ffffff">Delete reference station</text>
+      <rect x="70" y="272" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="160" y="295" text-anchor="middle" font-size="10.8" fill="#ffffff">Satellite status information</text>
+    </g>
+    <!-- pills col2 -->
+    <g>
+      <rect x="265" y="56" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="355" y="79" text-anchor="middle" font-size="10.8" fill="#ffffff">Load configuration</text>
+      <rect x="265" y="110" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="355" y="133" text-anchor="middle" font-size="10.8" fill="#ffffff">Show ephemeris information</text>
+      <rect x="265" y="164" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="355" y="181" text-anchor="middle" font-size="10.8" fill="#ffffff">Show satellite observation</text>
+      <text x="355" y="194" text-anchor="middle" font-size="10.8" fill="#ffffff">information</text>
+      <rect x="265" y="218" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="355" y="241" text-anchor="middle" font-size="10.8" fill="#ffffff">RTCM monitoring information</text>
+      <rect x="265" y="272" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="355" y="289" text-anchor="middle" font-size="10.8" fill="#ffffff">Reference station</text>
+      <text x="355" y="302" text-anchor="middle" font-size="10.8" fill="#ffffff">basic information</text>
+    </g>
+    <!-- pills col3 -->
+    <g>
+      <rect x="460" y="56" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="550" y="73" text-anchor="middle" font-size="10.8" fill="#ffffff">Show RTK baseline</text>
+      <text x="550" y="86" text-anchor="middle" font-size="10.8" fill="#ffffff">information</text>
+      <rect x="460" y="110" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="550" y="133" text-anchor="middle" font-size="10.8" fill="#ffffff">Add virtual station</text>
+      <rect x="460" y="164" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="550" y="181" text-anchor="middle" font-size="10.8" fill="#ffffff">Show subnetwork</text>
+      <text x="550" y="194" text-anchor="middle" font-size="10.8" fill="#ffffff">information</text>
+      <rect x="460" y="218" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="550" y="235" text-anchor="middle" font-size="10.8" fill="#ffffff">Show reference station</text>
+      <text x="550" y="248" text-anchor="middle" font-size="10.8" fill="#ffffff">triangular network</text>
+      <rect x="460" y="272" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="550" y="295" text-anchor="middle" font-size="10.8" fill="#ffffff">Delete virtual station</text>
+    </g>
+    <!-- pills col4 -->
+    <g>
+      <rect x="655" y="56" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="745" y="79" text-anchor="middle" font-size="10.8" fill="#ffffff">RTK baseline solving</text>
+      <rect x="655" y="110" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="745" y="133" text-anchor="middle" font-size="10.8" fill="#ffffff">Delete virtual station</text>
+      <rect x="655" y="164" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="745" y="187" text-anchor="middle" font-size="10.8" fill="#ffffff">Add virtual station</text>
+      <rect x="655" y="218" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="745" y="241" text-anchor="middle" font-size="10.8" fill="#ffffff">Add user</text>
+      <rect x="655" y="272" width="180" height="36" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+      <text x="745" y="295" text-anchor="middle" font-size="10.8" fill="#ffffff">Delete user</text>
+    </g>
+
+    <path d="M450,388 V352" fill="none" stroke="#7fa8d0" stroke-width="1.6" marker-end="url(#arr)"/>
+    <rect x="345" y="392" width="210" height="46" rx="8" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.2"/>
+    <text x="450" y="420" text-anchor="middle" fill="#ffffff">Issue commands to the system</text>
+
+    <path d="M450,478 V442" fill="none" stroke="#7fa8d0" stroke-width="1.6" marker-end="url(#arr)"/>
+    <circle cx="450" cy="518" r="40" fill="#e8a33d" stroke="#c98324" stroke-width="1.4"/>
+    <text x="450" y="513" text-anchor="middle" fill="#ffffff" font-size="12.5">Virtual</text>
+    <text x="450" y="529" text-anchor="middle" fill="#ffffff" font-size="12.5">console</text>
+
+    <rect x="620" y="392" width="150" height="106" rx="8" fill="#eef1f5" stroke="#c9d0d8" stroke-width="1.2"/>
+    <rect x="636" y="404" width="118" height="38" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+    <text x="695" y="428" text-anchor="middle" fill="#ffffff" font-size="12">Remote connection</text>
+    <rect x="636" y="452" width="118" height="38" rx="6" fill="#7ba7d7" stroke="#5b86b6" stroke-width="1.1"/>
+    <text x="695" y="476" text-anchor="middle" fill="#ffffff" font-size="12">Local connection</text>
+    <path d="M616,415 H560" fill="none" stroke="#7fa8d0" stroke-width="1.6" marker-end="url(#arr)"/>
+  </g>
+</svg>
+<figcaption><span class="fig-num">Figure 1.8</span>&nbsp;&nbsp;Virtual console module</figcaption>
+</figure>
+
+<!-- ================= CHAPTER 2 ================= -->
+<h2 class="chapter pre-break">2&nbsp;&nbsp;Operating instructions</h2>
+
+<h3>2.1&nbsp;&nbsp;Configuration files</h3>
+<p>Before using the continuously operating reference station and high-precision satellite positioning and navigation service system, the configuration files must be prepared.</p>
+
+<h4>1. System configuration</h4>
+<table>
+  <tr><th style="width:44%">Parameter</th><th>Description</th></tr>
+  <tr><td class="k">ntrip-sources-file</td><td>Path of the reference station input configuration file</td></tr>
+  <tr><td class="k">trace-file</td><td>Path of the system log file</td></tr>
+  <tr><td class="k">baselines-file</td><td>Path of the baseline list configuration file</td></tr>
+  <tr><td class="k">base-stations-info-file</td><td>Path of the reference station information configuration file</td></tr>
+  <tr><td class="k">virtual-stations-file</td><td>Path of the virtual reference station configuration file</td></tr>
+  <tr><td class="k">rtk-conf-file</td><td>Path of the baseline RTK solving configuration file</td></tr>
+  <tr><td class="k">agent-user-file</td><td>Path of the user configuration file</td></tr>
+  <tr><td class="k">monitor-port</td><td>Monitoring port of the real-time integrity monitoring system</td></tr>
+</table>
+
+<h4>2. Reference station input configuration</h4>
+<p class="note">Format: station name, IP, port, user name, password, mount point, reference station latitude, reference station longitude, reference station height#</p>
+<p>Example:</p>
+<pre><code>A005,127.0.0.1,8002,test ,pwd ,A005,39.67042106,115.92179510,73.42850#
+A006,127.0.0.1,8002,test ,pwd ,A006,39.68042106,115.92379510,73.43850#
+A007,127.0.0.1,8002,test ,pwd ,A007,39.64842106,115.92879510,73.45850#
+A008,127.0.0.1,8002,test ,pwd ,A008,39.54042106,115.12079510,73.46850#</code></pre>
+
+<h4>3. Virtual reference station configuration</h4>
+<p class="note">Format: virtual reference station name, ECEF-X, ECEF-Y, ECEF-Z#</p>
+<p>Example:</p>
+<pre><code>VRS001,-2149724.236,4410605.355,4061567.167#</code></pre>
+
+<h4>4. Baseline RTK solving configuration</h4>
+<table>
+  <tr><th style="width:28%">Parameter</th><th>Description</th></tr>
+  <tr><td class="k">pos1-posmode</td><td>Solving mode — the fused positioning solving mode. Options:
+    <br>single: GNSS single-point solving
+    <br>dgps: GNSS differential solving
+    <br>static: static mode
+    <br>ppp-kine: GNSS precise kinematic single-point solving
+    <br>ppp-static: GNSS precise static single-point solving</td></tr>
+  <tr><td class="k">pos1-frequency</td><td>Solving frequency</td></tr>
+  <tr><td class="k">pos1-soltype</td><td>Solution type</td></tr>
+  <tr><td class="k">pos1-elmask</td><td>Maximum satellite elevation angle</td></tr>
+  <tr><td class="k">pos1-tidecorr</td><td>Tide correction: off, on</td></tr>
+  <tr><td class="k">pos1-ionoopt</td><td>Ionospheric correction parameters:
+    <br>off: ionospheric correction off
+    <br>brdc: broadcast ionospheric correction model
+    <br>sbas: SBAS ionospheric correction model
+    <br>dual-freq: dual-frequency ionospheric correction model
+    <br>ionex-tec: IONEX ionospheric correction model
+    <br>qzs-brdc: QZS broadcast ionospheric correction model
+    <br>qzs-lex: QZS-LEX ionospheric correction model
+    <br>stec: STEC ionospheric correction model</td></tr>
+  <tr><td class="k">pos1-tropopt</td><td>Tropospheric correction parameters:
+    <br>off: tropospheric correction off
+    <br>saas: SAAS tropospheric correction model
+    <br>sbas: SBAS tropospheric correction model
+    <br>est-ztd: estimate tropospheric zenith total delay
+    <br>est-ztdgrad: estimate tropospheric zenith total delay and gradient parameters
+    <br>ztd: tropospheric zenith total delay correction model</td></tr>
+  <tr><td class="k">pos1-sateph</td><td>Ephemeris parameters:
+    <br>brdc: broadcast ephemeris
+    <br>precise: precise ephemeris</td></tr>
+  <tr><td class="k">pos1-navsys</td><td>Satellite systems used in solving:
+    <br>1:gps+2:sbas+4:glo+8:gal+16:qzs+32:comp</td></tr>
+  <tr><td class="k">pos2-armode</td><td>Ambiguity fixing mode:
+    <br>0:off, 1:continuous, 2:instantaneous, 3:fix-and-hold, 4:pppar, 5:pppar-ils, 6:wlnl, 7:tcar, 8:wlnlc, 9:tcarc</td></tr>
+  <tr><td class="k">pos2-arthres</td><td>Ambiguity fixing threshold (ratio)</td></tr>
+  <tr><td class="k">pos2-arlockcnt</td><td>AR lock count</td></tr>
+  <tr><td class="k">pos2-arelmask</td><td>AR maximum elevation angle</td></tr>
+  <tr><td class="k">pos2-arminfix</td><td>AR minimum fix count</td></tr>
+  <tr><td class="k">pos2-elmaskhold</td><td>AR hold maximum elevation angle</td></tr>
+  <tr><td class="k">pos2-slipthres</td><td>Cycle-slip detection threshold</td></tr>
+  <tr><td class="k">stats-eratio, stats-eratio2,<br>stats-errphase, stats-errphaseel,<br>stats-errphasebl, stats-errdoppler,<br>stats-stdbias, stats-stdiono,<br>stats-stdtrop, stats-prnaccelh,<br>stats-prnaccelv, stats-prnbias,<br>stats-prniono, stats-prntrop,<br>stats-prnpos, stats-clkstab</td><td>Random error model parameters</td></tr>
+  <tr><td class="k">pos2-maxage</td><td>Age of RTK observation data</td></tr>
+</table>
+
+<figure>
+  <img class="shot" src="images/intro-en/fig2-rtk-conf.png" alt="Baseline RTK solving configuration">
+  <figcaption><span class="fig-num">Figure 2.1</span>&nbsp;&nbsp;Baseline RTK solving configuration</figcaption>
+</figure>
+
+<h4>5. User configuration</h4>
+<p class="note">Format: user name, password#</p>
+<p>Example:</p>
+<pre><code>test1,password#
+test2,password#</code></pre>
+
+<h4>6. Reference station information configuration</h4>
+<p class="note">Format: reference station name, specific address, city, district, ECEF-X, ECEF-Y, ECEF-Z, ITRF, flag</p>
+<p>Example:</p>
+<pre><code>S009,XX Street Qingpu District Shanghai,Shanghai,Qingpu,31.12333298,121.07179362,55.9978,2014,0
+S010,XX Street Jinshan District Shanghai,Shanghai,Jinshan,30.91804368,121.16882480,90.5689,2014,0</code></pre>
+
+<h3>2.2&nbsp;&nbsp;Running the system</h3>
+<p>Program interface:</p>
+<pre><code>cors-engine  [-o file]  [-t level]</code></pre>
+<p>Parameters:</p>
+<ul>
+  <li><code>-o</code> — path of the system configuration file</li>
+  <li><code>-t</code> — log output level (1: error, 2: warning, 3: info)</li>
+</ul>
+<p>Example:</p>
+<pre><code>cors-engine.exe -o .\cors\conf\cors.conf -t 3</code></pre>
+
+<h3>2.3&nbsp;&nbsp;Virtual console</h3>
+<p>The virtual console connects to the continuously operating reference station and high-precision satellite positioning and navigation system in remote or local mode; commands can be issued to the running system, and the current operating status of the system can be queried through the virtual console.</p>
+
+<h4>1. Starting the system</h4>
+<ol class="steps">
+  <li>Type <code>start</code>;</li>
+  <li>Press Enter to confirm — <code>cors server already start</code> is returned and the system starts running.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-start.png" alt="Starting the system">
+  <figcaption><span class="fig-num">Figure 2.2</span>&nbsp;&nbsp;Starting the system</figcaption>
+</figure>
+
+<h4>2. Adding a reference station</h4>
+<ol class="steps">
+  <li>Type <code>addsource</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-addsource.png" alt="Adding a reference station">
+  <figcaption><span class="fig-num">Figure 2.3</span>&nbsp;&nbsp;Adding a reference station</figcaption>
+</figure>
+
+<h4>3. Deleting a reference station</h4>
+<ol class="steps">
+  <li>Type <code>delsource</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-delsource.png" alt="Deleting a reference station">
+  <figcaption><span class="fig-num">Figure 2.4</span>&nbsp;&nbsp;Deleting a reference station</figcaption>
+</figure>
+
+<h4>4. Loading the system configuration</h4>
+<ol class="steps">
+  <li>Type <code>loadopt</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-loadopt.png" alt="Loading the system configuration">
+  <figcaption><span class="fig-num">Figure 2.5</span>&nbsp;&nbsp;Loading the system configuration</figcaption>
+</figure>
+
+<h4>5. Displaying ephemeris information</h4>
+<ol class="steps">
+  <li>Type <code>navidata</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-navidata.png" alt="Displaying ephemeris information">
+  <figcaption><span class="fig-num">Figure 2.6</span>&nbsp;&nbsp;Displaying ephemeris information</figcaption>
+</figure>
+
+<h4>6. Displaying satellite observation information</h4>
+<ol class="steps">
+  <li>Type <code>observ name -nf</code>, where <em>name</em> is the reference station name and <em>nf</em> is the number of frequencies;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-observ.png" alt="Displaying satellite observation information">
+  <figcaption><span class="fig-num">Figure 2.7</span>&nbsp;&nbsp;Displaying satellite observation information</figcaption>
+</figure>
+
+<h4>7. Displaying satellite status information</h4>
+<ol class="steps">
+  <li>Type <code>satellite name -nf</code>, where <em>name</em> is the reference station name and <em>nf</em> is the number of frequencies;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-satellite.png" alt="Displaying satellite status information">
+  <figcaption><span class="fig-num">Figure 2.8</span>&nbsp;&nbsp;Displaying satellite status information</figcaption>
+</figure>
+
+<h4>8. Displaying reference station status information</h4>
+<ol class="steps">
+  <li>Type <code>sourceinfo name</code>, where <em>name</em> is the reference station name; when <em>name</em> is <code>all</code>, the status information of all reference stations is displayed;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-sourceinfo.png" alt="Displaying reference station status information">
+  <figcaption><span class="fig-num">Figure 2.9</span>&nbsp;&nbsp;Displaying reference station status information</figcaption>
+</figure>
+
+<h4>9. Adding a virtual reference station</h4>
+<ol class="steps">
+  <li>Type <code>addvsta name X Y Z</code>, where <em>name</em> is the virtual reference station name and X, Y, Z are the coordinates;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-addvsta.png" alt="Adding a virtual reference station">
+  <figcaption><span class="fig-num">Figure 2.10</span>&nbsp;&nbsp;Adding a virtual reference station</figcaption>
+</figure>
+
+<h4>10. Deleting a virtual reference station</h4>
+<ol class="steps">
+  <li>Type <code>delvsta name</code>, where <em>name</em> is the virtual reference station name;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-delvsta.png" alt="Deleting a virtual reference station">
+  <figcaption><span class="fig-num">Figure 2.11</span>&nbsp;&nbsp;Deleting a virtual reference station</figcaption>
+</figure>
+
+<h4>11. Displaying the reference station triangular network</h4>
+<ol class="steps">
+  <li>Type <code>showdtrigs</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-showdtrigs.png" alt="Displaying the reference station triangular network">
+  <figcaption><span class="fig-num">Figure 2.12</span>&nbsp;&nbsp;Displaying the reference station triangular network</figcaption>
+</figure>
+
+<h4>12. Displaying baseline RTK solution information</h4>
+<ol class="steps">
+  <li>Type <code>showbls</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-showbls.png" alt="Baseline RTK solution information">
+  <figcaption><span class="fig-num">Figure 2.13</span>&nbsp;&nbsp;Baseline RTK solution information</figcaption>
+</figure>
+
+<h4>13. Displaying subnetworks</h4>
+<ol class="steps">
+  <li>Type <code>showsubnet</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-showsubnet.png" alt="Displaying subnetworks">
+  <figcaption><span class="fig-num">Figure 2.14</span>&nbsp;&nbsp;Displaying subnetworks</figcaption>
+</figure>
+
+<h4>14. Virtual reference station list</h4>
+<ol class="steps">
+  <li>Type <code>showvsta</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-showvsta.png" alt="Virtual reference station list">
+  <figcaption><span class="fig-num">Figure 2.15</span>&nbsp;&nbsp;Virtual reference station list</figcaption>
+</figure>
+
+<h4>15. Adding a user</h4>
+<ol class="steps">
+  <li>Type <code>adduser name password</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-adduser.png" alt="Adding a user">
+  <figcaption><span class="fig-num">Figure 2.16</span>&nbsp;&nbsp;Adding a user</figcaption>
+</figure>
+
+<h4>16. Deleting a user</h4>
+<ol class="steps">
+  <li>Type <code>deluser name</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-deluser.png" alt="Deleting a user">
+  <figcaption><span class="fig-num">Figure 2.17</span>&nbsp;&nbsp;Deleting a user</figcaption>
+</figure>
+
+<h4>17. User list</h4>
+<ol class="steps">
+  <li>Type <code>showusers</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-showusers.png" alt="User list">
+  <figcaption><span class="fig-num">Figure 2.18</span>&nbsp;&nbsp;User list</figcaption>
+</figure>
+
+<h4>18. Displaying monitoring users</h4>
+<ol class="steps">
+  <li>Type <code>moniinfo</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-moniinfo.png" alt="Monitoring users">
+  <figcaption><span class="fig-num">Figure 2.19</span>&nbsp;&nbsp;Monitoring users</figcaption>
+</figure>
+
+<h4>19. NTRIPAGENT access user list</h4>
+<ol class="steps">
+  <li>Type <code>agentinfo</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-agentinfo.png" alt="NTRIPAGENT access user list">
+  <figcaption><span class="fig-num">Figure 2.20</span>&nbsp;&nbsp;NTRIPAGENT access user list</figcaption>
+</figure>
+
+<h4>20. Drawing the Delaunay reference station network</h4>
+<ol class="steps">
+  <li>Type <code>drawdtrignet dtrignet.png</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-drawdtrignet.png" alt="Delaunay reference station network" style="max-width:72%">
+  <figcaption><span class="fig-num">Figure 2.21</span>&nbsp;&nbsp;Delaunay reference station network</figcaption>
+</figure>
+
+<h4>21. Drawing the position relationship between virtual and reference stations</h4>
+<ol class="steps">
+  <li>Type <code>drawvsta VRS001 VRS001.png</code>;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-drawvsta.png" alt="Position relationship between VRS001 and the reference stations" style="max-width:58%">
+  <figcaption><span class="fig-num">Figure 2.22</span>&nbsp;&nbsp;Position relationship between the virtual reference station VRS001 and the reference stations</figcaption>
+</figure>
+
+<h4>22. Stopping the system</h4>
+<ol class="steps">
+  <li>Type <code>stop</code> — <code>stop cors server</code> is returned;</li>
+  <li>Press Enter to confirm.</li>
+</ol>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-stop.png" alt="Stopping the system">
+  <figcaption><span class="fig-num">Figure 2.23</span>&nbsp;&nbsp;Stopping the system</figcaption>
+</figure>
+
+<h4>23. Runtime views</h4>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-runtime-a.png" alt="Runtime view (a)">
+  <figcaption>(a) Rover-side positioning test with the CORS solution stream (RTKNAVI / RTKPLOT)</figcaption>
+</figure>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-runtime-b.png" alt="Runtime view (b)">
+  <figcaption>(b) Real-time signal-to-noise monitoring of the reference station streams</figcaption>
+</figure>
+<figure>
+  <img class="shot" src="images/intro-en/fig2-runtime-c.png" alt="Runtime view (c)">
+  <figcaption>(c) Engine trace logging and solution monitoring during operation</figcaption>
+</figure>
+<p class="note" style="text-align:center"><span class="fig-num">Figure 2.24</span>&nbsp;&nbsp;Runtime views</p>
+
+</div>
+</body>
+</html>
