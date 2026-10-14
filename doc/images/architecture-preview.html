@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>CORS 架构图 · 高保真预览</title>
+<style>
+  html,body{margin:0;padding:0;background:#ffffff}
+  .wrap{max-width:1320px;margin:0 auto;padding:20px 16px}
+  .wrap svg{display:block;width:100%;height:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 870" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <title>CORS architecture</title>
+  <defs>
+    <marker id="arrMain" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2E75B6"/>
+    </marker>
+    <marker id="arrStep" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4472C4"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="870" fill="#ffffff"/>
+
+  <!-- Engine container -->
+  <rect x="360" y="40" width="520" height="620" rx="16" fill="#F8FBFF" stroke="#4472C4" stroke-width="2"/>
+  <text x="620" y="78" text-anchor="middle" font-size="22" font-weight="700" fill="#1F4E79">CORS engine</text>
+  <text x="620" y="100" text-anchor="middle" font-size="13" fill="#5A7A9A">real-time network RTK · VRS solution core</text>
+
+  <!-- Step 1 -->
+  <rect x="384" y="112" width="472" height="68" rx="10" fill="#EAF1FB" stroke="#B7CDE8" stroke-width="1.2"/>
+  <circle cx="416" cy="146" r="15" fill="#4472C4"/>
+  <text x="416" y="152" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">1</text>
+  <text x="440" y="140" font-size="16" font-weight="700" fill="#1F4E79">Ingest &amp; decode</text>
+  <text x="440" y="164" font-size="13" fill="#33475C">NTRIP client · RTCM 2.x / 3.x message decoding</text>
+
+  <!-- Step 2 -->
+  <rect x="384" y="200" width="472" height="68" rx="10" fill="#EAF1FB" stroke="#B7CDE8" stroke-width="1.2"/>
+  <circle cx="416" cy="234" r="15" fill="#4472C4"/>
+  <text x="416" y="240" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">2</text>
+  <text x="440" y="228" font-size="16" font-weight="700" fill="#1F4E79">Satellite products</text>
+  <text x="440" y="252" font-size="13" fill="#33475C">multi-GNSS orbit &amp; clock computation · RAIM · time systems</text>
+
+  <!-- Step 3 -->
+  <rect x="384" y="288" width="472" height="68" rx="10" fill="#EAF1FB" stroke="#B7CDE8" stroke-width="1.2"/>
+  <circle cx="416" cy="322" r="15" fill="#4472C4"/>
+  <text x="416" y="328" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">3</text>
+  <text x="440" y="316" font-size="16" font-weight="700" fill="#1F4E79">Network &amp; baselines</text>
+  <text x="440" y="340" font-size="13" fill="#33475C">Delaunay triangulation · multi-frequency RTK · ambiguity fixing</text>
+
+  <!-- Step 4 -->
+  <rect x="384" y="376" width="472" height="68" rx="10" fill="#EAF1FB" stroke="#B7CDE8" stroke-width="1.2"/>
+  <circle cx="416" cy="410" r="15" fill="#4472C4"/>
+  <text x="416" y="416" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">4</text>
+  <text x="440" y="404" font-size="16" font-weight="700" fill="#1F4E79">Atmospheric modelling</text>
+  <text x="440" y="428" font-size="13" fill="#33475C">joint least-squares ionospheric + tropospheric corrections</text>
+
+  <!-- Step 5 -->
+  <rect x="384" y="464" width="472" height="68" rx="10" fill="#EAF1FB" stroke="#B7CDE8" stroke-width="1.2"/>
+  <circle cx="416" cy="498" r="15" fill="#4472C4"/>
+  <text x="416" y="504" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">5</text>
+  <text x="440" y="492" font-size="16" font-weight="700" fill="#1F4E79">VRS generation</text>
+  <text x="440" y="516" font-size="13" fill="#33475C">real-time pseudorange &amp; carrier-phase observations</text>
+
+  <!-- Step 6 -->
+  <rect x="384" y="552" width="472" height="68" rx="10" fill="#EAF1FB" stroke="#B7CDE8" stroke-width="1.2"/>
+  <circle cx="416" cy="586" r="15" fill="#4472C4"/>
+  <text x="416" y="592" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">6</text>
+  <text x="440" y="580" font-size="16" font-weight="700" fill="#1F4E79">Broadcast</text>
+  <text x="440" y="604" font-size="13" fill="#33475C">RTCM 3.x MSM over NTRIP · automatic rover routing</text>
+
+  <!-- Step arrows -->
+  <line x1="620" y1="184" x2="620" y2="196" stroke="#4472C4" stroke-width="2" marker-end="url(#arrStep)"/>
+  <line x1="620" y1="272" x2="620" y2="284" stroke="#4472C4" stroke-width="2" marker-end="url(#arrStep)"/>
+  <line x1="620" y1="360" x2="620" y2="372" stroke="#4472C4" stroke-width="2" marker-end="url(#arrStep)"/>
+  <line x1="620" y1="448" x2="620" y2="460" stroke="#4472C4" stroke-width="2" marker-end="url(#arrStep)"/>
+  <line x1="620" y1="536" x2="620" y2="548" stroke="#4472C4" stroke-width="2" marker-end="url(#arrStep)"/>
+
+  <!-- Reference stations -->
+  <rect x="30" y="240" width="200" height="220" rx="14" fill="#EAF3FB" stroke="#A8C8E8" stroke-width="1.5"/>
+  <text x="130" y="274" text-anchor="middle" font-size="16" font-weight="700" fill="#1F4E79">Reference stations</text>
+  <rect x="46" y="292" width="168" height="140" rx="10" fill="#FFFFFF" stroke="#A8C8E8" stroke-width="1.2"/>
+  <text x="130" y="330" text-anchor="middle" font-size="14" font-weight="700" fill="#1F4E79">GNSS receivers</text>
+  <text x="130" y="354" text-anchor="middle" font-size="12.5" fill="#33475C">any brand · 24/7 tracking</text>
+  <text x="130" y="378" text-anchor="middle" font-size="12.5" fill="#33475C">RTCM 2.x / 3.x output</text>
+
+  <!-- Rovers -->
+  <rect x="1020" y="240" width="200" height="220" rx="14" fill="#EAF6EE" stroke="#9CCFA8" stroke-width="1.5"/>
+  <text x="1120" y="274" text-anchor="middle" font-size="16" font-weight="700" fill="#2E6B41">Rovers</text>
+  <rect x="1036" y="292" width="168" height="140" rx="10" fill="#FFFFFF" stroke="#9CCFA8" stroke-width="1.2"/>
+  <text x="1120" y="330" text-anchor="middle" font-size="14" font-weight="700" fill="#2E6B41">GNSS rovers</text>
+  <text x="1120" y="354" text-anchor="middle" font-size="12.5" fill="#33475C">any brand</text>
+  <text x="1120" y="378" text-anchor="middle" font-size="12.5" fill="#33475C">RTCM 3.x · NTRIP</text>
+
+  <!-- Main arrows -->
+  <line x1="230" y1="350" x2="354" y2="350" stroke="#2E75B6" stroke-width="2.5" marker-end="url(#arrMain)"/>
+  <text x="292" y="318" text-anchor="middle" font-size="12.5" fill="#1F4E79">NTRIP</text>
+  <text x="292" y="334" text-anchor="middle" font-size="12.5" fill="#1F4E79">RTCM 2.x / 3.x</text>
+
+  <line x1="882" y1="350" x2="1014" y2="350" stroke="#2E75B6" stroke-width="2.5" marker-end="url(#arrMain)"/>
+  <text x="948" y="318" text-anchor="middle" font-size="12.5" fill="#1F4E79">VRS corrections</text>
+  <text x="948" y="334" text-anchor="middle" font-size="12.5" fill="#1F4E79">RTCM 3.x MSM · NTRIP</text>
+
+  <!-- Bottom: monitoring -->
+  <rect x="30" y="700" width="580" height="130" rx="14" fill="#FBF3E4" stroke="#E4C97E" stroke-width="1.5"/>
+  <text x="54" y="734" font-size="16" font-weight="700" fill="#8A6116">Integrity monitoring</text>
+  <text x="54" y="762" font-size="13" fill="#6B5B36">physical &amp; virtual station quality · coordinate stability · ephemeris health</text>
+  <text x="54" y="786" font-size="13" fill="#6B5B36">regional atmospheric delays · correction quality · RTK accuracy</text>
+  <text x="54" y="810" font-size="13" fill="#6B5B36">web dashboard (8181): network map · baselines · positioning quality</text>
+
+  <!-- Bottom: interfaces -->
+  <rect x="630" y="700" width="590" height="130" rx="14" fill="#F2F5F9" stroke="#C6D2E0" stroke-width="1.5"/>
+  <text x="654" y="734" font-size="16" font-weight="700" fill="#1F4E79">Service interfaces</text>
+  <text x="654" y="762" font-size="13" fill="#33475C">console 9000 · NTRIP service 8002 · monitoring 7999</text>
+  <text x="654" y="786" font-size="13" fill="#33475C">solution data stream 8080 · web dashboard 8181</text>
+  <text x="654" y="810" font-size="13" fill="#33475C">protocols: NTRIP · RTCM 2.x / 3.x · NMEA · RINEX</text>
+
+  <!-- Dashed connector -->
+  <line x1="500" y1="662" x2="500" y2="698" stroke="#B0B0B0" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <text x="510" y="684" font-size="12" fill="#8A8A8A">monitoring &amp; control</text>
+</svg>
+</div>
+</body>
+</html>

@@ -378,6 +378,51 @@ const HAS_ZH = /[一-鿿]/;
     ? bad('英文态属性残留中文 ' + attrZh.length + ' 处：' + attrZh.slice(0, 5).join(' | '))
     : ok('属性类文案零中文（title / placeholder / aria-label）');
 
+  /* 基线详情抽屉是**隐藏区域**（点行才展开），常规扫描看不到，
+     曾整块漏翻（STATUS / PER-SATELLITE DD DELAYS / Note 等十余条）。
+     这里主动点开首行再扫一遍。 */
+  const drawerOpened = await ev(`(() => {
+    const tr = document.querySelector('#blTable tbody tr');
+    /* 空态占位行是 <tr class="empty">，点它不会展开抽屉。
+       静态服务下没有 WebSocket 数据，走的正是这条分支。 */
+    if (!tr || tr.classList.contains('empty')) return false;
+    tr.click();
+    return true;
+  })()`);
+  if (!drawerOpened) {
+    console.log('[SKIP] 无基线行，跳过抽屉检查');
+  } else {
+    await sleep(1200);
+    const dHtml = await ev(`(() => {
+      const d = document.getElementById('blDrawer');
+      return d && !d.hidden ? d.innerHTML : null;
+    })()`);
+    if (!dHtml) {
+      bad('抽屉未能展开');
+    } else {
+      const dz = await ev(`(() => {
+        const d = document.getElementById('blDrawer');
+        const out = [];
+        d.querySelectorAll('*').forEach((el) => {
+          if (el.children.length) return;
+          const t = (el.textContent || '').trim();
+          if (/[\\u4e00-\\u9fff]/.test(t)) out.push(t.slice(0, 40));
+          ['title'].forEach((a) => {
+            const v = el.getAttribute && el.getAttribute(a);
+            if (v && /[\\u4e00-\\u9fff]/.test(v)) out.push('title: ' + v.slice(0, 36));
+          });
+        });
+        return [...new Set(out)];
+      })()`);
+      (dz || []).length
+        ? bad('抽屉内残留中文 ' + dz.length + ' 处：' + dz.slice(0, 5).join(' | '))
+        : ok('基线详情抽屉零中文（含逐星表与说明）');
+      /* 收起抽屉，避免影响后续检查 */
+      await ev('document.getElementById("blDrawerClose") && document.getElementById("blDrawerClose").click()');
+      await sleep(400);
+    }
+  }
+
   /* 静态复查：index.html 里所有 data-i18n* 的值都要在语言包里有译文 */
   const htmlRaw = fs.readFileSync(dashHtml, 'utf8');
   const i18nJsRaw = fs.readFileSync(i18nJs, 'utf8');

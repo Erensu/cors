@@ -177,10 +177,10 @@
             close();
             this.onChanged && this.onChanged();
           } else {
-            U.toast('创建失败', r.error || r.output || t('未知错误'), 'err');
+            U.toast(t('创建失败'), r.error || r.output || t('未知错误'), 'err');
           }
         } catch (err) {
-          U.toast('请求异常', err.message, 'err');
+          U.toast(t('请求异常'), err.message, 'err');
         } finally {
           this.busy = false;
           submit.disabled = false;
@@ -194,7 +194,8 @@
 
       if (!this.data.length) {
         this.tbody.innerHTML =
-          '<tr class="empty"><td colspan="7">暂无基站数据<br><small style="color:var(--text-3)">点击右上角「+ 新增基站」创建</small></td></tr>';
+          `<tr class="empty"><td colspan="7">${t('暂无基站数据')}<br>`
+          + `<small style="color:var(--text-3)">${t('点击右上角「+ 新增基站」创建')}</small></td></tr>`;
         return;
       }
 
@@ -276,7 +277,7 @@
                 <span class="st-in"><span class="dot-status ${online ? 'on' : 'off'}"></span>${statCell}</span>
               </td>
               <td>
-                <button class="row-del" data-act="del" title="删除该基站"
+                <button class="row-del" data-act="del" title="${t('删除该基站')}"
                         ${this.busy ? 'disabled' : ''}>${t('删除')}</button>
               </td>
             </tr>`;
@@ -303,10 +304,10 @@
           btn.disabled = true;
           const r = await global.MCORS.rest.post('/api/station/del', { name });
           if (r.ok) {
-            U.toast('基站已删除', name, 'ok');
+            U.toast(t('基站已删除'), name, 'ok');
             this.onChanged && this.onChanged();
           } else {
-            U.toast('删除失败', r.error || r.output || t('未知错误'), 'err');
+            U.toast(t('删除失败'), r.error || r.output || t('未知错误'), 'err');
             btn.disabled = false;
           }
         };
@@ -377,7 +378,9 @@
     this.drawerTitle.textContent = s.name || '—';
     const sub = [];
     if (s.cnName && s.cnName !== s.name) sub.push(s.cnName);
-    if (s.typeLabel) sub.push(s.typeLabel);
+    /* typeLabel 来自后端（station-dict 的 SRC_TYPE，中文），
+       英文态在此翻译；中文态原样用后端值。 */
+    if (s.typeLabel) sub.push(U.i18nOn() ? t(s.typeLabel) : s.typeLabel);
     if (s.connState) sub.push(s.connState === 'connected' ? t('上游已连接') : t('上游未连接'));
     this.drawerSub.textContent = sub.join(' · ') || '—';
 

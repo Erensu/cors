@@ -210,7 +210,7 @@
       hysteresis: 0
     },
     length: {
-      label: '基线长度',
+      label: i18nT('基线长度'),
       /* 长度是**静态几何量**，本身不抖；量化到 1km 只为让等长项聚在一起。
        * 取负 → 降序（长的在前）。
        *
@@ -223,13 +223,13 @@
       hysteresis: 1
     },
     ns: {
-      label: '参与星数',
+      label: i18nT('参与星数'),
       /* 升序展示（星少的在前）：星少说明可用观测少、解更脆弱。 */
       band: (b) => (Number.isFinite(b.ns) ? b.ns : 99),
       hysteresis: 1
     },
     poserr: {
-      label: '定位误差',
+      label: i18nT('定位误差'),
       /* 取负 → 降序（误差最大的在前），这是运维最该先看的几条。
        *
        * ⚠ 取负只作用于**有效值**；无值必须给**正**的哨兵值。
@@ -399,7 +399,7 @@
       if (btn) {
         btn.onclick = () => {
           this.onRefresh && this.onRefresh();
-          U.toast('已请求刷新', '正在向引擎查询基线解算');
+          U.toast(i18nT('已请求刷新'), i18nT('正在向引擎查询基线解算'));
         };
       }
     }
@@ -557,7 +557,7 @@
             rowKey: slot.key,
             baseName: slot.baseName, roverName: slot.roverName,
             baseSrcId: slot.baseSrcId, roverSrcId: slot.roverSrcId,
-            stat: null, level: 'pending', label: '待解算',
+            stat: null, level: 'pending', label: i18nT('待解算'),
             baselineKm: null, ageS: null, ns: null,
             poserr: null, poserrNorm: null,
             time: '', sats: [],
@@ -576,18 +576,18 @@
      */
     _emptyReason() {
       const c = this.caps;
-      if (!c) return [i18nT('暂无基线解算数据'), '引擎未运行或尚未建立基线'];
+      if (!c) return [i18nT('暂无基线解算数据'), i18nT('引擎未运行或尚未建立基线')];
       if (c.code === 'NO_SOLUTION')
-        return ['未连接 solution 数据源', c.hint || '请确认 cors-engine 已启动'];
+        return [i18nT('未连接 solution 数据源'), c.hint || i18nT('请确认 cors-engine 已启动')];
       if (c.code === 'NO_FRAMES')
-        return [i18nT('已连接但无数据帧'), c.hint || '上游未推流'];
+        return [i18nT('已连接但无数据帧'), c.hint || i18nT('上游未推流')];
       if (c.code === 'EPH_ONLY')
-        return ['上游仅提供星历，无法解算基线', c.hint || '缺少 MSM 观测值'];
+        return [i18nT('上游仅提供星历，无法解算基线'), c.hint || i18nT('缺少 MSM 观测值')];
       if (c.code === 'NO_BASELINE')
-        return ['尚未建立基线', c.hint || '可在基站管理中配置基线关系'];
+        return [i18nT('尚未建立基线'), c.hint || i18nT('可在基站管理中配置基线关系')];
       if (c.code === 'MOCK')
-        return [i18nT('暂无基线解算数据'), '当前为 mock 数据模式'];
-      return [i18nT('暂无基线解算数据'), '引擎未运行或尚未建立基线'];
+        return [i18nT('暂无基线解算数据'), i18nT('当前为 mock 数据模式')];
+      return [i18nT('暂无基线解算数据'), i18nT('引擎未运行或尚未建立基线')];
     }
 
     render() {
@@ -1094,7 +1094,8 @@
           if (wantStale) tr.classList.add('bl-stale');
           else tr.classList.remove('bl-stale');
           tr.title = wantStale
-            ? '该基线已超过 ' + Math.round(STALE_MS / 1000) + 's 未收到新解算，显示的是最后一次结果'
+            ? i18nT('该基线已超过 {0}s 未收到新解算，显示的是最后一次结果')
+                .replace('{0}', Math.round(STALE_MS / 1000))
             : '';
         }
         nodeByKey.set(k, tr);
@@ -1462,7 +1463,7 @@
     const na = value === null || value === undefined || value === '';
     return '<div class="st-kv"><dt>' + U.esc(label) + '</dt>' +
       '<dd class="' + (na ? 'na' : (mono ? 'mono' : '')) + '">' +
-      (na ? '无数据' : U.esc(value)) + '</dd></div>';
+      (na ? i18nT('无数据') : U.esc(value)) + '</dd></div>';
   }
 
   function grp(title) {
@@ -1483,7 +1484,7 @@
     const sub = [];
     sub.push((U.i18nOn() ? U.labelOf(b.stat) : b.label) || U.labelOf(b.stat));
     if (Number.isFinite(b.baselineKm)) sub.push(U.num(b.baselineKm, 1) + ' km');
-    if (Number.isFinite(b.ns)) sub.push(b.ns + ' 颗参与星');
+    if (Number.isFinite(b.ns)) sub.push(`${b.ns} ${i18nT('颗参与星')}`);
     this.drawerSub.textContent = sub.join(' \u00b7 ');
 
     let h = '';
@@ -1491,23 +1492,23 @@
     /* ---- 解状态（$BLSOLS 汇总行的各字段一一对应）---- */
     h += grp(i18nT('解状态'));
     h += kv(i18nT('解状态'), ((U.i18nOn() ? U.labelOf(b.stat) : b.label) || U.labelOf(b.stat)) + '（' + (b.stat || '-') + '）');
-    h += kv('观测时刻', b.time);
-    h += kv('基线长度', Number.isFinite(b.baselineKm) ? U.num(b.baselineKm, 3) + ' km' : null);
-    h += kv('差分龄期', Number.isFinite(b.ageS) ? U.num(b.ageS, 0) + ' s' : null);
-    h += kv('模糊度个数 nb', numOrDash(b.nb));
-    h += kv('参与卫星数 ns', numOrDash(b.ns));
+    h += kv(i18nT('观测时刻'), b.time);
+    h += kv(i18nT('基线长度'), Number.isFinite(b.baselineKm) ? U.num(b.baselineKm, 3) + ' km' : null);
+    h += kv(i18nT('差分龄期'), Number.isFinite(b.ageS) ? U.num(b.ageS, 0) + ' s' : null);
+    h += kv(i18nT('模糊度个数 nb'), numOrDash(b.nb));
+    h += kv(i18nT('参与卫星数 ns'), numOrDash(b.ns));
 
     /* ---- 定位误差：$BLSOLS 独有字段，逐分量列出 ----
      * 合成模单独给出，因为「哪个方向偏」与「整体偏多少」是两个不同问题：
      * 前者用于判断是否有系统性形变，后者用于快速判好坏。 */
-    h += grp('定位误差（poserr）');
+    h += grp(i18nT('定位误差（poserr）'));
     if (b.poserr) {
       h += kv('ΔX', numOrDash(b.poserr.x, 4) + ' m', true);
       h += kv('ΔY', numOrDash(b.poserr.y, 4) + ' m', true);
       h += kv('ΔZ', numOrDash(b.poserr.z, 4) + ' m', true);
-      h += kv('合成模', numOrDash(b.poserrNorm, 4) + ' m', true);
+      h += kv(i18nT('合成模'), numOrDash(b.poserrNorm, 4) + ' m', true);
     } else {
-      h += kv('定位误差', null);
+      h += kv(i18nT('定位误差'), null);
     }
 
     /* ---- 逐星明细 ----
@@ -1517,7 +1518,7 @@
      * 某颗星的电离层/对流层明显偏离同批其他星时，它就是可疑的粗差源。
      * 引擎侧逐星输出（solution.c）正是为此。 */
     const sats = b.sats || [];
-    h += grp('逐星双差延迟（N=' + sats.length + '）');
+    h += grp(i18nT('逐星双差延迟（N={0}）').replace('{0}', sats.length));
     if (sats.length) {
       /* 表格列与抽屉列同源，故这里也给出「平均」汇总行，
        * 避免用户在抽屉里逐星看完后还要回表格对一次。 */
@@ -1526,12 +1527,13 @@
       const mI = (b.sats || []).map((s) => s.iond).filter((v) => Number.isFinite(v));
       const avg = (a) => (a.length ? a.reduce((x, v) => x + v, 0) / a.length : null);
       h += '<table class="dd-eqs">'
-        + '<thead><tr><th>卫星</th><th>参考星</th><th>频</th>'
-        + '<th>有效</th><th>龄期(s)</th>'
-        + '<th title="点击查看该星双差大气延迟的历史曲线">大气(m)</th>'
-        + '<th title="点击查看该星双差对流层延迟的历史曲线">对流层(m)</th>'
-        + '<th title="点击查看该星双差电离层延迟的历史曲线">电离层(m)</th>'
-        + '<th>高度角(°)</th></tr></thead><tbody>'
+        + `<thead><tr><th>${i18nT('卫星')}</th><th>${i18nT('参考星')}</th>`
+        + `<th>${i18nT('频')}</th>`
+        + `<th>${i18nT('有效')}</th><th>${i18nT('龄期(s)')}</th>`
+        + `<th title="${i18nT('点击查看该星双差大气延迟的历史曲线')}">${i18nT('大气(m)')}</th>`
+        + `<th title="${i18nT('点击查看该星双差对流层延迟的历史曲线')}">${i18nT('对流层(m)')}</th>`
+        + `<th title="${i18nT('点击查看该星双差电离层延迟的历史曲线')}">${i18nT('电离层(m)')}</th>`
+        + `<th>${i18nT('高度角(°)')}</th></tr></thead><tbody>`
         + sats.map((e) => {
             /* 电离层绝对值超阈值的标红：它是双差模糊度的主要残差源，
              * 明显偏大通常意味着该星观测质量差或电离层活动剧烈。 */
@@ -1540,34 +1542,31 @@
               + '<td class="sat">' + U.esc(e.prn) + '</td>'
               + '<td class="sat">' + U.esc(e.refPrn) + '</td>'
               + '<td>' + freqName(e.freq) + '</td>'
-              + '<td>' + (e.stat ? '是' : '否') + '</td>'
+              + '<td>' + (e.stat ? i18nT('是') : i18nT('否')) + '</td>'
               + '<td class="num">' + numOrDash(e.ageS, 0) + '</td>'
               /* 三路延迟单元格可点：点谁看谁的曲线。
                * data-sat 与 collector 的 key（BL:基线→基线|卫星）对应；
                * data-freq 仅用于高亮/toggle 定位（曲线本身按星唯一）。 */
               + '<td class="num sat-plot" data-metric="atmo" data-sat="' + U.esc(e.prn)
-              + '" data-freq="' + e.freq + '" title="点击查看该星双差大气延迟历史曲线">'
+              + '" data-freq="' + e.freq + '" title="' + i18nT('点击查看该星双差大气延迟历史曲线') + '">'
               + numOrDash(e.atmo, 3) + '</td>'
               + '<td class="num sat-plot" data-metric="trpd" data-sat="' + U.esc(e.prn)
-              + '" data-freq="' + e.freq + '" title="点击查看该星双差对流层延迟历史曲线">'
+              + '" data-freq="' + e.freq + '" title="' + i18nT('点击查看该星双差对流层延迟历史曲线') + '">'
               + numOrDash(e.trpd, 3) + '</td>'
               + '<td class="num sat-plot" data-metric="iond" data-sat="' + U.esc(e.prn)
-              + '" data-freq="' + e.freq + '" title="点击查看该星双差电离层延迟历史曲线">'
+              + '" data-freq="' + e.freq + '" title="' + i18nT('点击查看该星双差电离层延迟历史曲线') + '">'
               + numOrDash(e.iond, 3) + '</td>'
               + '<td class="num">' + numOrDash(e.el, 1) + '</td>'
               + '</tr>';
           }).join('')
-        + '<tr class="dd-avg"><td colspan="5">平均（' + atmoCount(b) + ' 星）</td>'
+        + `<tr class="dd-avg"><td colspan="5">${i18nT('平均（{0} 星）').replace('{0}', atmoCount(b))}</td>`
         + '<td class="num">' + numOrDash(mA, 3) + '</td>'
         + '<td class="num">' + numOrDash(avg(mT), 3) + '</td>'
         + '<td class="num">' + numOrDash(avg(mI), 3) + '</td>'
         + '<td class="num">' + numOrDash(avg(sats.map((s) => s.el).filter((v) => Number.isFinite(v))), 1) + '</td>'
         + '</tr>'
         + '</tbody></table>'
-        + '<div class="dd-note">大气 = 双差大气延迟合计（≈ 对流层 + 电离层），'
-        + '表中为<b>所有参与星的算术平均</b>；'
-        + '|电离层| &gt;0.5m 的星以红色标出，通常是可疑的粗差源。'
-        + '<br><b>点击任一卫星的延迟数值</b>可查看它的历史曲线。</div>'
+        + `<div class="dd-note">${i18nT('ddNote')}</div>`
         /* 曲线图容器：初始隐藏，点单元格才展开。
          * 放在表格下方而非单元格内，是因为 canvas 有最小可用宽度，
          * 塞进表格单元会被列宽（15%）压成一条竖线。 */
@@ -1582,8 +1581,8 @@
         + '<div class="dd-note" id="satChartNote"></div>'
         + '</div>';
     } else {
-      h += kv('逐星明细', null);
-      h += kv('说明', '该历元引擎未输出逐星行（nf=0，无有效双差方程）');
+      h += kv(i18nT('逐星明细'), null);
+      h += kv(i18nT('说明'), i18nT('该历元引擎未输出逐星行（nf=0，无有效双差方程）'));
     }
 
     this.drawerBody.innerHTML = h;
@@ -1716,12 +1715,13 @@
 
       if (noteEl) {
         if (!hit) {
-          noteEl.innerHTML = '该星暂无历史数据（引擎可能刚接入，或此卫星刚进入解算）。';
+          noteEl.innerHTML = i18nT('该星暂无历史数据（引擎可能刚接入，或此卫星刚进入解算）。');
         } else if (hit.rows.length < 2) {
-          noteEl.innerHTML = '正在累积历史（当前 ' + hit.rows.length +
-            ' 个历元，至少需要 2 个才能画出曲线）。';
+          noteEl.innerHTML = i18nT('正在累积历史（当前 {0} 个历元，至少需要 2 个才能画出曲线）。')
+            .replace('{0}', hit.rows.length);
         } else {
-          noteEl.innerHTML = '数据来源：采集层 satHistory，' + hit.rows.length + ' 个历元。';
+          noteEl.innerHTML = i18nT('数据来源：采集层 satHistory，{0} 个历元。')
+            .replace('{0}', hit.rows.length);
         }
       }
     };

@@ -1,0 +1,135 @@
+<mxfile host="app.diagrams.net" agent="workbuddy" version="24.7.17">
+  <diagram id="cors-arch" name="CORS Architecture">
+    <mxGraphModel dx="1420" dy="940" grid="0" gridSize="10" guides="0" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="870" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ======================= Engine container ======================= -->
+        <mxCell id="eng" value="CORS engine&lt;div style='font-size:12px;color:#5A7A9A;font-weight:normal;margin-top:3px;'&gt;real-time network RTK · VRS solution core&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FBFF;strokeColor=#4472C4;strokeWidth=2;verticalAlign=top;spacingTop=12;fontSize=20;fontStyle=1;fontColor=#1F4E79;" vertex="1" parent="1">
+          <mxGeometry x="360" y="40" width="520" height="620" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 1 -->
+        <mxCell id="blk1" value="&lt;b style='font-size:16px;color:#1F4E79;'&gt;Ingest &amp;amp; decode&lt;/b&gt;&lt;br&gt;NTRIP client · RTCM 2.x / 3.x message decoding" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF1FB;strokeColor=#B7CDE8;strokeWidth=1.2;align=left;verticalAlign=middle;spacingLeft=64;spacingRight=12;fontSize=13;fontColor=#33475C;" vertex="1" parent="1">
+          <mxGeometry x="384" y="112" width="472" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="bdg1" value="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#4472C4;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="401" y="131" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 2 -->
+        <mxCell id="blk2" value="&lt;b style='font-size:16px;color:#1F4E79;'&gt;Satellite products&lt;/b&gt;&lt;br&gt;multi-GNSS orbit &amp;amp; clock computation · RAIM · time systems" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF1FB;strokeColor=#B7CDE8;strokeWidth=1.2;align=left;verticalAlign=middle;spacingLeft=64;spacingRight=12;fontSize=13;fontColor=#33475C;" vertex="1" parent="1">
+          <mxGeometry x="384" y="200" width="472" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="bdg2" value="2" style="ellipse;whiteSpace=wrap;html=1;fillColor=#4472C4;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="401" y="219" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 3 -->
+        <mxCell id="blk3" value="&lt;b style='font-size:16px;color:#1F4E79;'&gt;Network &amp;amp; baselines&lt;/b&gt;&lt;br&gt;Delaunay triangulation · multi-frequency RTK · ambiguity fixing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF1FB;strokeColor=#B7CDE8;strokeWidth=1.2;align=left;verticalAlign=middle;spacingLeft=64;spacingRight=12;fontSize=13;fontColor=#33475C;" vertex="1" parent="1">
+          <mxGeometry x="384" y="288" width="472" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="bdg3" value="3" style="ellipse;whiteSpace=wrap;html=1;fillColor=#4472C4;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="401" y="307" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 4 -->
+        <mxCell id="blk4" value="&lt;b style='font-size:16px;color:#1F4E79;'&gt;Atmospheric modelling&lt;/b&gt;&lt;br&gt;joint least-squares ionospheric + tropospheric corrections" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF1FB;strokeColor=#B7CDE8;strokeWidth=1.2;align=left;verticalAlign=middle;spacingLeft=64;spacingRight=12;fontSize=13;fontColor=#33475C;" vertex="1" parent="1">
+          <mxGeometry x="384" y="376" width="472" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="bdg4" value="4" style="ellipse;whiteSpace=wrap;html=1;fillColor=#4472C4;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="401" y="395" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 5 -->
+        <mxCell id="blk5" value="&lt;b style='font-size:16px;color:#1F4E79;'&gt;VRS generation&lt;/b&gt;&lt;br&gt;real-time pseudorange &amp;amp; carrier-phase observations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF1FB;strokeColor=#B7CDE8;strokeWidth=1.2;align=left;verticalAlign=middle;spacingLeft=64;spacingRight=12;fontSize=13;fontColor=#33475C;" vertex="1" parent="1">
+          <mxGeometry x="384" y="464" width="472" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="bdg5" value="5" style="ellipse;whiteSpace=wrap;html=1;fillColor=#4472C4;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="401" y="483" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Step 6 -->
+        <mxCell id="blk6" value="&lt;b style='font-size:16px;color:#1F4E79;'&gt;Broadcast&lt;/b&gt;&lt;br&gt;RTCM 3.x MSM over NTRIP · automatic rover routing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF1FB;strokeColor=#B7CDE8;strokeWidth=1.2;align=left;verticalAlign=middle;spacingLeft=64;spacingRight=12;fontSize=13;fontColor=#33475C;" vertex="1" parent="1">
+          <mxGeometry x="384" y="552" width="472" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="bdg6" value="6" style="ellipse;whiteSpace=wrap;html=1;fillColor=#4472C4;strokeColor=none;fontSize=15;fontStyle=1;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="401" y="571" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Step arrows -->
+        <mxCell id="e12" style="endArrow=block;endFill=1;html=1;strokeColor=#4472C4;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="blk1" target="blk2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e23" style="endArrow=block;endFill=1;html=1;strokeColor=#4472C4;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="blk2" target="blk3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e34" style="endArrow=block;endFill=1;html=1;strokeColor=#4472C4;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="blk3" target="blk4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e45" style="endArrow=block;endFill=1;html=1;strokeColor=#4472C4;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="blk4" target="blk5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e56" style="endArrow=block;endFill=1;html=1;strokeColor=#4472C4;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="blk5" target="blk6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ======================= Reference stations ======================= -->
+        <mxCell id="za" value="Reference stations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3FB;strokeColor=#A8C8E8;strokeWidth=1.5;verticalAlign=top;spacingTop=10;fontSize=15;fontStyle=1;fontColor=#1F4E79;" vertex="1" parent="1">
+          <mxGeometry x="30" y="240" width="200" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="zai" value="&lt;b style='font-size:14px;color:#1F4E79;'&gt;GNSS receivers&lt;/b&gt;&lt;br&gt;&lt;br&gt;any brand · 24/7 tracking&lt;br&gt;&lt;br&gt;RTCM 2.x / 3.x output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A8C8E8;strokeWidth=1.2;fontSize=12.5;fontColor=#33475C;" vertex="1" parent="za">
+          <mxGeometry x="16" y="52" width="168" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- ======================= Rovers ======================= -->
+        <mxCell id="zb" value="Rovers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF6EE;strokeColor=#9CCFA8;strokeWidth=1.5;verticalAlign=top;spacingTop=10;fontSize=15;fontStyle=1;fontColor=#2E6B41;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="240" width="200" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="zbi" value="&lt;b style='font-size:14px;color:#2E6B41;'&gt;GNSS rovers&lt;/b&gt;&lt;br&gt;&lt;br&gt;any brand&lt;br&gt;&lt;br&gt;RTCM 3.x · NTRIP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9CCFA8;strokeWidth=1.2;fontSize=12.5;fontColor=#33475C;" vertex="1" parent="zb">
+          <mxGeometry x="16" y="52" width="168" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- ======================= Main arrows ======================= -->
+        <mxCell id="ain" value="" style="endArrow=block;endFill=1;html=1;strokeColor=#2E75B6;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="za" target="eng">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="aout" value="" style="endArrow=block;endFill=1;html=1;strokeColor=#2E75B6;strokeWidth=2.5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="eng" target="zb">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l1a" value="NTRIP" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#1F4E79;" vertex="1" parent="1">
+          <mxGeometry x="242" y="305" width="100" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="l1b" value="RTCM 2.x / 3.x" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#1F4E79;" vertex="1" parent="1">
+          <mxGeometry x="242" y="321" width="100" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2a" value="VRS corrections" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#1F4E79;" vertex="1" parent="1">
+          <mxGeometry x="898" y="305" width="100" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2b" value="RTCM 3.x MSM · NTRIP" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#1F4E79;" vertex="1" parent="1">
+          <mxGeometry x="868" y="321" width="160" height="18" as="geometry"/>
+        </mxCell>
+
+        <!-- ======================= Bottom: monitoring ======================= -->
+        <mxCell id="mb" value="&lt;b style='font-size:16px;color:#8A6116;'&gt;Integrity monitoring&lt;/b&gt;&lt;br&gt;&lt;br&gt;physical &amp;amp; virtual station quality · coordinate stability · ephemeris health&lt;br&gt;regional atmospheric delays · correction quality · RTK accuracy&lt;br&gt;web dashboard (8181): network map · baselines · positioning quality" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FBF3E4;strokeColor=#E4C97E;strokeWidth=1.5;align=left;verticalAlign=top;spacingTop=10;spacingLeft=22;spacingRight=16;fontSize=13;fontColor=#6B5B36;" vertex="1" parent="1">
+          <mxGeometry x="30" y="700" width="580" height="130" as="geometry"/>
+        </mxCell>
+
+        <!-- ======================= Bottom: interfaces ======================= -->
+        <mxCell id="sb" value="&lt;b style='font-size:16px;color:#1F4E79;'&gt;Service interfaces&lt;/b&gt;&lt;br&gt;&lt;br&gt;console 9000 · NTRIP service 8002 · monitoring 7999&lt;br&gt;solution data stream 8080 · web dashboard 8181&lt;br&gt;protocols: NTRIP · RTCM 2.x / 3.x · NMEA · RINEX" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F2F5F9;strokeColor=#C6D2E0;strokeWidth=1.5;align=left;verticalAlign=top;spacingTop=10;spacingLeft=22;spacingRight=16;fontSize=13;fontColor=#33475C;" vertex="1" parent="1">
+          <mxGeometry x="630" y="700" width="590" height="130" as="geometry"/>
+        </mxCell>
+
+        <!-- Dashed connector -->
+        <mxCell id="cmdash" value="" style="endArrow=none;html=1;strokeColor=#B0B0B0;strokeWidth=1.5;dashed=1;dashPattern=5 4;exitX=0.27;exitY=1;exitDx=0;exitDy=0;entryX=0.81;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="eng" target="mb">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l3" value="monitoring &amp;amp; control" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#8A8A8A;" vertex="1" parent="1">
+          <mxGeometry x="510" y="675" width="180" height="18" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
