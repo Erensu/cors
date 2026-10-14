@@ -485,9 +485,41 @@ If the service shows no data, check the layers in order:
 - `doc/CORS-Software-Introduction-en.pdf` — English edition of the above guide (26 pages; source: `doc/CORS-Software-Introduction-en.html`, figures in `doc/images/intro-en/`)
 - `doc/cors.pdf` — system manual (Chinese)
 - `doc/vrs.pdf` — derivation of the VRS observation generation algorithm (Chinese)
+- `doc/VRS-Observation-Generation-Algorithm-en.pdf` — English edition of the above derivation (10 pages, 9 sections, 46 numbered equations; source: `doc/VRS-Observation-Generation-Algorithm-en.html`, figures in `doc/images/vrs-en/`)
+- `doc/images/` — architecture diagram set: `architecture.svg` (referenced by [How it works](#how-it-works)), `architecture.drawio` (editable source, kept in sync with the SVG) and `architecture-preview.html`
 - `app/mcors-0.1.0-win64-beta/doc/manual.html` — engine and dashboard manual (English); Chinese edition: `manual.zh.html`
 - `bin/README.md` — engine command reference
 - `bin/postprc/readme.txt` — replay tool usage note and sample data download link
+
+### Regenerating the English documents
+
+Both English editions ship as an editable `.html` source plus a `.pdf`
+printed from it. Each HTML uses one set of styles for both media — the same
+base font size and the same A4 content width as the printed page — so the
+HTML is the same document laid out as one continuous page instead of many,
+and what the browser shows is what gets printed.
+
+Printing an already edited HTML source:
+
+```bash
+chrome --headless=new --disable-gpu --no-pdf-header-footer \
+  --print-to-pdf=doc/CORS-Software-Introduction-en.pdf \
+  doc/CORS-Software-Introduction-en.html
+```
+
+The VRS derivation is generated in two steps, because its 46 equations are
+vector SVG rather than images:
+
+```bash
+python doc/.vrs_tmp/build.py        # re-renders every equation SVG, then the HTML
+```
+
+`doc/.vrs_tmp/eqgen.py` is a small mathtext→SVG typesetter used by that
+script; it handles fractions, matrices with bracket/parenthesis/brace
+delimiters, underbraces and multi-column matrices. Editing the equation
+list in `build.py`, re-running it and then printing with the Chrome command
+above regenerates `doc/VRS-Observation-Generation-Algorithm-en.pdf`
+(requires `matplotlib`).
 
 ## Interfaces and platforms
 

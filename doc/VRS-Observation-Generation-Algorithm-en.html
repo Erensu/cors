@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VRS Observation Generation Algorithm (English)</title>
+<style>
+  :root{
+    --ink:#1c2b39; --muted:#5b6b7b; --blue:#2f6fb4; --blue-dk:#1e5a97;
+    --line:#d7dfe7; --soft:#f4f7fa;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  /* The on-screen layout is deliberately identical to the printed one:
+     A4 content column = 210mm - 2 x 15mm = 180mm = 680px at 96dpi, and the
+     same base font size, so that the HTML and the PDF agree pixel for
+     pixel (the HTML is simply one continuous page instead of many). */
+  body{
+    font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    color:var(--ink); background:#fff; font-size:12.6px; line-height:1.65;
+  }
+  .sheet{width:680px;max-width:100%;margin:0 auto;background:#fff;
+    padding:26px 0 40px;}
+  h1,h2,h3{color:#15304a;line-height:1.35;margin:1.6em 0 .55em;}
+  h2{break-after:avoid;page-break-after:avoid;}
+  h3{break-after:avoid;page-break-after:avoid;}
+  h2.chapter{font-size:22px;border-bottom:2px solid var(--blue);
+    padding-bottom:.25em;margin-top:2.2em;}
+  h3{font-size:17px;margin-top:1.4em;}
+  p{margin:.6em 0;}
+  .muted{color:var(--muted);}
+  figure{margin:1.2em 0 1.4em;text-align:center;break-inside:avoid;
+    page-break-inside:avoid;}
+  figure img{max-width:100%;height:auto;}
+  figcaption{font-size:11px;color:var(--muted);margin-top:.5em;}
+  .fig-num{font-weight:600;color:#3d5166;}
+  .eqrow{position:relative;margin:.6em 0;text-align:center;
+    break-inside:avoid;page-break-inside:avoid;}
+  .eqrow img{display:inline-block;max-width:100%;}
+  .eqno{position:absolute;right:0;top:50%;transform:translateY(-50%);
+    color:var(--muted);font-size:12.5px;}
+  .cover{min-height:243mm;display:flex;flex-direction:column;
+    justify-content:center;align-items:center;text-align:center;padding:40px 0;}
+  .cover .rule{width:120px;height:4px;background:var(--blue);
+    margin:26px 0;border-radius:2px;}
+  .cover h1{font-size:28px;margin:0;max-width:600px;}
+  .cover .sub{font-size:17px;color:var(--blue-dk);margin-top:14px;letter-spacing:1px;}
+  .cover .author{margin-top:44px;font-size:15.5px;color:#3d5166;}
+  .cover .date{margin-top:8px;font-size:15px;color:var(--muted);}
+  .cover .edition{margin-top:10px;font-size:12.5px;color:#8a97a4;}
+  .toc{list-style:none;padding-left:0;font-size:12.6px;}
+  .toc li{margin:.32em 0;}
+  .note-card{background:var(--soft);border:1px solid var(--line);
+    border-radius:6px;padding:14px 18px;font-size:12.6px;}
+  .note-card ul{margin:.35em 0 .2em;padding-left:1.3em;}
+  .note-card li{margin:.3em 0;}
+  h2.pre-break{break-before:page;page-break-before:always;}
+  @page{size:A4;margin:15mm 15mm 16mm;}
+  @media print{
+    .sheet{padding:0;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<div class="cover">
+  <div class="rule"></div>
+  <h1>VRS Observation Generation Algorithm</h1>
+  <div class="sub">Derivation of the virtual reference station<br>observation generation algorithm</div>
+  <div class="author">Su Jinglan</div>
+  <div class="date">October 2026</div>
+  <div class="edition">English edition</div>
+</div>
+
+<h2 class="chapter pre-break">Contents</h2>
+<ul class="toc">
+  <li>1&nbsp;&nbsp;Introduction</li>
+  <li>2&nbsp;&nbsp;Observation model assumptions</li>
+  <li>3&nbsp;&nbsp;Linearization about the master reference station</li>
+  <li>4&nbsp;&nbsp;Tropospheric delays</li>
+  <li>5&nbsp;&nbsp;Virtual pseudorange observations</li>
+  <li>6&nbsp;&nbsp;Equivalence with the rover&ndash;master double differences</li>
+  <li>7&nbsp;&nbsp;Network solution in the ENU frame</li>
+  <li>8&nbsp;&nbsp;Virtual carrier-phase observations</li>
+  <li>9&nbsp;&nbsp;Second-order extension</li>
+</ul>
+
+<h2 class="chapter pre-break">1&nbsp;&nbsp;Introduction</h2>
+<p>This document briefly derives the basic algorithm by which the observations
+of a Virtual Reference Station (VRS) are generated.</p>
+<p>Assume that at epoch <i>t</i> the rover <i>u</i> and the reference stations
+<i>A</i>, <i>B</i> and <i>C</i> almost simultaneously observe the L1 C/A
+signals broadcast by <i>n</i> satellites, and let &lambda; denote the L1 C/A
+wavelength. The pseudorange observations are</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e01.svg" alt="" style="width:237.0px;height:94.3px;"><span class="eqno">(1)</span></div>
+<p>where</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e02.svg" alt="" style="width:84.5px;height:21.5px;"><span class="eqno">(2)</span></div>
+<figure>
+  <img src="images/vrs-en/fig1-vrs-geometry.svg" alt="VRS geometry" style="width:480px;">
+  <figcaption><span class="fig-num">Figure 1</span> &mdash; Reference stations, virtual reference station, rover and satellites</figcaption>
+</figure>
+
+<h2>2&nbsp;&nbsp;Observation model assumptions</h2>
+<p>Taking satellite <i>j</i> as the reference satellite and <i>A</i> as the
+master reference station, assume that the double-difference ionospheric delays
+are described by spatial functions <i>F<sub>I</sub></i> evaluated at the
+station positions:</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e03.svg" alt="" style="width:268.5px;height:97.2px;"><span class="eqno">(3)</span></div>
+<p>and, in the same way, the tropospheric delays by functions
+<i>F<sub>T</sub></i>:</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e04.svg" alt="" style="width:272.7px;height:97.2px;"><span class="eqno">(4)</span></div>
+<p>The double-difference pseudorange observation equations of the rover and of
+the reference stations are then</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e05.svg" alt="" style="width:184.6px;height:76.1px;"><span class="eqno">(5)</span></div>
+
+<h2>3&nbsp;&nbsp;Linearization about the master reference station</h2>
+<p>Given the known <i>I<sub>BA</sub><sup>ij</sup></i> and
+<i>I<sub>CA</sub><sup>ij</sup></i>, the rover double-difference ionosphere
+<i>I<sub>uA</sub><sup>ij</sup></i> is estimated as</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e06.svg" alt="" style="width:482.4px;height:76.1px;"><span class="eqno">(6)</span></div>
+<p>Expanding <i>F<sub>I</sub><sup>i</sup>(r<sub>B</sub>,&nbsp;r<sup>i</sup>)</i>
+and <i>F<sub>I</sub><sup>i</sup>(r<sub>C</sub>,&nbsp;r<sup>i</sup>)</i> as
+Taylor series about <i>r<sub>A</sub></i> and neglecting the higher-order terms
+gives</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e07.svg" alt="" style="width:273.7px;height:67.7px;"><span class="eqno">(7)</span></div>
+<p>and, likewise, for <i>F<sub>I</sub><sup>j</sup>(r<sub>B</sub>,&nbsp;r<sup>j</sup>)</i>
+and <i>F<sub>I</sub><sup>j</sup>(r<sub>C</sub>,&nbsp;r<sup>j</sup>)</i>:</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e08.svg" alt="" style="width:277.1px;height:70.2px;"><span class="eqno">(8)</span></div>
+<p>Substituting (6) and (7) into (5) yields</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e09.svg" alt="" style="width:242.0px;height:70.2px;"><span class="eqno">(9)</span></div>
+<p>that is,</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e10.svg" alt="" style="width:276.9px;height:70.3px;"><span class="eqno">(10)</span></div>
+<p>where the column <i>&chi;<sub>I</sub><sup>ij</sup></i> is the
+double-difference ionospheric gradient. Expanding
+<i>F<sub>I</sub><sup>i</sup>(r<sub>u</sub>,&nbsp;r<sup>i</sup>)</i> and
+<i>F<sub>I</sub><sup>j</sup>(r<sub>u</sub>,&nbsp;r<sup>j</sup>)</i> about
+<i>r<sub>A</sub></i> in the same way,</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e11.svg" alt="" style="width:273.3px;height:70.2px;"><span class="eqno">(11)</span></div>
+<p>gives</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e12.svg" alt="" style="width:345.1px;height:44.4px;"><span class="eqno">(12)</span></div>
+<p>that is, the rover double-difference ionosphere equals the projection of
+the gradient <i>&chi;<sub>I</sub><sup>ij</sup></i> onto the rover&ndash;master
+baseline vector.</p>
+
+<h2>4&nbsp;&nbsp;Tropospheric delays</h2>
+<p>The same treatment applied to the tropospheric delay gives</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e13.svg" alt="" style="width:279.0px;height:70.3px;"><span class="eqno">(13)</span></div>
+<p>and</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e14.svg" alt="" style="width:347.2px;height:44.4px;"><span class="eqno">(14)</span></div>
+
+<h2>5&nbsp;&nbsp;Virtual pseudorange observations</h2>
+<p>Suppose that a virtual reference station <i>V</i> is placed near the rover,
+still using <i>A</i> as the master reference station. The double-difference
+delays at <i>V</i> follow directly from the gradients:</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e15.svg" alt="" style="width:135.2px;height:53.3px;"><span class="eqno">(15)</span></div>
+<p>and the VRS double-difference pseudorange observation equation is</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e16.svg" alt="" style="width:175.7px;height:32.1px;"><span class="eqno">(16)</span></div>
+<p>Forming the <i>V</i>&ndash;<i>A</i> and <i>u</i>&ndash;<i>A</i> double
+differences of the pseudoranges gives</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e17.svg" alt="" style="width:369.2px;height:53.3px;"><span class="eqno">(17)</span></div>
+<p>Expanding <i>r<sub>u</sub><sup>i</sup></i> and
+<i>r<sub>u</sub><sup>j</sup></i> with <i>r<sub>V</sub></i> and re-grouping the
+delay terms,</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e18.svg" alt="" style="width:418.6px;height:52.5px;"><span class="eqno">(18)</span></div>
+<p>which can be written as</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e19.svg" alt="" style="width:583.0px;height:54.7px;"><span class="eqno">(19)</span></div>
+<p>From the above, the virtual pseudorange observations are</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e20.svg" alt="" style="width:199.0px;height:53.3px;"><span class="eqno">(20)</span></div>
+<p>Taking satellite 1 as the reference satellite of the VRS, its virtual
+observations are</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e21.svg" alt="" style="width:228.3px;height:94.7px;"><span class="eqno">(21)</span></div>
+<p>If the rover uses satellite 2 as its own reference satellite, the
+double-difference pseudorange equation formed between the rover and the VRS
+is</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e22.svg" alt="" style="width:368.8px;height:50.4px;"><span class="eqno">(22)</span></div>
+
+<h2>6&nbsp;&nbsp;Equivalence with the rover&ndash;master double differences</h2>
+<p>Expanding (21) with the definitions (19) and (20),</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e23.svg" alt="" style="width:586.7px;height:50.4px;"><span class="eqno">(23)</span></div>
+<p>For any other satellite, e.g. satellite 3,</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e24.svg" alt="" style="width:444.4px;height:50.8px;"><span class="eqno">(24)</span></div>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e25.svg" alt="" style="width:468.0px;height:116.7px;"><span class="eqno">(25)</span></div>
+<p>and the delay terms reduce as</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e26.svg" alt="" style="width:523.4px;height:50.8px;"><span class="eqno">(26)</span></div>
+<p>By induction, the full set of rover&ndash;VRS double differences</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e27.svg" alt="" style="width:385.5px;height:94.7px;"><span class="eqno">(27)</span></div>
+<p>is equivalent to the set of rover&ndash;master double differences referred
+to satellite 2. Feeding the virtual observations (20) to a single-baseline RTK
+filter is therefore equivalent to processing the network solution directly at
+the rover.</p>
+<p>Suppose now that <i>n</i> reference stations
+<i>B<sub>1</sub>,&nbsp;B<sub>2</sub>,&nbsp;&hellip;,&nbsp;B<sub>n</sub></i>
+operate around the master reference station <i>A</i>, each of them forming a
+baseline with <i>A</i>:</p>
+<figure>
+  <img src="images/vrs-en/fig2-network.svg" alt="Master reference station network" style="width:400px;">
+  <figcaption><span class="fig-num">Figure 2</span> &mdash; Master reference station <i>A</i> and the surrounding reference stations <i>B<sub>1</sub></i>&hellip;<i>B<sub>n</sub></i>, forming the baselines <i>AB<sub>1</sub>,&nbsp;AB<sub>2</sub>,&nbsp;&hellip;,&nbsp;AB<sub>n</sub></i></figcaption>
+</figure>
+
+<h2>7&nbsp;&nbsp;Network solution in the ENU frame</h2>
+<p>For the double-difference ionospheres of these baselines,</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e28.svg" alt="" style="width:286.2px;height:143.4px;"><span class="eqno">(28)</span></div>
+<p>To express <i>&chi;<sub>I</sub><sup>ij</sup></i> in the local ENU frame, let
+<i>S</i> be the rotation matrix from the ECEF frame to the topocentric
+coordinate system of the master station <i>A</i>. Inserting
+<i>S<sup>T</sup>&middot;S&nbsp;=&nbsp;I</i>,</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e29.svg" alt="" style="width:326.3px;height:143.4px;"><span class="eqno">(29)</span></div>
+<p>Defining <i>L<sub>I</sub><sup>ij</sup></i>, the geometry matrix <i>H</i>
+and the ENU gradient <i>&chi;<sub>I,ENU</sub><sup>ij</sup></i> as</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e30.svg" alt="" style="width:333.5px;height:160.9px;"><span class="eqno">(30)</span></div>
+<p>the observation model becomes</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e31.svg" alt="" style="width:104.3px;height:34.6px;"><span class="eqno">(31)</span></div>
+<p><i>&chi;<sub>I,ENU</sub><sup>ij</sup></i> contains the double-difference
+ionospheric gradients in the east, north and up directions. The least-squares
+estimate of (30) is</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e32.svg" alt="" style="width:189.2px;height:34.6px;"><span class="eqno">(32)</span></div>
+<p>The double-difference ionosphere of the virtual station <i>V</i> is finally
+computed as</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e33.svg" alt="" style="width:571.9px;height:52.9px;"><span class="eqno">(33)</span></div>
+<p>and, in the same way, for the double-difference troposphere:</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e34.svg" alt="" style="width:335.8px;height:35.1px;"><span class="eqno">(34)</span></div>
+
+<h2>8&nbsp;&nbsp;Virtual carrier-phase observations</h2>
+<p>The derivation for the carrier-phase observations proceeds along the same
+lines. The carrier-phase observation equation is</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e35.svg" alt="" style="width:275.8px;height:94.3px;"><span class="eqno">(35)</span></div>
+<p>Taking satellite <i>j</i> as the reference satellite and <i>A</i> as the
+master reference station, the double-difference carrier-phase observation
+equations are</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e36.svg" alt="" style="width:229.8px;height:76.1px;"><span class="eqno">(36)</span></div>
+<p>As with the virtual pseudoranges, the virtual carrier-phase observations
+are</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e37.svg" alt="" style="width:202.8px;height:53.3px;"><span class="eqno">(37)</span></div>
+<p>and, with satellite 1 as the VRS reference satellite,</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e38.svg" alt="" style="width:232.2px;height:94.7px;"><span class="eqno">(38)</span></div>
+
+<h2>9&nbsp;&nbsp;Second-order extension</h2>
+<p>If required, <i>F<sub>I</sub><sup>i</sup>(r<sub>u</sub>,&nbsp;r<sup>i</sup>)</i>
+and <i>F<sub>I</sub><sup>j</sup>(r<sub>u</sub>,&nbsp;r<sup>j</sup>)</i> can be
+expanded as Taylor series to second order:</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e39.svg" alt="" style="width:479.4px;height:70.2px;"><span class="eqno">(39)</span></div>
+<p>The rover double-difference ionosphere then becomes</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e40.svg" alt="" style="width:529.7px;height:76.1px;"><span class="eqno">(40)</span></div>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e41.svg" alt="" style="width:513.6px;height:70.3px;"><span class="eqno">(41)</span></div>
+<p>Neglecting the correlation of the gradient between the horizontal
+directions,</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e42.svg" alt="" style="width:235.6px;height:65.1px;"><span class="eqno">(42)</span></div>
+<p>so that</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e43.svg" alt="" style="width:382.6px;height:65.1px;"><span class="eqno">(43)</span></div>
+<p>The master reference station <i>A</i> again forms the baselines
+<i>AB<sub>1</sub>,&nbsp;AB<sub>2</sub>,&nbsp;&hellip;,&nbsp;AB<sub>n</sub></i>
+with the surrounding stations. For their double-difference ionospheres,</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e44.svg" alt="" style="width:257.8px;height:145.6px;"><span class="eqno">(44)</span></div>
+<p>i.e.</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e45.svg" alt="" style="width:111.4px;height:104.0px;"><span class="eqno">(45)</span></div>
+<p>The least-squares estimate of (44) is</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e46.svg" alt="" style="width:206.0px;height:107.1px;"><span class="eqno">(46)</span></div>
+<p>The double-difference ionosphere of the virtual station <i>V</i> is then</p>
+<div class="eqrow"><img class="eq" src="images/vrs-en/eq-e47.svg" alt="" style="width:333.3px;height:79.9px;"><span class="eqno">(47)</span></div>
+<p>The troposphere is handled in exactly the same way.</p>
+
+</div>
+</body>
+</html>

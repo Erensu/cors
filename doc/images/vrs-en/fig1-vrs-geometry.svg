@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 400" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+  <rect x="0" y="0" width="660" height="400" fill="#ffffff"/>
+  <defs>
+    <g id="sat">
+      <line x1="0" y1="-9" x2="0" y2="-16" stroke="#3d5166" stroke-width="1.6"/>
+      <circle cx="0" cy="-18.5" r="2.4" fill="none" stroke="#3d5166" stroke-width="1.4"/>
+      <rect x="-10" y="-8" width="20" height="16" rx="2.5" fill="#4a7fb5" stroke="#2c5d8f" stroke-width="1.3"/>
+      <rect x="-38" y="-5.5" width="24" height="11" rx="1.5" fill="#a9c8e4" stroke="#2c5d8f" stroke-width="1.2"/>
+      <rect x="14" y="-5.5" width="24" height="11" rx="1.5" fill="#a9c8e4" stroke="#2c5d8f" stroke-width="1.2"/>
+      <line x1="-31" y1="-5.5" x2="-31" y2="5.5" stroke="#2c5d8f" stroke-width="0.8"/>
+      <line x1="-24" y1="-5.5" x2="-24" y2="5.5" stroke="#2c5d8f" stroke-width="0.8"/>
+      <line x1="21" y1="-5.5" x2="21" y2="5.5" stroke="#2c5d8f" stroke-width="0.8"/>
+      <line x1="28" y1="-5.5" x2="28" y2="5.5" stroke="#2c5d8f" stroke-width="0.8"/>
+      <path d="M -7 -22 a 10 10 0 0 1 14 0" fill="none" stroke="#2f6fb4" stroke-width="1.4"/>
+      <path d="M -10 -26 a 14.5 14.5 0 0 1 20 0" fill="none" stroke="#7fa8d0" stroke-width="1.3"/>
+    </g>
+    <g id="tower">
+      <path d="M -17 0 L 0 -42 L 17 0" fill="none" stroke="#3d5166" stroke-width="1.7" stroke-linejoin="round"/>
+      <line x1="-11.5" y1="-14" x2="11.5" y2="-14" stroke="#3d5166" stroke-width="1.1"/>
+      <line x1="-6" y1="-28" x2="6" y2="-28" stroke="#3d5166" stroke-width="1.1"/>
+      <line x1="-11.5" y1="-14" x2="6" y2="-28" stroke="#3d5166" stroke-width="0.9"/>
+      <line x1="11.5" y1="-14" x2="-6" y2="-28" stroke="#3d5166" stroke-width="0.9"/>
+      <line x1="-3" y1="0" x2="0" y2="-14" stroke="#3d5166" stroke-width="0.9"/>
+      <line x1="3" y1="0" x2="0" y2="-14" stroke="#3d5166" stroke-width="0.9"/>
+      <line x1="-6" y1="-14" x2="0" y2="-28" stroke="#3d5166" stroke-width="0.9"/>
+      <line x1="6" y1="-14" x2="0" y2="-28" stroke="#3d5166" stroke-width="0.9"/>
+      <line x1="0" y1="-42" x2="0" y2="-52" stroke="#3d5166" stroke-width="1.5"/>
+      <path d="M -6 -55 a 8.5 8.5 0 0 1 12 0" fill="none" stroke="#2f6fb4" stroke-width="1.4"/>
+      <path d="M -9.5 -59.5 a 13.5 13.5 0 0 1 19 0" fill="none" stroke="#7fa8d0" stroke-width="1.3"/>
+    </g>
+    <g id="rover">
+      <circle cx="0" cy="-34" r="6.5" fill="#f0c98d" stroke="#8a6a3b" stroke-width="1.3"/>
+      <path d="M -7 -26 q 7 -5 14 0 l -2.5 13 h -9 z" fill="#4a7fb5" stroke="#2c5d8f" stroke-width="1.2"/>
+      <line x1="-6" y1="-14" x2="-8" y2="0" stroke="#2c5d8f" stroke-width="2.4" stroke-linecap="round"/>
+      <line x1="6" y1="-14" x2="8" y2="0" stroke="#2c5d8f" stroke-width="2.4" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <!-- dashed links: satellite i -->
+  <g stroke="#9aa7b4" stroke-width="1.2" stroke-dasharray="5 4" fill="none">
+    <line x1="215" y1="78" x2="95"  y2="268"/>
+    <line x1="222" y1="82" x2="322" y2="308"/>
+    <line x1="230" y1="78" x2="558" y2="258"/>
+    <line x1="222" y1="80" x2="330" y2="238"/>
+    <line x1="228" y1="80" x2="402" y2="262"/>
+    <!-- satellite j -->
+    <line x1="475" y1="78" x2="105" y2="262"/>
+    <line x1="468" y1="82" x2="335" y2="308"/>
+    <line x1="462" y1="78" x2="566" y2="252"/>
+    <line x1="468" y1="80" x2="342" y2="234"/>
+    <line x1="464" y1="80" x2="410" y2="256"/>
+  </g>
+
+  <!-- satellites -->
+  <use href="#sat" x="215" y="72"/>
+  <use href="#sat" x="475" y="72"/>
+  <text x="215" y="30" text-anchor="middle" font-size="13" stroke="#ffffff" stroke-width="4" paint-order="stroke" stroke-linejoin="round" fill="#1e5a97" font-style="italic">Satellite i</text>
+  <text x="475" y="30" text-anchor="middle" font-size="13" stroke="#ffffff" stroke-width="4" paint-order="stroke" stroke-linejoin="round" fill="#1e5a97" font-style="italic">Satellite j</text>
+
+  <!-- ground stations -->
+  <use href="#tower" x="95" y="310"/>
+  <use href="#tower" x="322" y="350"/>
+  <use href="#tower" x="558" y="300"/>
+  <use href="#tower" x="330" y="282"/>
+  <use href="#rover" x="402" y="306"/>
+
+  <text x="95"  y="332" text-anchor="middle" font-size="13" fill="#3d5166">Reference station <tspan font-style="italic">A</tspan></text>
+  <text x="322" y="372" text-anchor="middle" font-size="13" stroke="#ffffff" stroke-width="4" paint-order="stroke" stroke-linejoin="round" fill="#3d5166">Reference station <tspan font-style="italic">B</tspan></text>
+  <text x="558" y="322" text-anchor="middle" font-size="13" stroke="#ffffff" stroke-width="4" paint-order="stroke" stroke-linejoin="round" fill="#3d5166">Reference station <tspan font-style="italic">C</tspan></text>
+  <text x="300" y="262" text-anchor="end" font-size="13" stroke="#ffffff" stroke-width="4" paint-order="stroke" stroke-linejoin="round" fill="#8a3d3d">Virtual reference station <tspan font-style="italic">V</tspan></text>
+  <text x="432" y="322" text-anchor="middle" font-size="13" stroke="#ffffff" stroke-width="4" paint-order="stroke" stroke-linejoin="round" fill="#3d5166">Rover <tspan font-style="italic">u</tspan></text>
+</svg>
